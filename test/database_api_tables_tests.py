@@ -17,6 +17,7 @@ from medical_forum import database
 DB_PATH = 'db/medical_forum_data_test.db'
 ENGINE = database.Engine(DB_PATH)
 
+# Tables content initial sizes
 INITIAL_MESSAGES_COUNT = 23
 
 # Tables names
@@ -113,7 +114,7 @@ class TablesCreationTestCase(unittest.TestCase):
         Calling sqlite directly (as stated in Exercise 1 docs)
         """
         print('(' + self.test_messages_table_schema.__name__ + ')', self.test_messages_table_schema.__doc__)
-        test_table_schema(self, MESSAGES_TABLE, MESSAGES_TABLE_NAMES, MESSAGES_TABLE_TYPES, MESSAGES_TABLE_FK)
+        test_table_schema(self, MESSAGES_TABLE, MESSAGES_TABLE_NAMES, MESSAGES_TABLE_TYPES, MESSAGES_TABLE_FK, True)
 
     def test_diagnosis_table_schema(self):
         """
@@ -121,7 +122,7 @@ class TablesCreationTestCase(unittest.TestCase):
         Calling sqlite directly (as stated in Exercise 1 docs)
         """
         print('(' + self.test_messages_table_schema.__name__ + ')', self.test_messages_table_schema.__doc__)
-        test_table_schema(self, DIAGNOSIS_TABLE, DIAGNOSIS_TABLE_NAMES, DIAGNOSIS_TABLE_TYPES, DIAGNOSIS_TABLE_FK)
+        test_table_schema(self, DIAGNOSIS_TABLE, DIAGNOSIS_TABLE_NAMES, DIAGNOSIS_TABLE_TYPES, DIAGNOSIS_TABLE_FK, True)
 
 
 def test_table_schema(self, table_name, columns_names, columns_types, table_fk, fk_on):
