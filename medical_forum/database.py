@@ -181,7 +181,7 @@ class Engine(object):
         '''
         keys_on = 'PRAGMA foreign_keys = ON'
         stmnt = 'CREATE TABLE users(user_id INTEGER PRIMARY KEY,\
-        user_type TEXT, \
+        user_type INTEGER, \
         username TEXT UNIQUE, \
         registration_date INTEGER,\
         last_log INTEGER, \
@@ -216,15 +216,65 @@ class Engine(object):
         keys_on = 'PRAGMA foreign_keys = ON'
 
         stmnt = 'CREATE TABLE users_profile(user_id INTEGER PRIMARY KEY, \
-                    firstname TEXT, lastname TEXT, \
-                    email TEXT, website TEXT, \
-                    picture TEXT, mobile TEXT, \
-                    skype TEXT, birthday TEXT, \
-                    residence TEXT, gender TEXT, \
-                    signature TEXT, avatar TEXT, \
-                    FOREIGN KEY(user_id) REFERENCES users(user_id) \
-                    ON DELETE CASCADE)'
+        user_type INTEGER, \
+        firstname TEXT, \
+        lastname TEXT, \
+        home_address TEXT, \
+        work_address TEXT, \
+        gender TEXT, \
+        age INTEGER, \
+        medical_record INTEGER, \
+        email TEXT, \
+        picture TEXT, \
+        phone INTEGER, \
+        height INTEGER, \
+        weight INTEGER, \
+        FOREIGN KEY(user_id) \
+        REFERENCES users(user_id) ON DELETE CASCADE)'
+
         #Connects to the database. Gets a connection object
+        con = sqlite3.connect(self.db_path)
+        with con:
+            #Get the cursor object.
+            #It allows to execute SQL code and traverse the result set
+            cur = con.cursor()
+            try:
+                cur.execute(keys_on)
+                #execute the statement
+                cur.execute(stmnt)
+            except sqlite3.Error as excp:
+                print("Error %s:" % excp.args[0])
+                return False
+        return True
+        ### Modified from create_patients_profile_table
+    def create_doctors_profile_table(self):
+        '''
+        Create the table ``doctors_profile`` programmatically, without using
+        .sql file.
+
+        Print an error message in the console if it could not be created.
+
+        :return: ``True`` if the table was successfully created or ``False``
+            otherwise.
+
+        '''
+        keys_on = 'PRAGMA foreign_keys = ON'
+
+        stmnt = 'CREATE TABLE users_profile(user_id INTEGER PRIMARY KEY, \
+        user_type INTEGER, \
+        firstname TEXT, \
+        lastname TEXT, \
+        age INTEGER, \
+        gender TEXT, \
+        speciality TEXT, \
+        email TEXT, \
+        phone INTEGER, \
+        home_address TEXT, \
+        work_address TEXT, \
+        picture TEXT, \
+        FOREIGN KEY(user_id) \
+        REFERENCES users(user_id) ON DELETE CASCADE)'
+
         #Connects to the database. Gets a connection object
         con = sqlite3.connect(self.db_path)
         with con:
