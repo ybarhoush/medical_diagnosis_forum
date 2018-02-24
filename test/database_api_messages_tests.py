@@ -7,7 +7,8 @@ Database API testing unit for messages related methods from medical_forum/databa
 """
 
 # Importing required modules
-import sqlite3, unittest
+import sqlite3
+import unittest
 
 # Import the database of medical_forum
 from medical_forum import database
@@ -17,6 +18,8 @@ DB_PATH = 'db/medical_forum_test.db'
 ENGINE = database.Engine(DB_PATH)
 
 # Defining testing constants for messages objects
+INITIAL_MESSAGES_COUNT = 23
+
 MESSAGE_1 = {
     'message_id': 'msg-1',
     'reply_to': None,  # this means it's a new message or medical case
@@ -40,8 +43,6 @@ MESSAGE_2 = {
 # bad non-existing message_id
 BAD_MESSAGE_ID = 'msg-256'
 
-INITIAL_MESSAGES_COUNT = 23
-
 FOREIGN_KEYS_ON = 'PRAGMA foreign_keys = ON'
 MESSAGES_TABLE_NAME = 'messages'
 
@@ -52,7 +53,7 @@ class DatabaseMessagesTestCase(unittest.TestCase):
     """
 
     # following resources were used for setUpClass and tearDownClass, setUpDB and tearDownDB
-    #  Exercise 1 and https://docs.python.org/3/library/unittest.html#setupclass-and-teardownclass
+    # Exercise 1 and https://docs.python.org/3/library/unittest.html#setupclass-and-teardownclass
     # Setup method
     @classmethod
     def setUpClass(cls):
@@ -94,7 +95,7 @@ class DatabaseMessagesTestCase(unittest.TestCase):
          """
         print('(' + self.test_messages_table_exist.__name__ + ')', self.test_messages_table_exist.__doc__)
         # SQL query to get schema information
-        query = 'SELECT COUNT(*) FROM information_schema.tables WHERE table_name = ' + MESSAGES_TABLE_NAME
+        query = 'SELECT COUNT(*) FROM information_schema.tables WHERE table_name = {}'.format(MESSAGES_TABLE_NAME)
         # Get the sqlite3 con from the Connection instance
         con = self.connection.con
         with con:
@@ -115,7 +116,7 @@ class DatabaseMessagesTestCase(unittest.TestCase):
          """
         print('(' + self.test_messages_table_populated.__name__ + ')', self.test_messages_table_populated.__doc__)
         # query to get list of messages table elements
-        query = 'SELECT * FROM ' + MESSAGES_TABLE_NAME
+        query = 'SELECT * FROM {}'.format(MESSAGES_TABLE_NAME)
         # Get the sqlite3 con from the Connection instance
         con = self.connection.con
         with con:
@@ -129,6 +130,12 @@ class DatabaseMessagesTestCase(unittest.TestCase):
             # Assert if count of messages doesn't equal the known initial value
             self.assertEqual(len(messages_items), INITIAL_MESSAGES_COUNT)
 
+    def test_create_message_object(self):
+        """
+        Check that the messages table has been populated with default data successfully.
+        Calling sqlite directly (as stated in Exercise 1 docs)
+         """
+        print('(' + self.test_create_message_object.__name__ + ')', self.test_create_message_object.__doc__)
 
 
 if __name__ == '__main__':
