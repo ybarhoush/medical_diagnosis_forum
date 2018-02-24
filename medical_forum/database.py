@@ -13,9 +13,9 @@ Provides the database API to access the forum persistent data.
 from datetime import datetime
 import time, sqlite3, re, os
 #Default paths for .db and .sql files to create and populate the database.
-DEFAULT_DB_PATH = 'db/forum.db'
-DEFAULT_SCHEMA = "db/forum_schema_dump.sql"
-DEFAULT_DATA_DUMP = "db/forum_data_dump.sql"
+DEFAULT_DB_PATH = 'db/medical_forum_data.db'
+DEFAULT_SCHEMA = "db/medical_forum_data_schema.sql"
+DEFAULT_DATA_DUMP = "db/medical_forum_data_dump.sql"
 
 # Copied Class from Exercise 1
 # Unless it is stated in the comment before the method, the method is copied
