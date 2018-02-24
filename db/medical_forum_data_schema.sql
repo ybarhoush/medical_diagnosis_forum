@@ -1,3 +1,4 @@
+PRAGMA foreign_keys=OFF;
 BEGIN TRANSACTION;
 CREATE TABLE IF NOT EXISTS users_profile (
 	user_id	INTEGER NOT NULL,
@@ -52,3 +53,4 @@ CREATE TABLE IF NOT EXISTS diagnosis (
 	FOREIGN KEY(user_id) REFERENCES users(user_id) ON DELETE SET NULL
 );
 COMMIT;
+PRAGMA foreign_keys=ON;
