@@ -204,6 +204,7 @@ class Engine(object):
                 return False
         return True
 
+    #Modified from create_users_profile_table
     def create_users_profile_table(self):
         """
         Create the table ``users_profile`` programmatically, without using
@@ -250,6 +251,7 @@ class Engine(object):
                 return False
         return True
 
+    #Modified from create_users_profile_table
     def create_diagnosis_table(self):
         """
         Create the table ``diagnosis`` programmatically, without using .sql file.
