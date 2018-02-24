@@ -388,3 +388,62 @@ class Connection(object):
         except sqlite3.Error as excp:
             print("Error %s:" % excp.args[0])
             return False
+    
+    #HELPERS
+    #Here the helpers that transform database rows into dictionary. They work
+    #similarly to ORM
+
+    #Helpers for messages
+    #Modified from _create_message_object
+    def _create_message_object(self, row):
+        """
+        It takes a :py:class:`sqlite3.Row` and transform it into a dictionary.
+
+        :param row: The row obtained from the database.
+        :type row: sqlite3.Row
+        :return: a dictionary containing the following keys:
+
+            * ``message_id``: id of the message (int)
+            * ``title``: message's title
+            * ``body``: message's text
+            * ``timestamp``: UNIX timestamp (long integer) that specifies when
+              the message was created.
+            * ``replyto``: The id of the parent message. String with the format
+              msg-{id}. Its value can be None.
+            * ``sender``: The username of the message's creator.
+
+            Note that all values in the returned dictionary are string unless
+            otherwise stated.
+
+        """
+        message_id = 'msg-' + str(row['message_id'])
+        message_replyto = 'msg-' + str(row['reply_to']) \
+            if row['reply_to'] is not None else None
+        message_sender = row['username']
+        message_title = row['title']
+        message_body = row['body']
+        message_timestamp = row['timestamp']
+        message = {'message_id': message_id, 'title': message_title,
+                   'timestamp': message_timestamp, 'replyto': message_replyto,
+                   'body': message_body, 'sender': message_sender}
+        return message
+
+    #Modified from _create_message_list_object
+    def _create_message_list_object(self, row):
+        """
+        Same as :py:meth:`_create_message_object`. However, the resulting
+        dictionary is targeted to build messages in a list.
+
+        :param row: The row obtained from the database.
+        :type row: sqlite3.Row
+        :return: a dictionary with the keys ``message_id``, ``title``,
+            ``timestamp`` and ``sender``.
+
+        """
+        message_id = 'msg-' + str(row['message_id'])
+        message_sender = row['username']
+        message_title = row['title']
+        message_timestamp = row['timestamp']
+        message = {'message_id': message_id, 'title': message_title,
+                   'timestamp': message_timestamp, 'sender': message_sender}
+        return message
