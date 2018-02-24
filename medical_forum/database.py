@@ -447,3 +447,65 @@ class Connection(object):
         message = {'message_id': message_id, 'title': message_title,
                    'timestamp': message_timestamp, 'sender': message_sender}
         return message
+
+    #Helpers for users
+    #Modified from _create_user_object
+    def _create_user_object(self, row):
+        """
+        It takes a database Row and transform it into a python dictionary.
+
+        :param row: The row obtained from the database.
+        :type row: sqlite3.Row
+        :return: a dictionary with the following format:
+
+            .. code-block:: javascript
+
+                {'public_profile':{'reg_date':,'username':'',
+                                   'speciality':'','age':''},
+                'restricted_profile':{'firstname':'','lastname':'',
+                                      'work_address':'','gender':'',
+                                      'picture':''}
+                }
+
+            where:
+
+            * ``reg_date``: UNIX timestamp when the user registered in
+                                 the system (long integer)
+            * ``username``: username of the user
+            * ``speciality``: text chosen by the user for speciality
+            * ``age``: name of the image file used as age
+            * ``firstanme``: given name of the user
+            * ``lastname``: family name of the user
+            * ``phone``: string showing the user's phone number. Can be None.
+            * ``work_address``: complete user's home address.
+            * ``picture``: file which contains an image of the user.
+            * ``gender``: User's gender ('male' or 'female').
+
+            Note that all values are string if they are not otherwise indicated.
+
+        """
+        reg_date = row['reg_date']
+        return {'public_profile': {'reg_date': reg_date,
+                                   'username': row['username'],
+                                   'speciality': row['speciality'],
+                                   'age': row['age']},
+                'restricted_profile': {'firstname': row['firstname'],
+                                       'lastname': row['lastname'],
+                                       'phone': row['phone'],
+                                       'work_address': row['work_address'],
+                                       'gender': row['gender'],
+                                       'picture': row['picture']}
+                }
+    #Modified from _create_user_list_object
+    def _create_user_list_object(self, row):
+        """
+        Same as :py:meth:`_create_message_object`. However, the resulting
+        dictionary is targeted to build messages in a list.
+
+        :param row: The row obtained from the database.
+        :type row: sqlite3.Row
+        :return: a dictionary with the keys ``reg_date`` and
+            ``username``
+
+        """
+        return {'reg_date': row['reg_date'], 'username': row['username']}
