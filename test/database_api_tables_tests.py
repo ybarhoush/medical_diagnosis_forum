@@ -7,7 +7,7 @@ Database API testing unit for tables creation, and whether all created successfu
 """
 
 # Importing required modules
-import sqlite3
+from .utils import *
 import unittest
 
 # Import the database of medical_forum
@@ -101,14 +101,14 @@ class TablesCreationTestCase(unittest.TestCase):
         """
         Checks that the users table has the right schema.
         """
-        print('(' + self.test_messages_table_schema.__name__ + ')', self.test_messages_table_schema.__doc__)
+        print('(' + self.test_users_table_schema.__name__ + ')', self.test_users_table_schema.__doc__)
         test_table_schema(self, USERS_TABLE, USERS_TABLE_NAMES, USERS_TABLE_TYPES, USERS_TABLE_FK, False)
 
     def test_users_profile_table_schema(self):
         """
         Checks that the users profile table has the right schema.
         """
-        print('(' + self.test_messages_table_schema.__name__ + ')', self.test_messages_table_schema.__doc__)
+        print('(' + self.test_users_profile_table_schema.__name__ + ')', self.test_users_profile_table_schema.__doc__)
         test_table_schema(self, USERS_PROFILE_TABLE, USERS_PROFILE_TABLE_NAMES, USERS_PROFILE_TABLE_TYPES,
                           USERS_PROFILE_TABLE_FK, True)
 
@@ -123,7 +123,7 @@ class TablesCreationTestCase(unittest.TestCase):
         """
         Checks that the diagnosis table has the right schema.
         """
-        print('(' + self.test_messages_table_schema.__name__ + ')', self.test_messages_table_schema.__doc__)
+        print('(' + self.test_diagnosis_table_schema.__name__ + ')', self.test_diagnosis_table_schema.__doc__)
         test_table_schema(self, DIAGNOSIS_TABLE, DIAGNOSIS_TABLE_NAMES, DIAGNOSIS_TABLE_TYPES, DIAGNOSIS_TABLE_FK, True)
 
     def test_users_table_populated(self):
@@ -137,89 +137,22 @@ class TablesCreationTestCase(unittest.TestCase):
         """
         Check that the users profile table has been populated with default data successfully.
          """
-        print('(' + self.test_users_table_populated.__name__ + ')', self.test_users_table_populated.__doc__)
+        print('(' + self.test_users_profile_table_populated.__name__ + ')', self.test_users_profile_table_populated.__doc__)
         test_table_populated(self, USERS_TABLE, INITIAL_USERS_COUNT)
 
     def test_messages_table_populated(self):
         """
         Check that the messages table has been populated with default data successfully.
          """
-        print('(' + self.test_users_table_populated.__name__ + ')', self.test_users_table_populated.__doc__)
+        print('(' + self.test_messages_table_populated.__name__ + ')', self.test_messages_table_populated.__doc__)
         test_table_populated(self, USERS_TABLE, INITIAL_USERS_COUNT)
 
     def test_diagnosis_table_populated(self):
         """
         Check that the diagnosis table has been populated with default data successfully.
          """
-        print('(' + self.test_users_table_populated.__name__ + ')', self.test_users_table_populated.__doc__)
+        print('(' + self.test_diagnosis_table_populated.__name__ + ')', self.test_diagnosis_table_populated.__doc__)
         test_table_populated(self, USERS_TABLE, INITIAL_USERS_COUNT)
-
-
-def test_table_populated(self, table_name, element_count):
-    """
-    Check that the messages table has been populated with default data successfully.
-    Calling sqlite directly (as stated in Exercise 1 docs)
-    Exercise 1 has been used as a reference
-     """
-    # print('(' + self.test_messages_table_populated.__name__ + ')', self.test_messages_table_populated.__doc__)
-    # query to get list of messages table elements
-    query = 'SELECT * FROM {}'.format(table_name)
-    # Get the sqlite3 con from the Connection instance
-    con = self.connection.con
-    with con:
-        # Cursor and row from sqlite3 class
-        con.row_factory = sqlite3.Row
-        cur = con.cursor()
-        # Support for foreign keys and execute query
-        cur.execute(FOREIGN_KEYS_ON)
-        cur.execute(query)
-        items = cur.fetchall()
-        # Assert if count of messages doesn't equal the known initial value
-        self.assertEqual(len(items), element_count)
-
-
-def test_table_schema(self, table_name, columns_names, columns_types, table_fk, fk_on):
-    """
-    General method to checks that the provided table has the right schema.
-    Calling sqlite directly (as stated in Exercise 1 docs)
-    Exercise 1 is used as reference and https://docs.python.org/3/library/unittest.html#re-using-old-test-code
-
-    @:param table_name the name of the table to check
-    @:param columns_names a tuple with the real/default column names
-    @:param columns_types a tuple with the real/default column types
-    @:param table_fk a tuple with the table's foreign keys
-    @:param fk_on whether the table has any foreign keys or not (True/False)
-    """
-    # print('(' + self.test_users_table_schema.__name__ + ')', self.test_users_table_schema.__doc__)
-    # connection instance
-    con = self.connection.con
-    with con:
-        c = con.cursor()
-        # collect column information in the query result
-        # Every column will be represented by a tuple with the following attributes:
-        # (id, name, type, not null, default_value, primary_key)
-        c.execute('PRAGMA TABLE_INFO({})'.format(table_name))
-        ti_result = c.fetchall()
-        names = [tup[1] for tup in ti_result]
-        types = [tup[2] for tup in ti_result]
-
-        # Check and assert the names and their types with default ones
-        self.assertEqual(names, columns_names)
-        self.assertEqual(types, columns_types)
-
-        if fk_on:
-            # get the foreign key data using the the query below
-            # the returned tuple has the following attributes
-            # (id, seq, table, from, to, on_update, on_delete, match)
-            # so we take elements (2, 3, 4) -> (table, from, to)
-            # reference: https://stackoverflow.com/questions/44424476/output-of-the-sqlites-foreign-key-list-pragma
-            c.execute('PRAGMA FOREIGN_KEY_LIST({})'.format(table_name))
-            fk_result = c.fetchall()
-            # Check and assert that foreign keys are correctly set
-            result_filtered = [(tup[2], tup[3], tup[4]) for tup in fk_result]
-            for tup in result_filtered:
-                # Test that each tup is included in the list of all default foreign keys
-                self.assertIn(tup, table_fk)
 
 
 if __name__ == '__main__':
