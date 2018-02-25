@@ -11,16 +11,6 @@ import unittest
 # import helper different methods
 from .utils import *
 
-# Import the database of medical_forum
-from medical_forum import database
-
-# Database file path to be used for testing only and create database instance
-DB_PATH = 'db/medical_forum_test.db'
-ENGINE = database.Engine(DB_PATH)
-
-# Defining testing constants for messages objects
-INITIAL_MESSAGES_COUNT = 19
-
 MESSAGE_1_ID = 'msg-1'
 MESSAGE_1 = {
     'message_id': 'msg-1',
@@ -54,9 +44,6 @@ MESSAGE_1_MODIFIED = {'message_id': MESSAGE_1_ID,
 # bad and non-existing message_id
 NON_EXIST_MESSAGE_ID = 'msg-256'
 BAD_MESSAGE_ID = '1'
-
-FOREIGN_KEYS_ON = 'PRAGMA foreign_keys = ON'
-MESSAGES_TABLE_NAME = 'messages'
 
 
 class DatabaseMessagesTestCase(unittest.TestCase):
@@ -104,7 +91,7 @@ class DatabaseMessagesTestCase(unittest.TestCase):
         Check that the messages table has been populated with default data successfully.
          """
         print('(' + self.test_messages_table_populated.__name__ + ')', self.test_messages_table_populated.__doc__)
-        test_table_populated(self, MESSAGES_TABLE_NAME, INITIAL_MESSAGES_COUNT)
+        test_table_populated(self, MESSAGES_TABLE, INITIAL_MESSAGES_COUNT)
 
     def test_create_message_object(self):
         """
