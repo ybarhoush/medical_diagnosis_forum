@@ -906,7 +906,7 @@ class Connection(object):
 
     # ACCESSING THE USER and USER_PROFILE tables
     def get_users(self):
-        """
+        '''
         Extracts all users in the database.
 
         :return: list of Users of the database. Each user is a dictionary
@@ -914,7 +914,7 @@ class Connection(object):
             (long representing UNIX timestamp). None is returned if the database
             has no users.
 
-        """
+        '''
         # Create the SQL Statements
         # SQL Statement for retrieving the users
         query = 'SELECT users.*, users_profile.* FROM users, users_profile \
@@ -937,14 +937,14 @@ class Connection(object):
         return users
 
     def get_user(self, username):
-        """
+        '''
         Extracts all the information of a user.
 
         :param str username: The username of the user to search for.
         :return: dictionary with the format provided in the method:
             :py:meth:`_create_user_object`
 
-        """
+        '''
         # Create the SQL Statements
         # SQL Statement for retrieving the user given a username
         query1 = 'SELECT user_id from users WHERE username = ?'
@@ -969,7 +969,7 @@ class Connection(object):
         user_id = row["user_id"]
         # Execute the SQL Statement to retrieve the user invformation.
         # Create first the valuse
-        pvalue = (user_id, )
+        pvalue = (user_id,)
         # execute the statement
         cur.execute(query2, pvalue)
         # Process the response. Only one posible row is expected.
@@ -977,7 +977,7 @@ class Connection(object):
         return self._create_user_object(row)
 
     def delete_user(self, username):
-        """
+        '''
         Remove all user information of the user with the username passed in as
         argument.
 
@@ -985,7 +985,7 @@ class Connection(object):
 
         :return: True if the user is deleted, False otherwise.
 
-        """
+        '''
         # Create the SQL Statements
         # SQL Statement for deleting the user information
         query = 'DELETE FROM users WHERE username = ?'
@@ -1003,61 +1003,58 @@ class Connection(object):
             return False
         return True
 
-    def modify_user(self, username, p_profile,r_profile):
-        """
+    def modify_user(self, username, p_profile, r_profile):
+        '''
         Modify the information of a user.
 
         :param str username: The username of the user to modify
         :param dict p_profile: a dictionary with the public information
                 to be modified. The dictionary has the following structure:
-
-                .. code-block:: javascript
-
-                    'public_profile':{'user_type':''}
         :param dict r_profile: a dictionary with the restricted inforamtion
                 to be modified. The dictionary has the following structure:
-
                 .. code-block:: javascript
+
+                    {'public_profile':{'reg_date':,'username':'',
+                                       'speciality':'', usertype':''},
                     'restricted_profile':{'firstname':'','lastname':'',
-                                          'email':'', 'speciality':'','phone':'',
-                                          'age':'','work_address':'',
-                                          'gender':'', 'picture':''}
+                                          'work_address':'','gender':'',
+                                          'picture':'', 'age':'',}
+                    }
 
                 where:
 
-                * ``reg_date``: UNIX timestamp when the user registered
-                    in the system (long integer)
-                * ``user_type``: user_type, either doctor or patient
-                * ``firstname``: given name of the user
+                * ``reg_date``: UNIX timestamp when the user registered in
+                                     the system (long integer)
+                * ``usertype``: can either be a doctor or patient
+                * ``username``: username of the user
+                * ``speciality``: text chosen by the user for speciality
+                * ``age``: name of the image file used as age
+                * ``firstanme``: given name of the user
                 * ``lastname``: family name of the user
-                * ``email``: current email of the user.
-                * ``speciality``: url with the user's personal page. Can be None
-                * ``phone``: string showing the user's phone number. Can be
-                    None.
-                * ``: user's username in Can be None.
+                * ``phone``: string showing the user's phone number. Can be None.
                 * ``work_address``: complete user's work address.
                 * ``picture``: file which contains an image of the user.
                 * ``gender``: User's gender ('male' or 'female').
 
-            Note that all values are string if they are not otherwise indicated.
+                Note that all values are string if they are not otherwise indicated.
 
         :return: the username of the modified user or None if the
             ``username`` passed as parameter is not  in the database.
         :raise ValueError: if the user argument is not well formed.
-        """
+        '''
         # Create the SQL Statements
-        # SQL Statement for extracting the user_id given a username
+        # SQL Statement for extracting the userid given a username
         query1 = 'SELECT user_id from users WHERE username = ?'
         # SQL Statement to update the user_profile table
         query2 = 'UPDATE users_profile SET firstname = ?,lastname = ?, \
                                            email = ?,speciality = ?, \
                                            picture = ?,phone = ?, \
                                         = ,work_address = ?, \
-                                           gender = ?,user_type = ?,\
+                                           gender = ?,usertype = ?,\
                                            WHERE user_id = ?'
         # temporal variables
         user_id = None
-        _firstname = None if not r_profile else  r_profile.get('firstname', None)
+        _firstname = None if not r_profile else r_profile.get('firstname', None)
         _lastname = None if not r_profile else r_profile.get('lastname', None)
         _email = None if not r_profile else r_profile.get('email', None)
         _speciality = None if not r_profile else r_profile.get('speciality', None)
@@ -1065,7 +1062,7 @@ class Connection(object):
         _phone = None if not r_profile else r_profile.get('phone', None)
         _work_address = None if not r_profile else r_profile.get('work_address', None)
         _gender = None if not r_profile else r_profile.get('gender', None)
-        _user_type = None if not p_profile else p_profile.get('user_type', None)
+        _usertype = None if not p_profile else p_profile.get('usertype', None)
 
         # Activate foreign key support
         self.set_foreign_keys_support()
@@ -1085,7 +1082,7 @@ class Connection(object):
             # execute the main statement
             pvalue = (_firstname, _lastname, _email, _speciality, _picture,
                       _phone, _work_address, _gender,
-                      _user_type, user_id)
+                      _usertype, user_id)
             cur.execute(query2, pvalue)
             self.con.commit()
             # Check that I have modified the user
@@ -1093,9 +1090,8 @@ class Connection(object):
                 return None
             return username
 
-    # TODO fix error
     def append_user(self, username, user):
-        """
+        '''
         Create a new user in the database.
 
         :param str username: The username of the user to modify
@@ -1104,52 +1100,52 @@ class Connection(object):
 
                 .. code-block:: javascript
 
-                    {'public_profile':{'reg_date':,'user_type':''},
+                    {'public_profile':{'reg_date':,'username':'',
+                                       'speciality':'', usertype':''},
                     'restricted_profile':{'firstname':'','lastname':'',
-                                          'email':'', 'speciality':'','phone':'',
-                                          'work_address':'', 'gender':'', 'picture':''}
+                                          'work_address':'','gender':'',
+                                          'picture':'', 'age':'',}
                     }
 
                 where:
 
-                * ``reg_date``: UNIX timestamp when the user registered
-                    in the system (long integer)
-                * ``user_type``: can either be a doctor or patient
-                * ``firstname``: given name of the user
+                * ``reg_date``: UNIX timestamp when the user registered in
+                                     the system (long integer)
+                * ``usertype``: can either be a doctor or patient
+                * ``username``: username of the user
+                * ``speciality``: text chosen by the user for speciality
+                * ``age``: name of the image file used as age
+                * ``firstanme``: given name of the user
                 * ``lastname``: family name of the user
-                * ``email``: current email of the user.
-                * ``speciality``: url with the user's personal page. Can be None
-                * ``phone``: string showing the user's phone number. Can be
-                    None.
-                * ``username``: user's username in Can be None.
+                * ``phone``: string showing the user's phone number. Can be None.
                 * ``work_address``: complete user's work address.
                 * ``picture``: file which contains an image of the user.
                 * ``gender``: User's gender ('male' or 'female').
 
-            Note that all values are string if they are not otherwise indicated.
+                Note that all values are string if they are not otherwise indicated.
 
         :return: the username of the modified user or None if the
             ``username`` passed as parameter is not  in the database.
         :raise ValueError: if the user argument is not well formed.
 
-        """
+        '''
         # Create the SQL Statements
-        # SQL Statement for extracting the user_id given a username
+        # SQL Statement for extracting the userid given a username
         query1 = 'SELECT user_id FROM users WHERE username = ?'
         # SQL Statement to create the row in  users table
-        query2 = 'INSERT INTO users(username,regDate,lastLogin,views)\
+        query2 = 'INSERT INTO users(username,regDate,lastLogin,timesviewed)\
                   VALUES(?,?,?,?)'
         # SQL Statement to create the row in user_profile table
         query3 = 'INSERT INTO users_profile (user_id, firstname,lastname, \
                                              email,speciality, \
                                              picture,phone, \
                                              work_address, \
-                                             gender,user_type)\
+                                             gender,usertype)\
                   VALUES (?,?,?,?,?,?,?,?,?,?)'
         # temporal variables for user table
         # timestamp will be used for lastlogin and regDate.
         timestamp = time.mktime(datetime.now().timetuple())
-        views = 0
+        timesviewed = 0
         # temporal variables for user profiles
         p_profile = user['public_profile']
         r_profile = user['restricted_profile']
@@ -1161,8 +1157,8 @@ class Connection(object):
         _phone = r_profile.get('phone', None)
         _work_address = r_profile.get('work_address', None)
         _gender = r_profile.get('gender', None)
-        _user_type = p_profile.get('user_type', None)
-        
+        _usertype = p_profile.get('usertype', None)
+
         # Activate foreign key support
         self.set_foreign_keys_support()
         # Cursor and row initialization
@@ -1177,14 +1173,15 @@ class Connection(object):
         if row is None:
             # Add the row in users table
             # Execute the statement
-            pvalue = (username, timestamp, timestamp, views)
+            pvalue = (username, timestamp, timestamp, timesviewed)
             cur.execute(query2, pvalue)
             # Extrat the rowid => user-id
             lid = cur.lastrowid
             # Add the row in users_profile table
             # Execute the statement
-            pvalue = (lid, _firstname, _lastname, _email, _speciality, _picture, _phone,_work_address, _gender, _user_type)
-            
+            pvalue = (
+            lid, _firstname, _lastname, _email, _speciality, _picture, _phone, _work_address, _gender, _usertype)
+
             cur.execute(query3, pvalue)
             self.con.commit()
             # We do not do any comprobation and return the username
@@ -1194,7 +1191,7 @@ class Connection(object):
 
     # UTILS
     def get_user_id(self, username):
-        """
+        '''
         Get the key of the database row which contains the user with the given
         username.
 
@@ -1203,7 +1200,7 @@ class Connection(object):
             not exit.
         :rtype: str
 
-        """
+        '''
 
         query = 'SELECT user_id FROM users WHERE username = ?'
         # Activate foreign key support
@@ -1224,7 +1221,7 @@ class Connection(object):
             return row[0]
 
     def contains_user(self, username):
-        """
+        '''
         :return: True if the user is in the database. False otherwise
-        """
+        '''
         return self.get_user_id(username) is not None
