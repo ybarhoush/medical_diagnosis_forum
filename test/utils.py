@@ -1,6 +1,27 @@
 import sqlite3
 
+# Define constants
 FOREIGN_KEYS_ON = 'PRAGMA foreign_keys = ON'
+
+# Tables content initial sizes
+INITIAL_MESSAGES_COUNT = 19
+INITIAL_USERS_COUNT = 25
+INITIAL_USERS_PROFILE_COUNT = 25
+INITIAL_DIAGNOSIS_COUNT = 10
+
+# Tables names
+USERS_TABLE = 'users'
+USERS_PROFILE_TABLE = 'users_profile'
+MESSAGES_TABLE = 'messages'
+DIAGNOSIS_TABLE = 'diagnosis'
+
+# Import the database of medical_forum from ../medical_forum/database.py
+from medical_forum import database
+
+
+# Database file path to be used for testing only and create database instance
+DB_PATH = 'db/medical_forum_data_test.db'
+ENGINE = database.Engine(DB_PATH)
 
 
 def execute_query(self, query, fetch_type):
@@ -37,7 +58,6 @@ def test_table_populated(self, table_name, element_count):
     @:param: table_name: the name of the table to check.
     @:param: element_count: the count of elements (default) in the table.
      """
-    # print('(' + self.test_messages_table_populated.__name__ + ')', self.test_messages_table_populated.__doc__)
     # query to get list of messages table elements
     query = 'SELECT * FROM {}'.format(table_name)
     # Assert if count of messages doesn't equal the known initial value
@@ -56,7 +76,6 @@ def test_table_schema(self, table_name, columns_names, columns_types, table_fk, 
     @:param table_fk: a tuple with the table's foreign keys
     @:param fk_on: whether the table has any foreign keys or not (True/False)
     """
-    # print('(' + self.test_users_table_schema.__name__ + ')', self.test_users_table_schema.__doc__)
     # connection instance
     con = self.connection.con
     with con:
