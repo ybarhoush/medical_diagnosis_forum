@@ -602,25 +602,55 @@ class Connection(object):
         # Build the return object
         return self._create_diagnosis_object(row)
 
-    # Modified from create_diagnosis
-    def create_message(self, title, body, sender, reply_to=None):
+    # Written from scratch
+    def create_diagnosis(self, disease, diagnosis_description, sender):
         """
         Create a new message with the data provided as arguments.
 
-        :param str title: the message's title
-        :param str body: the message's content
-        :param str sender: the username of the person who is editing this message.
-        :param str reply_to: Only provided if this message is an answer to a
-            previous message (parent). Otherwise, Null will be stored in the
-            database. The id of the message has the format msg-\d{1,3}
+        :param str disease: the disease
+        :param str diagnosis_description: the diagnosis description's of the disease
+        :param str sender: the username of the person who is editing this diagnosis.
 
         :return: the id of the created message or None if the message was not
             found. Note that the returned value is a string with the format msg-\d{1,3}.
 
         :raises ForumDatabaseError: if the database could not be modified.
-        :raises ValueError: if the reply_to has a wrong format.
 
         """
+        # Create the SQL statement
+        # SQL to test that the diagnosis which I am answering does exist
+        query1 = 'SELECT * from diagnosis WHERE diagnosis_id = ?'
+        # SQL Statement for getting the user id given a username
+        query2 = 'SELECT user_id from users WHERE username = ?'
+        # SQL Statement for inserting the data
+        stmnt = 'INSERT INTO diagnosis(disease, diagnosis_description, username, user_id) \
+                 VALUES(?,?,?,?)'
+        # Variables for the statement.
+        # user_id is obtained from first statement.
+        user_id = None
+        # Activate foreign key support
+        self.set_foreign_keys_support()
+        # Cursor and row initialization
+        self.con.row_factory = sqlite3.Row
+        cur = self.con.cursor()
+
+        # Execute SQL Statement to get user_id given username
+        pvalue = (sender,)
+        cur.execute(query2, pvalue)
+        # Extract user id
+        row = cur.fetchone()
+        if row is not None:
+            user_id = row["user_id"]
+        # Generate the values for SQL statement
+        pvalue = (self, disease, diagnosis_description, sender, user_id)
+        # Execute the statement
+        cur.execute(stmnt, pvalue)
+        self.con.commit()
+        # Extract the id of the added message
+        lid = cur.lastrowid
+        # Return the id in
+        return 'diagnosis-' + str(lid) if lid is not None else None
+
     # Message Table API.
     # Modified from get_message
     def get_message(self, message_id):
@@ -817,38 +847,58 @@ class Connection(object):
                 return None
         return 'msg-%s' % message_id
 
-    # Writted from scratch
-    def create_message(self, disease, diagnosis_description, sender):
+    # Modified from create_message
+    def create_message(self, title, body, sender, reply_to=None):
         """
         Create a new message with the data provided as arguments.
 
-        :param str disease: the disease
-        :param str diagnosis_description: the diagnosis description's of the disease
-        :param str sender: the username of the person who is editing this diagnosis.
+        :param str title: the message's title
+        :param str body: the message's content
+        :param str sender: the username of the person who is editing this message.
+        :param str reply_to: Only provided if this message is an answer to a
+            previous message (parent). Otherwise, Null will be stored in the
+            database. The id of the message has the format msg-\d{1,3}
 
         :return: the id of the created message or None if the message was not
             found. Note that the returned value is a string with the format msg-\d{1,3}.
 
         :raises ForumDatabaseError: if the database could not be modified.
+        :raises ValueError: if the reply_to has a wrong format.
 
         """
+        # Extracts the int which is the id for a message in the database
+        if reply_to is not None:
+            match = re.match('msg-(\d{1,3})', reply_to)
+            if match is None:
+                raise ValueError("The reply_to is malformed")
+            reply_to = int(match.group(1))
+
         # Create the SQL statement
-        # SQL to test that the diagnosis which I am answering does exist
-        query1 = 'SELECT * from diagnosis WHERE diagnosis_id = ?'
+        # SQL to test that the message which I am answering does exist
+        query1 = 'SELECT * from messages WHERE message_id = ?'
         # SQL Statement for getting the user id given a username
         query2 = 'SELECT user_id from users WHERE username = ?'
         # SQL Statement for inserting the data
-        stmnt = 'INSERT INTO diagnosis(disease, diagnosis_description, username, user_id) \
-                 VALUES(?,?,?,?)'
+        stmnt = 'INSERT INTO messages(title, body, timestamp, \
+                 views, reply_to, username, user_id) \
+                 VALUES(?,?,?,?,?,?,?)'
         # Variables for the statement.
         # user_id is obtained from first statement.
         user_id = None
+        timestamp = time.mktime(datetime.now().timetuple())
         # Activate foreign key support
         self.set_foreign_keys_support()
         # Cursor and row initialization
         self.con.row_factory = sqlite3.Row
         cur = self.con.cursor()
-
+        # If exists the reply_to argument, check that the message exists in
+        # the database table
+        if reply_to is not None:
+            pvalue = (reply_to,)
+            cur.execute(query1, pvalue)
+            messages = cur.fetchall()
+            if len(messages) < 1:
+                return None
         # Execute SQL Statement to get user_id given username
         pvalue = (sender,)
         cur.execute(query2, pvalue)
@@ -857,14 +907,14 @@ class Connection(object):
         if row is not None:
             user_id = row["user_id"]
         # Generate the values for SQL statement
-        pvalue = (self, disease, diagnosis_description, sender, user_id)
+        pvalue = (title, body, timestamp, 0, reply_to, sender, user_id)
         # Execute the statement
         cur.execute(stmnt, pvalue)
         self.con.commit()
         # Extract the id of the added message
         lid = cur.lastrowid
         # Return the id in
-        return 'diagnosis-' + str(lid) if lid is not None else None
+        return 'msg-' + str(lid) if lid is not None else None
 
     # Modified from append_answer
     def append_answer(self, reply_to, title, body, sender):
