@@ -459,16 +459,17 @@ class Connection(object):
             .. code-block:: javascript
 
                 {'public_profile':{'reg_date':,'username':'',
-                                   'speciality':'','age':''},
+                                   'speciality':'', usertype':''},
                 'restricted_profile':{'firstname':'','lastname':'',
                                       'work_address':'','gender':'',
-                                      'picture':''}
+                                      'picture':'', 'age':'',}
                 }
 
             where:
 
             * ``reg_date``: UNIX timestamp when the user registered in
                                  the system (long integer)
+            * ``usertype``: can either be a doctor or patient
             * ``username``: username of the user
             * ``speciality``: text chosen by the user for speciality
             * ``age``: name of the image file used as age
@@ -486,13 +487,13 @@ class Connection(object):
         return {'public_profile': {'reg_date': reg_date,
                                    'username': row['username'],
                                    'speciality': row['speciality'],
-                                   'age': row['age']},
+                                   'user_type': row['user_type']},
                 'restricted_profile': {'firstname': row['firstname'],
                                        'lastname': row['lastname'],
                                        'phone': row['phone'],
                                        'work_address': row['work_address'],
                                        'gender': row['gender'],
-                                       'picture': row['picture']}
+                                       'picture': row['picture'], 'age': row['age']}
                 }
 
     #Modified from _create_user_list_object
@@ -1006,36 +1007,33 @@ class Connection(object):
         :param str username: The username of the user to modify
         :param dict p_profile: a dictionary with the public information 
                 to be modified. The dictionary has the following structure:
-
-                .. code-block:: javascript
-
-                    'public_profile':{'usertype':''}
-        :param dict r_profile: a dictionary with the restricted inforamtion 
+        :param dict r_profile: a dictionary with the restricted inforamtion
                 to be modified. The dictionary has the following structure:
-
                 .. code-block:: javascript
+
+                    {'public_profile':{'reg_date':,'username':'',
+                                       'speciality':'', usertype':''},
                     'restricted_profile':{'firstname':'','lastname':'',
-                                          'email':'', 'speciality':'','phone':'',
-                                          'age':'','work_address':'',
-                                          'gender':'', 'picture':''}
+                                          'work_address':'','gender':'',
+                                          'picture':'', 'age':'',}
+                    }
 
                 where:
 
-                * ``reg_date``: UNIX timestamp when the user registered
-                    in the system (long integer)
-                * ``usertype``: usertype, either doctor or patient
+                * ``reg_date``: UNIX timestamp when the user registered in
+                                     the system (long integer)
+                * ``usertype``: can either be a doctor or patient
+                * ``username``: username of the user
+                * ``speciality``: text chosen by the user for speciality
+                * ``age``: name of the image file used as age
                 * ``firstanme``: given name of the user
                 * ``lastname``: family name of the user
-                * ``email``: current email of the user.
-                * ``speciality``: url with the user's personal page. Can be None
-                * ``phone``: string showing the user's phone number. Can be
-                    None.
-                * ``: user's username in Can be None.
+                * ``phone``: string showing the user's phone number. Can be None.
                 * ``work_address``: complete user's work address.
                 * ``picture``: file which contains an image of the user.
                 * ``gender``: User's gender ('male' or 'female').
 
-            Note that all values are string if they are not otherwise indicated.
+                Note that all values are string if they are not otherwise indicated.
 
         :return: the username of the modified user or None if the
             ``username`` passed as parameter is not  in the database.
@@ -1088,7 +1086,7 @@ class Connection(object):
             if cur.rowcount < 1:
                 return None
             return username
-    # TODO fix error
+
     def append_user(self, username, user):
         '''
         Create a new user in the database.
@@ -1099,29 +1097,29 @@ class Connection(object):
 
                 .. code-block:: javascript
 
-                    {'public_profile':{'reg_date':,'usertype':''},
+                    {'public_profile':{'reg_date':,'username':'',
+                                       'speciality':'', usertype':''},
                     'restricted_profile':{'firstname':'','lastname':'',
-                                          'email':'', 'speciality':'','phone':'',
-                                          'work_address':'', 'gender':'', 'picture':''}
+                                          'work_address':'','gender':'',
+                                          'picture':'', 'age':'',}
                     }
 
                 where:
 
-                * ``reg_date``: UNIX timestamp when the user registered
-                    in the system (long integer)
+                * ``reg_date``: UNIX timestamp when the user registered in
+                                     the system (long integer)
                 * ``usertype``: can either be a doctor or patient
+                * ``username``: username of the user
+                * ``speciality``: text chosen by the user for speciality
+                * ``age``: name of the image file used as age
                 * ``firstanme``: given name of the user
                 * ``lastname``: family name of the user
-                * ``email``: current email of the user.
-                * ``speciality``: url with the user's personal page. Can be None
-                * ``phone``: string showing the user's phone number. Can be
-                    None.
-                * ``uusername``: user's username in Can be None.
+                * ``phone``: string showing the user's phone number. Can be None.
                 * ``work_address``: complete user's work address.
                 * ``picture``: file which contains an image of the user.
                 * ``gender``: User's gender ('male' or 'female').
 
-            Note that all values are string if they are not otherwise indicated.
+                Note that all values are string if they are not otherwise indicated.
 
         :return: the username of the modified user or None if the
             ``username`` passed as parameter is not  in the database.
