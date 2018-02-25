@@ -1152,7 +1152,7 @@ class Connection(object):
                                        'speciality':'', user_type':''},
                     'restricted_profile':{'firstname':'','lastname':'',
                                           'work_address':'','gender':'',
-                                          'picture':'', 'age':'',}
+                                          'picture':'', 'age':'', 'email':''}
                     }
 
                 where:
@@ -1169,6 +1169,7 @@ class Connection(object):
                 * ``work_address``: complete user's work address.
                 * ``picture``: file which contains an image of the user.
                 * ``gender``: User's gender ('male' or 'female').
+                * ``email``: User's email
 
                 Note that all values are string if they are not otherwise indicated.
 
@@ -1188,8 +1189,8 @@ class Connection(object):
                                              speciality, \
                                              picture,age, \
                                              work_address, \
-                                             gender,user_type)\
-                  VALUES (?,?,?,?,?,?,?,?,?)'
+                                             gender, email, user_type)\
+                  VALUES (?,?,?,?,?,?,?,?,?,?)'
         # temporal variables for user table
         # timestamp will be used for last login and reg_date.
         timestamp = time.mktime(datetime.now().timetuple())
@@ -1201,9 +1202,10 @@ class Connection(object):
         _lastname = r_profile.get('lastname', None)
         _speciality = p_profile.get('speciality', None)
         _picture = r_profile.get('picture', None)
-        _age = r_profile.get('phone', None)
+        _age = r_profile.get('age', None)
         _work_address = r_profile.get('work_address', None)
         _gender = r_profile.get('gender', None)
+        _email = r_profile.get('email', None)
         _user_type = p_profile.get('user_type', None)
 
         # Activate foreign key support
@@ -1227,7 +1229,7 @@ class Connection(object):
             # Add the row in users_profile table
             # Execute the statement
             pvalue = (
-            lid, _firstname, _lastname, _speciality, _picture, _age, _work_address, _gender, _user_type)
+            lid, _firstname, _lastname, _speciality, _picture, _age, _work_address, _gender, _email, _user_type)
 
             cur.execute(query3, pvalue)
             self.con.commit()
