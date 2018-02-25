@@ -218,8 +218,8 @@ class Engine(object):
         """
         keys_on = 'PRAGMA foreign_keys = ON'
 
-        stmnt = 'CREATE TABLE users_profile(user_type INTEGER PRIMARY KEY, \
-                    user_id INTEGER, \
+        stmnt = 'CREATE TABLE users_profile(user_id INTEGER PRIMARY KEY, \
+                    user_type INTEGER, \
                     firstname TEXT, \
                     lastname TEXT, \
                     work_address TEXT, \
@@ -232,8 +232,6 @@ class Engine(object):
                     height INTEGER, \
                     weight INTEGER, \
                     speciality TEXT, \
-                    FOREIGN KEY(user_type) \
-                    REFERENCES users(user_type) ON DELETE CASCADE) \
                     FOREIGN KEY(diagnosis_id) \
                     REFERENCES users(diagnosis_id) ON DELETE CASCADE)'
         #Connects to the database. Gets a connection object
@@ -312,7 +310,7 @@ class Connection(object):
 
     def isclosed(self):
         """
-        :return: ``True`` if connection has already being closed.  
+        :return: ``True`` if connection has already being closed.
         """
         return self._isclosed
 
@@ -388,7 +386,7 @@ class Connection(object):
         except sqlite3.Error as excp:
             print("Error %s:" % excp.args[0])
             return False
-    
+
     #HELPERS
     #Here the helpers that transform database rows into dictionary. They work
     #similarly to ORM
@@ -496,6 +494,7 @@ class Connection(object):
                                        'gender': row['gender'],
                                        'picture': row['picture']}
                 }
+
     #Modified from _create_user_list_object
     def _create_user_list_object(self, row):
         """
@@ -510,8 +509,99 @@ class Connection(object):
         """
         return {'reg_date': row['reg_date'], 'username': row['username']}
 
+    # Helpers for diagnosis
+    # Written from scratch
+    def _create_diagnosis_object(self, row):
+        '''
+        It takes a :py:class:`sqlite3.Row` and transform it into a dictionary.
+
+        :param row: The row obtained from the database.
+        :type row: sqlite3.Row
+        :return: a dictionary containing the following keys:
+
+            * ``diagnosis_id``: id of the message (int)
+            * ``user_id``: id of the user (int)
+            * ``message_id``: id of the message (int)
+            * ``disease``: disease's text
+            * ``diagnosis_description``: diagnosis description's text
+
+            Note that all values in the returned dictionary are string unless
+            otherwise stated.
+
+        '''
+        diagnosis_id = 'diagnosis-' + str(row['diagnosis_id'])
+        user_id = row['user_id']
+        message_id = row['message_id']
+        disease = row['disease']
+        diagnosis_description = row['diagnosis_description']
+
+        diagnosis = {'diagnosis_id': diagnosis_id, 'user_id': user_id,
+                     'message_id': message_id,
+                     'disease': disease, 'diagnosis_description': diagnosis_description}
+        return diagnosis
+
+    # Written from scratch
+    def _create_diagnosis_list_object(self, row):
+        '''
+        Same as :py:meth:`_create_diagnosis_object`. However, the resulting
+        dictionary is targeted to build messages in a list.
+
+        :param row: The row obtained from the database.
+        :type row: sqlite3.Row
+        :return: a dictionary with the keys ``diagnosis_id``, ``user_id``,
+            ``message_id``, ``disease`` and ``diagnosis_description``.
+        '''
+        diagnosis_id = 'diagnosis-' + str(row['diagnosis_id'])
+        user_id = row['user_id']
+        message_id = row['message_id']
+        disease = row['disease']
+        diagnosis_description = row['diagnosis_description']
+
+        return {'diagnosis_id': diagnosis_id, 'user_id': user_id,
+                'message_id': message_id,
+                'disease': disease, 'diagnosis_description': diagnosis_description}
+
     #API ITSELF
+    # Diagnosis Table API.
+    def get_diagnosis(self, diagnosisid):
+        '''
+        Extracts a diagnosis from the database.
+
+        :param diagnosisid: The id of the diagnosis. Note that diagnosisid is a
+            string with format ``diagnosis-\d{1,3}``.
+        :return: A dictionary with the format provided in
+            :py:meth:`_create_diagnosis_object` or None if the diagnosis with target
+            id does not exist.
+        :raises ValueError: when ``diagnosisid`` is not well formed
+
+        '''
+        # Extracts the int which is the id for a diagnosis in the database
+        match = re.match(r'diagnosis-(\d{1,3})', diagnosisid)
+        if match is None:
+            raise ValueError("The diagnosis is malformed")
+        diagnosisid = int(match.group(1))
+        # Activate foreign key support
+        self.set_foreign_keys_support()
+        # Create the SQL Query
+        query = 'SELECT * FROM diagnosis WHERE diagnosis_id = ?'
+        # Cursor and row initialization
+        self.con.row_factory = sqlite3.Row
+        cur = self.con.cursor()
+        # Execute main SQL Statement
+        pvalue = (diagnosisid,)
+        cur.execute(query, pvalue)
+        # Process the response.
+        # Just one row is expected
+        row = cur.fetchone()
+        if row is None:
+            return None
+        # Build the return object
+        return self._create_diagnosis_object(row)
+
+    # TODO imlement create_diagnosis
+
     #Message Table API.
+
     def get_message(self, messageid):
         '''
         Extracts a message from the database.
@@ -546,6 +636,84 @@ class Connection(object):
             return None
         #Build the return object
         return self._create_message_object(row)
+
+    def get_messages(self, username=None, number_of_messages=-1,
+                     before=-1, after=-1):
+        '''
+        Return a list of all the messages in the database filtered by the
+        conditions provided in the parameters.
+
+        :param username: default None. Search messages of a user with the given
+            username. If this parameter is None, it returns the messages of
+            any user in the system.
+        :type username: str
+        :param number_of_messages: default -1. Sets the maximum number of
+            messages returning in the list. If set to -1, there is no limit.
+        :type number_of_messages: int
+        :param before: All timestamps > ``before`` (UNIX timestamp) are removed.
+            If set to -1, this condition is not applied.
+        :type before: long
+        :param after: All timestamps < ``after`` (UNIX timestamp) are removed.
+            If set to -1, this condition is not applied.
+        :type after: long
+
+        :return: A list of messages. Each message is a dictionary containing
+            the following keys:
+
+            * ``messageid``: string with the format msg-\d{1,3}.Id of the
+                message.
+            * ``sender``: username of the message's author.
+            * ``title``: string containing the title of the message.
+            * ``timestamp``: UNIX timestamp (long int) that specifies when the
+                message was created.
+
+            Note that all values in the returned dictionary are string unless
+            otherwise stated.
+
+        :raises ValueError: if ``before`` or ``after`` are not valid UNIX
+            timestamps
+
+        '''
+        #Create the SQL Statement build the string depending on the existence
+        #of username, numbero_of_messages, before and after arguments.
+        query = 'SELECT * FROM messages'
+          #username restriction
+        if username is not None or before != -1 or after != -1:
+            query += ' WHERE'
+        if username is not None:
+            query += " user_nickname = '%s'" % username
+          #Before restriction
+        if before != -1:
+            if username is not None:
+                query += ' AND'
+            query += " timestamp < %s" % str(before)
+          #After restriction
+        if after != -1:
+            if username is not None or before != -1:
+                query += ' AND'
+            query += " timestamp > %s" % str(after)
+          #Order of results
+        query += ' ORDER BY timestamp DESC'
+          #Limit the number of resulst return
+        if number_of_messages > -1:
+            query += ' LIMIT ' + str(number_of_messages)
+        #Activate foreign key support
+        self.set_foreign_keys_support()
+        #Cursor and row initialization
+        self.con.row_factory = sqlite3.Row
+        cur = self.con.cursor()
+        #Execute main SQL Statement
+        cur.execute(query)
+        #Get results
+        rows = cur.fetchall()
+        if rows is None:
+            return None
+        #Build the return object
+        messages = []
+        for row in rows:
+            message = self._create_message_list_object(row)
+            messages.append(message)
+        return messages
 
     def delete_message(self, messageid):
         '''
@@ -620,7 +788,7 @@ class Connection(object):
             self.con.commit()
         except sqlite3.Error as e:
             print ("Error %s:" % (e.args[0]))
-        else: 
+        else:
             if cur.rowcount < 1:
                 return None
         return 'msg-%s' % messageid
@@ -694,7 +862,7 @@ class Connection(object):
         lid = cur.lastrowid
         #Return the id in
         return 'msg-' + str(lid) if lid is not None else None
-   
+
     #Modified from append_answer
     def append_answer(self, replyto, title, body, sender="Anonymous"):
         '''
@@ -710,7 +878,7 @@ class Connection(object):
             message. If it is not provided "Anonymous" will be stored in db.
 
         :return: the id of the created message or None if the message was not
-            found. Note that 
+            found. Note that
             the returned value is a string with the format msg-\d{1,3}.
 
         :raises ForumDatabaseError: if the database could not be modified.
@@ -719,4 +887,155 @@ class Connection(object):
         '''
         return self.create_message(title, body, sender, replyto)
 
+    #MESSAGE UTILS
 
+    def contains_message(self, messageid):
+        '''
+        Checks if a message is in the database.
+
+        :param str messageid: Id of the message to search. Note that messageid
+            is a string with the format msg-\d{1,3}.
+        :return: True if the message is in the database. False otherwise.
+
+        '''
+        return self.get_message(messageid) is not None
+
+    #ACCESSING THE USER and USER_PROFILE tables
+    def get_users(self):
+        '''
+        Extracts all users in the database.
+
+        :return: list of Users of the database. Each user is a dictionary
+            that contains two keys: ``username``(str) and ``reg_date``
+            (long representing UNIX timestamp). None is returned if the database
+            has no users.
+
+        '''
+        #Create the SQL Statements
+          #SQL Statement for retrieving the users
+        query = 'SELECT users.*, users_profile.* FROM users, users_profile \
+                 WHERE users.user_id = users_profile.user_id'
+        #Activate foreign key support
+        self.set_foreign_keys_support()
+        #Create the cursor
+        self.con.row_factory = sqlite3.Row
+        cur = self.con.cursor()
+        #Execute main SQL Statement
+        cur.execute(query)
+        #Process the results
+        rows = cur.fetchall()
+        if rows is None:
+            return None
+        #Process the response.
+        users = []
+        for row in rows:
+            users.append(self._create_user_list_object(row))
+        return users
+
+    def get_user(self, username):
+        '''
+        Extracts all the information of a user.
+
+        :param str nickname: The nickname of the user to search for.
+        :return: dictionary with the format provided in the method:
+            :py:meth:`_create_user_object`
+
+        '''
+        #Create the SQL Statements
+          #SQL Statement for retrieving the user given a nickname
+        query1 = 'SELECT user_id from users WHERE nickname = ?'
+          #SQL Statement for retrieving the user information
+        query2 = 'SELECT users.*, users_profile.* FROM users, users_profile \
+                  WHERE users.user_id = ? \
+                  AND users_profile.user_id = users.user_id'
+          #Variable to be used in the second query.
+        user_id = None
+        #Activate foreign key support
+        self.set_foreign_keys_support()
+        #Cursor and row initialization
+        self.con.row_factory = sqlite3.Row
+        cur = self.con.cursor()
+        #Execute SQL Statement to retrieve the id given a nickname
+        pvalue = (username,)
+        cur.execute(query1, pvalue)
+        #Extract the user id
+        row = cur.fetchone()
+        if row is None:
+            return None
+        user_id = row["user_id"]
+        # Execute the SQL Statement to retrieve the user invformation.
+        # Create first the valuse
+        pvalue = (user_id, )
+        #execute the statement
+        cur.execute(query2, pvalue)
+        #Process the response. Only one posible row is expected.
+        row = cur.fetchone()
+        return self._create_user_object(row)
+
+    def delete_user(self, username):
+        '''
+        Remove all user information of the user with the nickname passed in as
+        argument.
+
+        :param str nickname: The nickname of the user to remove.
+
+        :return: True if the user is deleted, False otherwise.
+
+        '''
+        #Create the SQL Statements
+          #SQL Statement for deleting the user information
+        query = 'DELETE FROM users WHERE nickname = ?'
+        #Activate foreign key support
+        self.set_foreign_keys_support()
+        #Cursor and row initialization
+        self.con.row_factory = sqlite3.Row
+        cur = self.con.cursor()
+        #Execute the statement to delete
+        pvalue = (username,)
+        cur.execute(query, pvalue)
+        self.con.commit()
+        #Check that it has been deleted
+        if cur.rowcount < 1:
+            return False
+        return True
+
+    # TODO def modify_user(self, nickname, user)
+    # TODO def def append_user(self, nickname, user)
+
+
+    # UTILS
+    def get_user_id(self, username):
+        '''
+        Get the key of the database row which contains the user with the given
+        username.
+
+        :param str username: The username of the user to search.
+        :return: the database attribute user_id or None if ``username`` does
+            not exit.
+        :rtype: str
+
+        '''
+
+        query = 'SELECT user_id FROM users WHERE username = ?'
+        #Activate foreign key support
+        self.set_foreign_keys_support()
+        #Cursor and row initialization
+        self.con.row_factory = sqlite3.Row
+        cur = self.con.cursor()
+        #Execute the  main SQL statement
+        pvalue = (username,)
+        cur.execute(query, pvalue)
+        #Process the response.
+        #Just one row is expected
+        row = cur.fetchone()
+        if row is None:
+            return None
+        #Build the return object
+        else:
+            return row[0]
+
+    def contains_user(self, username):
+        '''
+        :return: True if the user is in the database. False otherwise
+        '''
+        return self.get_user_id(username) is not None
