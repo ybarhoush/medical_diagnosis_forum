@@ -1142,7 +1142,7 @@ class Connection(object):
         '''
         Create a new user in the database.
 
-        :param str username: The username of the user to modify
+        :param str username: The username of the user to modify.
         :param dict user: a dictionary with the information to be modified. The
                 dictionary has the following structure:
 
