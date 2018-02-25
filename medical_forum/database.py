@@ -8,17 +8,20 @@ Provides the database API to access the forum persistent data.
 @author: ivan
 @author: mika
 @author: yazan
+@author: Issam
 """
 
 from datetime import datetime
 import time, sqlite3, re, os
-#Default paths for .db and .sql files to create and populate the database.
+# Default paths for .db and .sql files to create and populate the database.
 DEFAULT_DB_PATH = 'db/medical_forum_data.db'
 DEFAULT_SCHEMA = "db/medical_forum_data_schema.sql"
 DEFAULT_DATA_DUMP = "db/medical_forum_data_dump.sql"
 
 # Copied Class from Exercise 1
 # Unless it is stated in the comment before the method, the method is copied
+
+
 class Engine(object):
     """
     Abstraction of the database.
@@ -64,7 +67,7 @@ class Engine(object):
 
         """
         if os.path.exists(self.db_path):
-            #THIS REMOVES THE DATABASE STRUCTURE
+            # THIS REMOVES THE DATABASE STRUCTURE
             os.remove(self.db_path)
 
     def clear(self):
@@ -74,9 +77,9 @@ class Engine(object):
 
         """
         keys_on = 'PRAGMA foreign_keys = ON'
-        #THIS KEEPS THE SCHEMA AND REMOVE VALUES
+        # THIS KEEPS THE SCHEMA AND REMOVE VALUES
         con = sqlite3.connect(self.db_path)
-        #Activate foreing keys support
+        # Activate foreing keys support
         cur = con.cursor()
         cur.execute(keys_on)
         with con:
@@ -85,10 +88,10 @@ class Engine(object):
             cur.execute("DELETE FROM messages")
             cur.execute("DELETE FROM users_profile")
             cur.execute("DELETE FROM users")
-            #NOTE since we have ON DELETE CASCADE BOTH IN users_profile AND
-            #friends, WE DO NOT HAVE TO WORRY TO CLEAR THOSE TABLES.
+            # NOTE since we have ON DELETE CASCADE BOTH IN users_profile AND
+            # friends, WE DO NOT HAVE TO WORRY TO CLEAR THOSE TABLES.
 
-    #METHODS TO CREATE AND POPULATE A DATABASE USING DIFFERENT SCRIPTS
+    # METHODS TO CREATE AND POPULATE A DATABASE USING DIFFERENT SCRIPTS
     def create_tables(self, schema=None):
         """
         Create programmatically the tables from a schema file.
@@ -118,10 +121,10 @@ class Engine(object):
         """
         keys_on = 'PRAGMA foreign_keys = ON'
         con = sqlite3.connect(self.db_path)
-        #Activate foreing keys support
+        # Activate foreing keys support
         cur = con.cursor()
         cur.execute(keys_on)
-        #Populate database from dump
+        # Populate database from dump
         if dump is None:
             dump = DEFAULT_DATA_DUMP
         try:
@@ -132,9 +135,9 @@ class Engine(object):
         finally:
             con.close()
 
-    #METHODS TO CREATE THE TABLES PROGRAMMATICALLY WITHOUT USING SQL SCRIPT
+    # METHODS TO CREATE THE TABLES PROGRAMMATICALLY WITHOUT USING SQL SCRIPT
 
-    #Modified from create_messages_table
+    # Modified from create_messages_table
     def create_messages_table(self):
         """
         Create the table ``messages`` programmatically, without using .sql file.
@@ -160,19 +163,19 @@ class Engine(object):
                     REFERENCES users(user_id, username) ON DELETE SET NULL)'
         con = sqlite3.connect(self.db_path)
         with con:
-            #Get the cursor object.
-            #It allows to execute SQL code and traverse the result set
+            # Get the cursor object.
+            # It allows to execute SQL code and traverse the result set
             cur = con.cursor()
             try:
                 cur.execute(keys_on)
-                #execute the statement
+                # execute the statement
                 cur.execute(stmnt)
             except sqlite3.Error as excp:
                 print("Error %s:" % excp.args[0])
                 return False
         return True
 
-    #Modified from create_users_table
+    # Modified from create_users_table
     def create_users_table(self):
         """
         Create the table ``users`` programmatically, without using .sql file.
@@ -191,22 +194,22 @@ class Engine(object):
                                     last_login INTEGER, \
                                     msg_count INTEGER,\
                                     UNIQUE(user_id, username))'
-        #Connects to the database. Gets a connection object
+        # Connects to the database. Gets a connection object
         con = sqlite3.connect(self.db_path)
         with con:
-            #Get the cursor object.
-            #It allows to execute SQL code and traverse the result set
+            # Get the cursor object.
+            # It allows to execute SQL code and traverse the result set
             cur = con.cursor()
             try:
                 cur.execute(keys_on)
-                #execute the statement
+                # execute the statement
                 cur.execute(stmnt)
             except sqlite3.Error as excp:
                 print("Error %s:" % excp.args[0])
                 return False
         return True
 
-    #Modified from create_users_profile_table
+    # Modified from create_users_profile_table
     def create_users_profile_table(self):
         """
         Create the table ``users_profile`` programmatically, without using
@@ -236,22 +239,22 @@ class Engine(object):
                     speciality TEXT, \
                     FOREIGN KEY(diagnosis_id) \
                     REFERENCES users(diagnosis_id) ON DELETE CASCADE)'
-        #Connects to the database. Gets a connection object
+        # Connects to the database. Gets a connection object
         con = sqlite3.connect(self.db_path)
         with con:
-            #Get the cursor object.
-            #It allows to execute SQL code and traverse the result set
+            # Get the cursor object.
+            # It allows to execute SQL code and traverse the result set
             cur = con.cursor()
             try:
                 cur.execute(keys_on)
-                #execute the statement
+                # execute the statement
                 cur.execute(stmnt)
             except sqlite3.Error as excp:
                 print("Error %s:" % excp.args[0])
                 return False
         return True
 
-    #Modified from create_users_profile_table
+    # Modified from create_users_profile_table
     def create_diagnosis_table(self):
         """
         Create the table ``diagnosis`` programmatically, without using .sql file.
@@ -271,15 +274,15 @@ class Engine(object):
                     REFERENCES users(user_id) ON DELETE CASCADE) \
                     FOREIGN KEY(message_id) \
                     REFERENCES users(message_id) ON DELETE CASCADE)'
-        #Connects to the database. Gets a connection object
+        # Connects to the database. Gets a connection object
         con = sqlite3.connect(self.db_path)
         with con:
-            #Get the cursor object.
-            #It allows to execute SQL code and traverse the result set
+            # Get the cursor object.
+            # It allows to execute SQL code and traverse the result set
             cur = con.cursor()
             try:
                 cur.execute(keys_on)
-                #execute the statement
+                # execute the statement
                 cur.execute(stmnt)
             except sqlite3.Error as excp:
                 print("Error %s:" % excp.args[0])
@@ -326,7 +329,7 @@ class Connection(object):
             self.con.close()
             self._isclosed = True
 
-    #FOREIGN KEY STATUS
+    # FOREIGN KEY STATUS
     def check_foreign_keys_status(self):
         """
         Check if the foreign keys has been activated.
@@ -337,11 +340,11 @@ class Connection(object):
 
         """
         try:
-            #Create a cursor to receive the database values
+            # Create a cursor to receive the database values
             cur = self.con.cursor()
-            #Execute the pragma command
+            # Execute the pragma command
             cur.execute('PRAGMA foreign_keys')
-            #We know we retrieve just one record: use fetchone()
+            # We know we retrieve just one record: use fetchone()
             data = cur.fetchone()
             is_activated = data == (1,)
             print("Foreign Keys status: %s" % 'ON' if is_activated else 'OFF')
@@ -360,10 +363,10 @@ class Connection(object):
         """
         keys_on = 'PRAGMA foreign_keys = ON'
         try:
-            #Get the cursor object.
-            #It allows to execute SQL code and traverse the result set
+            # Get the cursor object.
+            # It allows to execute SQL code and traverse the result set
             cur = self.con.cursor()
-            #execute the pragma command, ON
+            # execute the pragma command, ON
             cur.execute(keys_on)
             return True
         except sqlite3.Error as excp:
@@ -379,22 +382,22 @@ class Connection(object):
         """
         keys_on = 'PRAGMA foreign_keys = OFF'
         try:
-            #Get the cursor object.
-            #It allows to execute SQL code and traverse the result set
+            # Get the cursor object.
+            # It allows to execute SQL code and traverse the result set
             cur = self.con.cursor()
-            #execute the pragma command, OFF
+            # execute the pragma command, OFF
             cur.execute(keys_on)
             return True
         except sqlite3.Error as excp:
             print("Error %s:" % excp.args[0])
             return False
 
-    #HELPERS
-    #Here the helpers that transform database rows into dictionary. They work
-    #similarly to ORM
+    # HELPERS
+    # Here the helpers that transform database rows into dictionary. They work
+    # similarly to ORM
 
-    #Helpers for messages
-    #Modified from _create_message_object
+    # Helpers for messages
+    # Modified from _create_message_object
     def _create_message_object(self, row):
         """
         It takes a :py:class:`sqlite3.Row` and transform it into a dictionary.
@@ -428,7 +431,7 @@ class Connection(object):
                    'body': message_body, 'sender': message_sender}
         return message
 
-    #Modified from _create_message_list_object
+    # Modified from _create_message_list_object
     def _create_message_list_object(self, row):
         """
         Same as :py:meth:`_create_message_object`. However, the resulting
@@ -448,8 +451,8 @@ class Connection(object):
                    'timestamp': message_timestamp, 'sender': message_sender}
         return message
 
-    #Helpers for users
-    #Modified from _create_user_object
+    # Helpers for users
+    # Modified from _create_user_object
     def _create_user_object(self, row):
         """
         It takes a database Row and transform it into a python dictionary.
@@ -474,7 +477,7 @@ class Connection(object):
             * ``username``: username of the user
             * ``speciality``: text chosen by the user for speciality
             * ``age``: name of the image file used as age
-            * ``firstanme``: given name of the user
+            * ``firstname``: given name of the user
             * ``lastname``: family name of the user
             * ``phone``: string showing the user's phone number. Can be None.
             * ``work_address``: complete user's work address.
@@ -497,7 +500,7 @@ class Connection(object):
                                        'picture': row['picture']}
                 }
 
-    #Modified from _create_user_list_object
+    # Modified from _create_user_list_object
     def _create_user_list_object(self, row):
         """
         Same as :py:meth:`_create_message_object`. However, the resulting
@@ -514,7 +517,7 @@ class Connection(object):
     # Helpers for diagnosis
     # Written from scratch
     def _create_diagnosis_object(self, row):
-        '''
+        """
         It takes a :py:class:`sqlite3.Row` and transform it into a dictionary.
 
         :param row: The row obtained from the database.
@@ -529,8 +532,7 @@ class Connection(object):
 
             Note that all values in the returned dictionary are string unless
             otherwise stated.
-
-        '''
+        """
         diagnosis_id = 'diagnosis-' + str(row['diagnosis_id'])
         user_id = row['user_id']
         message_id = row['message_id']
@@ -544,7 +546,7 @@ class Connection(object):
 
     # Written from scratch
     def _create_diagnosis_list_object(self, row):
-        '''
+        """
         Same as :py:meth:`_create_diagnosis_object`. However, the resulting
         dictionary is targeted to build messages in a list.
 
@@ -552,7 +554,7 @@ class Connection(object):
         :type row: sqlite3.Row
         :return: a dictionary with the keys ``diagnosis_id``, ``user_id``,
             ``message_id``, ``disease`` and ``diagnosis_description``.
-        '''
+        """
         diagnosis_id = 'diagnosis-' + str(row['diagnosis_id'])
         user_id = row['user_id']
         message_id = row['message_id']
@@ -563,25 +565,25 @@ class Connection(object):
                 'message_id': message_id,
                 'disease': disease, 'diagnosis_description': diagnosis_description}
 
-    #API ITSELF
+    # API ITSELF
     # Diagnosis Table API.
-    def get_diagnosis(self, diagnosisid):
-        '''
+    def get_diagnosis(self, diagnosis_id):
+        """
         Extracts a diagnosis from the database.
 
-        :param diagnosisid: The id of the diagnosis. Note that diagnosisid is a
+        :param diagnosis_id: The id of the diagnosis. Note that diagnosis_id is a
             string with format ``diagnosis-\d{1,3}``.
         :return: A dictionary with the format provided in
             :py:meth:`_create_diagnosis_object` or None if the diagnosis with target
             id does not exist.
-        :raises ValueError: when ``diagnosisid`` is not well formed
+        :raises ValueError: when ``diagnosis_id`` is not well formed
 
-        '''
+        """
         # Extracts the int which is the id for a diagnosis in the database
-        match = re.match(r'diagnosis-(\d{1,3})', diagnosisid)
+        match = re.match(r'diagnosis-(\d{1,3})', diagnosis_id)
         if match is None:
             raise ValueError("The diagnosis is malformed")
-        diagnosisid = int(match.group(1))
+        diagnosis_id = int(match.group(1))
         # Activate foreign key support
         self.set_foreign_keys_support()
         # Create the SQL Query
@@ -590,7 +592,7 @@ class Connection(object):
         self.con.row_factory = sqlite3.Row
         cur = self.con.cursor()
         # Execute main SQL Statement
-        pvalue = (diagnosisid,)
+        pvalue = (diagnosis_id,)
         cur.execute(query, pvalue)
         # Process the response.
         # Just one row is expected
@@ -602,10 +604,10 @@ class Connection(object):
 
     # TODO imlement create_diagnosis
 
-    #Message Table API.
+    # Message Table API.
 
     def get_message(self, message_id):
-        '''
+        """
         Extracts a message from the database.
 
         :param message_id: The id of the message. Note that message_id is a
@@ -615,7 +617,7 @@ class Connection(object):
             id does not exist.
         :raises ValueError: when ``message_id`` is not well formed
 
-        '''
+        """
         # Extracts the int which is the id for a message in the database
         match = re.match(r'msg-(\d{1,3})', message_id)
         if match is None:
@@ -641,7 +643,7 @@ class Connection(object):
 
     def get_messages(self, username=None, number_of_messages=-1,
                      before=-1, after=-1):
-        '''
+        """
         Return a list of all the messages in the database filtered by the
         conditions provided in the parameters.
 
@@ -675,7 +677,7 @@ class Connection(object):
         :raises ValueError: if ``before`` or ``after`` are not valid UNIX
             timestamps
 
-        '''
+        """
         # Create the SQL Statement build the string depending on the existence
         # of username, numbero_of_messages, before and after arguments.
         query = 'SELECT * FROM messages'
@@ -718,7 +720,7 @@ class Connection(object):
         return messages
 
     def delete_message(self, message_id):
-        '''
+        """
         Delete the message with id given as parameter.
 
         :param str message_id: id of the message to remove.Note that message_id
@@ -726,7 +728,7 @@ class Connection(object):
         :return: True if the message has been deleted, False otherwise
         :raises ValueError: if the message_id has a wrong format.
 
-        '''
+        """
         # Extracts the int which is the id for a message in the database
         match = re.match(r'msg-(\d{1,3})', message_id)
         if match is None:
@@ -756,7 +758,7 @@ class Connection(object):
 
     # Modified from modify_message
     def modify_message(self, message_id, title, body):
-        '''
+        """
         Modify the title, the body and the editor of the message with id
         ``message_id``
 
@@ -769,7 +771,7 @@ class Connection(object):
               where \d{1,3} is the id of the message in the database.
         :raises ValueError: if the message_id has a wrong format.
 
-        '''
+        """
         # Extracts the int which is the id for a message in the database
         match = re.match(r'msg-(\d{1,3})', message_id)
         if match is None:
@@ -798,7 +800,7 @@ class Connection(object):
 
     # TODO fix sender cannot be anonymous
     def create_message(self, title, body, sender, reply_to=None):
-        '''
+        """
         Create a new message with the data provided as arguments.
 
         :param str title: the message's title
@@ -814,7 +816,7 @@ class Connection(object):
         :raises ForumDatabaseError: if the database could not be modified.
         :raises ValueError: if the reply_to has a wrong format.
 
-        '''
+        """
         # Extracts the int which is the id for a message in the database
         if reply_to is not None:
             match = re.match('msg-(\d{1,3})', reply_to)
@@ -865,9 +867,10 @@ class Connection(object):
         # Return the id in
         return 'msg-' + str(lid) if lid is not None else None
 
-    #Modified from append_answer
+    # Modified from append_answer
+    # TODO fix sender cannot be anonymous
     def append_answer(self, reply_to, title, body, sender="Anonymous"):
-        '''
+        """
         Same as :py:meth:`create_message`. The ``reply_to`` parameter is not
         a keyword argument, though.
 
@@ -886,25 +889,24 @@ class Connection(object):
         :raises ForumDatabaseError: if the database could not be modified.
         :raises ValueError: if the reply_to has a wrong format.
 
-        '''
+        """
         return self.create_message(title, body, sender, reply_to)
 
-    #MESSAGE UTILS
-
+    # MESSAGE UTILS
     def contains_message(self, message_id):
-        '''
+        """
         Checks if a message is in the database.
 
         :param str message_id: Id of the message to search. Note that message_id
             is a string with the format msg-\d{1,3}.
         :return: True if the message is in the database. False otherwise.
 
-        '''
+        """
         return self.get_message(message_id) is not None
 
-    #ACCESSING THE USER and USER_PROFILE tables
+    # ACCESSING THE USER and USER_PROFILE tables
     def get_users(self):
-        '''
+        """
         Extracts all users in the database.
 
         :return: list of Users of the database. Each user is a dictionary
@@ -912,55 +914,55 @@ class Connection(object):
             (long representing UNIX timestamp). None is returned if the database
             has no users.
 
-        '''
-        #Create the SQL Statements
-          #SQL Statement for retrieving the users
+        """
+        # Create the SQL Statements
+        # SQL Statement for retrieving the users
         query = 'SELECT users.*, users_profile.* FROM users, users_profile \
                  WHERE users.user_id = users_profile.user_id'
-        #Activate foreign key support
+        # Activate foreign key support
         self.set_foreign_keys_support()
-        #Create the cursor
+        # Create the cursor
         self.con.row_factory = sqlite3.Row
         cur = self.con.cursor()
-        #Execute main SQL Statement
+        # Execute main SQL Statement
         cur.execute(query)
-        #Process the results
+        # Process the results
         rows = cur.fetchall()
         if rows is None:
             return None
-        #Process the response.
+        # Process the response.
         users = []
         for row in rows:
             users.append(self._create_user_list_object(row))
         return users
 
     def get_user(self, username):
-        '''
+        """
         Extracts all the information of a user.
 
         :param str username: The username of the user to search for.
         :return: dictionary with the format provided in the method:
             :py:meth:`_create_user_object`
 
-        '''
-        #Create the SQL Statements
-          #SQL Statement for retrieving the user given a username
+        """
+        # Create the SQL Statements
+        # SQL Statement for retrieving the user given a username
         query1 = 'SELECT user_id from users WHERE username = ?'
-          #SQL Statement for retrieving the user information
+        # SQL Statement for retrieving the user information
         query2 = 'SELECT users.*, users_profile.* FROM users, users_profile \
                   WHERE users.user_id = ? \
                   AND users_profile.user_id = users.user_id'
-          #Variable to be used in the second query.
+        # Variable to be used in the second query.
         user_id = None
-        #Activate foreign key support
+        # Activate foreign key support
         self.set_foreign_keys_support()
-        #Cursor and row initialization
+        # Cursor and row initialization
         self.con.row_factory = sqlite3.Row
         cur = self.con.cursor()
-        #Execute SQL Statement to retrieve the id given a username
+        # Execute SQL Statement to retrieve the id given a username
         pvalue = (username,)
         cur.execute(query1, pvalue)
-        #Extract the user id
+        # Extract the user id
         row = cur.fetchone()
         if row is None:
             return None
@@ -968,14 +970,14 @@ class Connection(object):
         # Execute the SQL Statement to retrieve the user invformation.
         # Create first the valuse
         pvalue = (user_id, )
-        #execute the statement
+        # execute the statement
         cur.execute(query2, pvalue)
-        #Process the response. Only one posible row is expected.
+        # Process the response. Only one posible row is expected.
         row = cur.fetchone()
         return self._create_user_object(row)
 
     def delete_user(self, username):
-        '''
+        """
         Remove all user information of the user with the username passed in as
         argument.
 
@@ -983,26 +985,26 @@ class Connection(object):
 
         :return: True if the user is deleted, False otherwise.
 
-        '''
-        #Create the SQL Statements
-          #SQL Statement for deleting the user information
+        """
+        # Create the SQL Statements
+        # SQL Statement for deleting the user information
         query = 'DELETE FROM users WHERE username = ?'
-        #Activate foreign key support
+        # Activate foreign key support
         self.set_foreign_keys_support()
-        #Cursor and row initialization
+        # Cursor and row initialization
         self.con.row_factory = sqlite3.Row
         cur = self.con.cursor()
-        #Execute the statement to delete
+        # Execute the statement to delete
         pvalue = (username,)
         cur.execute(query, pvalue)
         self.con.commit()
-        #Check that it has been deleted
+        # Check that it has been deleted
         if cur.rowcount < 1:
             return False
         return True
 
     def modify_user(self, username, p_profile,r_profile):
-        '''
+        """
         Modify the information of a user.
 
         :param str username: The username of the user to modify
@@ -1011,7 +1013,7 @@ class Connection(object):
 
                 .. code-block:: javascript
 
-                    'public_profile':{'usertype':''}
+                    'public_profile':{'user_type':''}
         :param dict r_profile: a dictionary with the restricted inforamtion
                 to be modified. The dictionary has the following structure:
 
@@ -1025,8 +1027,8 @@ class Connection(object):
 
                 * ``reg_date``: UNIX timestamp when the user registered
                     in the system (long integer)
-                * ``usertype``: usertype, either doctor or patient
-                * ``firstanme``: given name of the user
+                * ``user_type``: user_type, either doctor or patient
+                * ``firstname``: given name of the user
                 * ``lastname``: family name of the user
                 * ``email``: current email of the user.
                 * ``speciality``: url with the user's personal page. Can be None
@@ -1042,18 +1044,18 @@ class Connection(object):
         :return: the username of the modified user or None if the
             ``username`` passed as parameter is not  in the database.
         :raise ValueError: if the user argument is not well formed.
-        '''
-        #Create the SQL Statements
-        #SQL Statement for extracting the user_id given a username
+        """
+        # Create the SQL Statements
+        # SQL Statement for extracting the user_id given a username
         query1 = 'SELECT user_id from users WHERE username = ?'
-        #SQL Statement to update the user_profile table
+        # SQL Statement to update the user_profile table
         query2 = 'UPDATE users_profile SET firstname = ?,lastname = ?, \
                                            email = ?,speciality = ?, \
                                            picture = ?,phone = ?, \
                                         = ,work_address = ?, \
-                                           gender = ?,usertype = ?,\
+                                           gender = ?,user_type = ?,\
                                            WHERE user_id = ?'
-        #temporal variables
+        # temporal variables
         user_id = None
         _firstname = None if not r_profile else  r_profile.get('firstname', None)
         _lastname = None if not r_profile else r_profile.get('lastname', None)
@@ -1063,36 +1065,37 @@ class Connection(object):
         _phone = None if not r_profile else r_profile.get('phone', None)
         _work_address = None if not r_profile else r_profile.get('work_address', None)
         _gender = None if not r_profile else r_profile.get('gender', None)
-        _usertype = None if not p_profile else p_profile.get('usertype', None)
+        _user_type = None if not p_profile else p_profile.get('user_type', None)
 
-        #Activate foreign key support
+        # Activate foreign key support
         self.set_foreign_keys_support()
-        #Cursor and row initialization
+        # Cursor and row initialization
         self.con.row_factory = sqlite3.Row
         cur = self.con.cursor()
-        #Execute the statement to extract the id associated to a username
+        # Execute the statement to extract the id associated to a username
         pvalue = (username,)
         cur.execute(query1, pvalue)
-        #Only one value expected
+        # Only one value expected
         row = cur.fetchone()
-        #if does not exist, return
+        # if does not exist, return
         if row is None:
             return None
         else:
             user_id = row["user_id"]
-            #execute the main statement
+            # execute the main statement
             pvalue = (_firstname, _lastname, _email, _speciality, _picture,
                       _phone, _work_address, _gender,
-                      _usertype, user_id)
+                      _user_type, user_id)
             cur.execute(query2, pvalue)
             self.con.commit()
-            #Check that I have modified the user
+            # Check that I have modified the user
             if cur.rowcount < 1:
                 return None
             return username
+
     # TODO fix error
     def append_user(self, username, user):
-        '''
+        """
         Create a new user in the database.
 
         :param str username: The username of the user to modify
@@ -1101,7 +1104,7 @@ class Connection(object):
 
                 .. code-block:: javascript
 
-                    {'public_profile':{'reg_date':,'usertype':''},
+                    {'public_profile':{'reg_date':,'user_type':''},
                     'restricted_profile':{'firstname':'','lastname':'',
                                           'email':'', 'speciality':'','phone':'',
                                           'work_address':'', 'gender':'', 'picture':''}
@@ -1111,14 +1114,14 @@ class Connection(object):
 
                 * ``reg_date``: UNIX timestamp when the user registered
                     in the system (long integer)
-                * ``usertype``: can either be a doctor or patient
-                * ``firstanme``: given name of the user
+                * ``user_type``: can either be a doctor or patient
+                * ``firstname``: given name of the user
                 * ``lastname``: family name of the user
                 * ``email``: current email of the user.
                 * ``speciality``: url with the user's personal page. Can be None
                 * ``phone``: string showing the user's phone number. Can be
                     None.
-                * ``uusername``: user's username in Can be None.
+                * ``username``: user's username in Can be None.
                 * ``work_address``: complete user's work address.
                 * ``picture``: file which contains an image of the user.
                 * ``gender``: User's gender ('male' or 'female').
@@ -1129,25 +1132,25 @@ class Connection(object):
             ``username`` passed as parameter is not  in the database.
         :raise ValueError: if the user argument is not well formed.
 
-        '''
-        #Create the SQL Statements
-          #SQL Statement for extracting the user_id given a username
+        """
+        # Create the SQL Statements
+        # SQL Statement for extracting the user_id given a username
         query1 = 'SELECT user_id FROM users WHERE username = ?'
-          #SQL Statement to create the row in  users table
+        # SQL Statement to create the row in  users table
         query2 = 'INSERT INTO users(username,regDate,lastLogin,views)\
                   VALUES(?,?,?,?)'
-          #SQL Statement to create the row in user_profile table
+        # SQL Statement to create the row in user_profile table
         query3 = 'INSERT INTO users_profile (user_id, firstname,lastname, \
                                              email,speciality, \
                                              picture,phone, \
                                              work_address, \
-                                             gender,usertype)\
+                                             gender,user_type)\
                   VALUES (?,?,?,?,?,?,?,?,?,?)'
-        #temporal variables for user table
-        #timestamp will be used for lastlogin and regDate.
+        # temporal variables for user table
+        # timestamp will be used for lastlogin and regDate.
         timestamp = time.mktime(datetime.now().timetuple())
         views = 0
-        #temporal variables for user profiles
+        # temporal variables for user profiles
         p_profile = user['public_profile']
         r_profile = user['restricted_profile']
         _firstname = r_profile.get('firstname', None)
@@ -1158,40 +1161,40 @@ class Connection(object):
         _phone = r_profile.get('phone', None)
         _work_address = r_profile.get('work_address', None)
         _gender = r_profile.get('gender', None)
-        _usertype = p_profile.get('usertype', None)
+        _user_type = p_profile.get('user_type', None)
         
-        #Activate foreign key support
+        # Activate foreign key support
         self.set_foreign_keys_support()
-        #Cursor and row initialization
+        # Cursor and row initialization
         self.con.row_factory = sqlite3.Row
         cur = self.con.cursor()
-        #Execute the main SQL statement to extract the id associated to a username
+        # Execute the main SQL statement to extract the id associated to a username
         pvalue = (username,)
         cur.execute(query1, pvalue)
-        #No value expected (no other user with that username expected)
+        # No value expected (no other user with that username expected)
         row = cur.fetchone()
-        #If there is no user add rows in user and user profile
+        # If there is no user add rows in user and user profile
         if row is None:
-            #Add the row in users table
+            # Add the row in users table
             # Execute the statement
             pvalue = (username, timestamp, timestamp, views)
             cur.execute(query2, pvalue)
-            #Extrat the rowid => user-id
+            # Extrat the rowid => user-id
             lid = cur.lastrowid
-            #Add the row in users_profile table
+            # Add the row in users_profile table
             # Execute the statement
-            pvalue = (lid, _firstname, _lastname, _email, _speciality, _picture, _phone,_work_address, _gender, _usertype)
+            pvalue = (lid, _firstname, _lastname, _email, _speciality, _picture, _phone,_work_address, _gender, _user_type)
             
             cur.execute(query3, pvalue)
             self.con.commit()
-            #We do not do any comprobation and return the username
+            # We do not do any comprobation and return the username
             return username
         else:
             return None
 
     # UTILS
     def get_user_id(self, username):
-        '''
+        """
         Get the key of the database row which contains the user with the given
         username.
 
@@ -1200,28 +1203,28 @@ class Connection(object):
             not exit.
         :rtype: str
 
-        '''
+        """
 
         query = 'SELECT user_id FROM users WHERE username = ?'
-        #Activate foreign key support
+        # Activate foreign key support
         self.set_foreign_keys_support()
-        #Cursor and row initialization
+        # Cursor and row initialization
         self.con.row_factory = sqlite3.Row
         cur = self.con.cursor()
-        #Execute the  main SQL statement
+        # Execute the  main SQL statement
         pvalue = (username,)
         cur.execute(query, pvalue)
-        #Process the response.
-        #Just one row is expected
+        # Process the response.
+        # Just one row is expected
         row = cur.fetchone()
         if row is None:
             return None
-        #Build the return object
+        # Build the return object
         else:
             return row[0]
 
     def contains_user(self, username):
-        '''
+        """
         :return: True if the user is in the database. False otherwise
-        '''
+        """
         return self.get_user_id(username) is not None
