@@ -1195,7 +1195,7 @@ class Connection(object):
                                              picture,age, \
                                              work_address, \
                                              gender, email, user_type)\
-                  VALUES (?,?,?,?,?,?,?,?,?,?, ?)'
+                  VALUES (?,?,?,?,?,?,?,?,?,?)'
         # temporal variables for user table
         # timestamp will be used for last login and reg_date.
         timestamp = time.mktime(datetime.now().timetuple())
