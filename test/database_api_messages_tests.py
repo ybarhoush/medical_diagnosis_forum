@@ -19,15 +19,15 @@ DB_PATH = 'db/medical_forum_test.db'
 ENGINE = database.Engine(DB_PATH)
 
 # Defining testing constants for messages objects
-INITIAL_MESSAGES_COUNT = 23
+INITIAL_MESSAGES_COUNT = 19
 
 MESSAGE_1_ID = 'msg-1'
 MESSAGE_1 = {
     'message_id': 'msg-1',
     'reply_to': None,  # this means it's a new message or medical case
     'title': 'Soreness in the throat',
-    'body': "Hi, I have this soreness in my throat. It started just yesterday and its \
-            getting worse by every hour. What should I do, and what is the cause of this. ",
+    'body': "Hi, I have this soreness in my throat. It started just yesterday and its "
+            "getting worse by every hour. What should I do, and what is the cause of this. ",
     'sender': 'PoorGuy',
     'timestamp': 1519474612
 }
@@ -38,8 +38,8 @@ MESSAGE_2 = {
     'message_id': 'msg-8',
     'reply_to': 'msg-1',  # message reply to MESSAGE_1
     'title': 'Dizziness when running',
-    'body': "Hi, I need help with this issue real quick. I get very dizzy when I run for few minutes. \
-            This is being happening for like 2 weeks now. I really need help with this ! ",
+    'body': "Hi, I need help with this issue real quick. I get very dizzy when I run for few minutes. "
+            "This is being happening for like 2 weeks now. I really need help with this ! ",
     'sender': MESSAGE_DUMMY_USERNAME,
     'timestamp': 1519441355
 }
@@ -48,8 +48,8 @@ MESSAGE_1_MODIFIED = {'message_id': MESSAGE_1_ID,
                       'reply_to': None,
                       'title': 'new title',
                       'body': 'new body',
-                      'sender': 'poorGuy',
-                      'timestamp': 1362017481}
+                      'sender': 'PoorGuy',
+                      'timestamp': 1519474612}
 
 # bad and non-existing message_id
 NON_EXIST_MESSAGE_ID = 'msg-256'
@@ -144,7 +144,6 @@ class DatabaseMessagesTestCase(unittest.TestCase):
         # Test with an message id for a non-existing message
         self.assertIsNone(self.connection.get_message(NON_EXIST_MESSAGE_ID))
 
-    # TODO: this is not implemented yet
     def test_get_messages(self):
         """
         Test that get_messages (a list of all messages) work correctly
@@ -162,34 +161,30 @@ class DatabaseMessagesTestCase(unittest.TestCase):
                 self.assertEqual(len(message), 4)
                 self.assertDictContainsSubset(message, MESSAGE_2)
 
-    # TODO: this is not implemented yet
     def test_get_messages_specific_user(self):
         """
-        Get all messages from user Mystery. Check that their ids are 13 and 14.
+        Get all messages from user Dizzy. Check that their ids are 8, 9 and and 14.
         """
-        # Messages sent from Mystery are 13 and 14
+        # Messages sent from Dizzy are 3
         print('(' + self.test_get_messages_specific_user.__name__+')', self.test_get_messages_specific_user.__doc__)
-        messages = self.connection.get_messages(nickname="Mystery")
-        self.assertEqual(len(messages), 2)
-        # Messages id are 13 and 14
+        messages = self.connection.get_messages(username=MESSAGE_DUMMY_USERNAME)
+        self.assertEqual(len(messages), 3)
+        # Messages id are 8, 9 and 15
         for message in messages:
-            self.assertIn(message['message_id'], ('msg-13', 'msg-14'))
-            self.assertNotIn(message['message_id'], ('msg-1', 'msg-2',
-                                                    'msg-3', 'msg-4'))
+            self.assertIn(message['message_id'], ('msg-8', 'msg-9', 'msg-15'))
+            self.assertNotIn(message['message_id'], ('msg-1', 'msg-2', 'msg-3'))
 
-    # TODO: this is not implemented yet
     def test_get_messages_length(self):
         """
-        Check that the number_of_messages  is working in get_messages
+        Check that the number_of_messages  is working in get_messages for number of 2 messages
         """
         # Messages sent from Mystery are 2
         print('(' + self.test_get_messages_length.__name__+')', self.test_get_messages_length.__doc__)
-        messages = self.connection.get_messages(nickname="Mystery",
-                                                number_of_messages=2)
+        messages = self.connection.get_messages(username=MESSAGE_DUMMY_USERNAME, number_of_messages=2)
         self.assertEqual(len(messages), 2)
-        #Number of messages is 20
-        messages = self.connection.get_messages(number_of_messages=1)
-        self.assertEqual(len(messages), 1)
+        # Number of messages is 10
+        messages = self.connection.get_messages(number_of_messages=10)
+        self.assertEqual(len(messages), 10)
 
     def test_delete_message(self):
         """
@@ -216,7 +211,6 @@ class DatabaseMessagesTestCase(unittest.TestCase):
         print('(' + self.test_delete_message_non_exist_id.__name__+')', self.test_delete_message_non_exist_id.__doc__)
         self.assertFalse(self.connection.delete_message(NON_EXIST_MESSAGE_ID))
 
-    # TODO: this is not implemented fully yet
     def test_modify_message(self):
         """
         Test that the message msg-1 has been modified
@@ -227,7 +221,6 @@ class DatabaseMessagesTestCase(unittest.TestCase):
         # check whether modification was successful
         self.assertDictContainsSubset(self.connection.get_message(MESSAGE_1_ID), MESSAGE_1_MODIFIED)
 
-    # TODO: this is not implemented fully yet
     def test_modify_message_bad_id(self):
         """
         Test that trying to modify message with id (1) and not (msg-1) which actually exist
@@ -236,7 +229,6 @@ class DatabaseMessagesTestCase(unittest.TestCase):
         with self.assertRaises(ValueError):
             self.connection.modify_message(BAD_MESSAGE_ID, "new title", "new body")
 
-    # TODO: this is not implemented fully yet
     def test_modify_message_non_exist_id(self):
         """
         Test that trying to modify message with id (msg-256) which does not exist
