@@ -1142,7 +1142,7 @@ class Connection(object):
         '''
         Create a new user in the database.
 
-        :param str username: The username of the user to modify
+        :param str username: The username of the user to modify.
         :param dict user: a dictionary with the information to be modified. The
                 dictionary has the following structure:
 
@@ -1181,8 +1181,8 @@ class Connection(object):
         # SQL Statement for extracting the userid given a username
         query1 = 'SELECT user_id FROM users WHERE username = ?'
         # SQL Statement to create the row in  users table
-        query2 = 'INSERT INTO users(username,reg_date,last_login,timesviewed)\
-                  VALUES(?,?,?,?)'
+        query2 = 'INSERT INTO users(username,reg_date,last_login)\
+                  VALUES(?,?,?)'
         # SQL Statement to create the row in user_profile table
         query3 = 'INSERT INTO users_profile (user_id, firstname,lastname, \
                                              email,speciality, \
@@ -1193,7 +1193,7 @@ class Connection(object):
         # temporal variables for user table
         # timestamp will be used for last login and reg_date.
         timestamp = time.mktime(datetime.now().timetuple())
-        timesviewed = 0
+
         # temporal variables for user profiles
         p_profile = user['public_profile']
         r_profile = user['restricted_profile']
@@ -1221,7 +1221,7 @@ class Connection(object):
         if row is None:
             # Add the row in users table
             # Execute the statement
-            pvalue = (username, timestamp, timestamp, timesviewed)
+            pvalue = (username, timestamp, timestamp)
             cur.execute(query2, pvalue)
             # Extrat the rowid => user-id
             lid = cur.lastrowid
