@@ -62,7 +62,8 @@ NEW_PATIENT = {'public_profile': {'reg_date': 1362012548,
                                       'work_address': '89 North White Oak Way',
                                       'gender': 'male',
                                       'picture': '',
-                                      'age': 40},
+                                      'age': 40,
+                                      'email': 'test@email.com'},
                'pass_hash': 'testPass'  # TODO we will add hashing creation logic later
                }
 
