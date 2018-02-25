@@ -20,7 +20,7 @@ USERS_TABLE_FK = [()]
 # Profile table
 USERS_PROFILE_TABLE_NAMES = ['user_id', 'user_type', 'firstname', 'lastname', 'work_address', 'gender',
                              'age', 'email', 'picture', 'phone', 'diagnosis_id', 'height', 'weight', 'speciality']
-USERS_PROFILE_TABLE_TYPES = ['INTEGER', 'INTEGER', 'TEXT', 'TEXT', 'TEXT', 'TEXT', 'TEXT', 'TEXT', 'TEXT',
+USERS_PROFILE_TABLE_TYPES = ['INTEGER', 'INTEGER', 'TEXT', 'TEXT', 'TEXT', 'TEXT', 'INTEGER', 'TEXT', 'TEXT',
                              'INTEGER', 'INTEGER', 'INTEGER', 'INTEGER', 'TEXT']
 USERS_PROFILE_TABLE_FK = [('users', 'user_id', 'user_id'), ('diagnosis', 'diagnosis_id', 'diagnosis_id')]
 
