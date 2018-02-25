@@ -1100,17 +1100,18 @@ class Connection(object):
         query1 = 'SELECT user_id from users WHERE username = ?'
         # SQL Statement to update the user_profile table
         query2 = 'UPDATE users_profile SET firstname = ?,lastname = ?, speciality = ?, \
-                                           picture = ? ,work_address = ?, \
-                                           gender = ? , age = ? WHERE user_id = ?'
+                                                   picture = ?, \
+                                                   work_address = ?, \
+                                                   gender = ? , age = ? WHERE user_id = ?'
         # temporal variables
         user_id = None
         _firstname = None if not r_profile else r_profile.get('firstname', None)
         _lastname = None if not r_profile else r_profile.get('lastname', None)
-        _speciality = None if not r_profile else r_profile.get('speciality', None)
+        _speciality = None if not p_profile else p_profile.get('speciality', None)
         _work_address = None if not r_profile else r_profile.get('work_address', None)
         _gender = None if not r_profile else r_profile.get('gender', None)
-        _age = None if not p_profile else p_profile.get('age', None)
-
+        _age = None if not r_profile else r_profile.get('age', None)
+        _picture = None if not r_profile else r_profile.get('picture', None)
         # Activate foreign key support
         self.set_foreign_keys_support()
         # Cursor and row initialization
@@ -1127,8 +1128,8 @@ class Connection(object):
         else:
             user_id = row["user_id"]
             # execute the main statement
-            pvalue = (_firstname, _lastname, _speciality,
-                      _work_address, _gender, _age, user_id,)
+            pvalue = (_firstname, _lastname, _speciality, _picture,
+                      _work_address, _gender, _age, user_id)
             cur.execute(query2, pvalue)
             self.con.commit()
             # Check that I have modified the user
