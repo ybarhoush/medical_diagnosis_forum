@@ -1021,7 +1021,7 @@ class Connection(object):
                 .. code-block:: javascript
 
                     {'public_profile':{'reg_date':,'username':'',
-                                       'speciality':'', usertype':''},
+                                       'speciality':'', user_type':''},
                     'restricted_profile':{'firstname':'','lastname':'',
                                           'work_address':'','gender':'',
                                           'picture':'', 'age':'',}
@@ -1031,7 +1031,7 @@ class Connection(object):
 
                 * ``reg_date``: UNIX timestamp when the user registered in
                                      the system (long integer)
-                * ``usertype``: can either be a doctor or patient
+                * ``user_type``: can either be a doctor or patient
                 * ``username``: username of the user
                 * ``speciality``: text chosen by the user for speciality
                 * ``age``: name of the image file used as age
@@ -1056,7 +1056,7 @@ class Connection(object):
                                            email = ?,speciality = ?, \
                                            picture = ?,phone = ?, \
                                         = ,work_address = ?, \
-                                           gender = ?,usertype = ?,\
+                                           gender = ?,user_type = ?,\
                                            WHERE user_id = ?'
         # temporal variables
         user_id = None
@@ -1068,7 +1068,7 @@ class Connection(object):
         _phone = None if not r_profile else r_profile.get('phone', None)
         _work_address = None if not r_profile else r_profile.get('work_address', None)
         _gender = None if not r_profile else r_profile.get('gender', None)
-        _usertype = None if not p_profile else p_profile.get('usertype', None)
+        _user_type = None if not p_profile else p_profile.get('user_type', None)
 
         # Activate foreign key support
         self.set_foreign_keys_support()
@@ -1088,7 +1088,7 @@ class Connection(object):
             # execute the main statement
             pvalue = (_firstname, _lastname, _email, _speciality, _picture,
                       _phone, _work_address, _gender,
-                      _usertype, user_id)
+                      _user_type, user_id)
             cur.execute(query2, pvalue)
             self.con.commit()
             # Check that I have modified the user
@@ -1108,7 +1108,7 @@ class Connection(object):
                 .. code-block:: javascript
 
                     {'public_profile':{'reg_date':,'username':'',
-                                       'speciality':'', usertype':''},
+                                       'speciality':'', user_type':''},
                     'restricted_profile':{'firstname':'','lastname':'',
                                           'work_address':'','gender':'',
                                           'picture':'', 'age':'',}
@@ -1118,7 +1118,7 @@ class Connection(object):
 
                 * ``reg_date``: UNIX timestamp when the user registered in
                                      the system (long integer)
-                * ``usertype``: can either be a doctor or patient
+                * ``user_type``: can either be a doctor or patient
                 * ``username``: username of the user
                 * ``speciality``: text chosen by the user for speciality
                 * ``age``: name of the image file used as age
@@ -1140,17 +1140,17 @@ class Connection(object):
         # SQL Statement for extracting the userid given a username
         query1 = 'SELECT user_id FROM users WHERE username = ?'
         # SQL Statement to create the row in  users table
-        query2 = 'INSERT INTO users(username,regDate,lastLogin,timesviewed)\
+        query2 = 'INSERT INTO users(username,reg_date,last_login,timesviewed)\
                   VALUES(?,?,?,?)'
         # SQL Statement to create the row in user_profile table
         query3 = 'INSERT INTO users_profile (user_id, firstname,lastname, \
                                              email,speciality, \
                                              picture,phone, \
                                              work_address, \
-                                             gender,usertype)\
+                                             gender,user_type)\
                   VALUES (?,?,?,?,?,?,?,?,?,?)'
         # temporal variables for user table
-        # timestamp will be used for lastlogin and regDate.
+        # timestamp will be used for last login and reg_date.
         timestamp = time.mktime(datetime.now().timetuple())
         timesviewed = 0
         # temporal variables for user profiles
@@ -1164,7 +1164,7 @@ class Connection(object):
         _phone = r_profile.get('phone', None)
         _work_address = r_profile.get('work_address', None)
         _gender = r_profile.get('gender', None)
-        _usertype = p_profile.get('usertype', None)
+        _user_type = p_profile.get('user_type', None)
 
         # Activate foreign key support
         self.set_foreign_keys_support()
@@ -1187,7 +1187,7 @@ class Connection(object):
             # Add the row in users_profile table
             # Execute the statement
             pvalue = (
-            lid, _firstname, _lastname, _email, _speciality, _picture, _phone, _work_address, _gender, _usertype)
+            lid, _firstname, _lastname, _email, _speciality, _picture, _phone, _work_address, _gender, _user_type)
 
             cur.execute(query3, pvalue)
             self.con.commit()
