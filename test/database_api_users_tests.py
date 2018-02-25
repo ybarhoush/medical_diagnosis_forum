@@ -23,7 +23,8 @@ PATIENT = {'public_profile': {'reg_date': 1785505926,
                                   'work_address': '85 South White Oak Way',
                                   'gender': 'female',
                                   'picture': '192.219/dab/image.png',
-                                  'age': 36}
+                                  'age': 36,
+                                  'email': 'vpid7@-zbe--.net'}
            }
 
 MODIFIED_PATIENT = {'public_profile': {'reg_date': 1785505926,
@@ -35,7 +36,8 @@ MODIFIED_PATIENT = {'public_profile': {'reg_date': 1785505926,
                                            'work_address': '54 Middle White Park',
                                            'gender': 'female',
                                            'picture': '192.219/dab/image45.png',
-                                           'age': 36}
+                                           'age': 36,
+                                           'email': 'modified@email.net'}
                     }
 
 DOCTOR_USERNAME = 'Clarissa'
@@ -49,12 +51,12 @@ DOCTOR = {'public_profile': {'reg_date': 715581063,
                                  'work_address': '47 West Rocky Hague Road',
                                  'gender': 'female',
                                  'picture': '192.219/dab/image.png',
-                                 'age': 27}
+                                 'age': 27,
+                                 'email': 'pbxim@f-hq--.com'}
           }
 
 NEW_PATIENT_USERNAME = 'sully'
-NEW_PATIENT = {'public_profile': {'reg_date': 1362012548,
-                                  'username': NEW_PATIENT_USERNAME,
+NEW_PATIENT = {'public_profile': {'username': NEW_PATIENT_USERNAME,
                                   'speciality': '',
                                   'user_type': 0},
                'restricted_profile': {'firstname': 'sully',
@@ -210,6 +212,7 @@ class DatabaseUsersTestCase(unittest.TestCase):
         self.assertEqual(r_profile['gender'], resp_r_profile['gender'])
         self.assertEqual(r_profile['picture'], resp_r_profile['picture'])
         self.assertEqual(r_profile['age'], resp_r_profile['age'])
+        self.assertEqual(r_profile['email'], resp_r_profile['email'])
         self.assertDictContainsSubset(get_resp, MODIFIED_PATIENT)
 
     def test_modify_user_non_exist_username(self):
@@ -220,7 +223,6 @@ class DatabaseUsersTestCase(unittest.TestCase):
         self.assertIsNone(self.connection.modify_user(NON_EXIST_PATIENT_USERNAME, PATIENT['public_profile'],
                                                       PATIENT['restricted_profile']))
 
-    # TODO not working
     def test_append_user(self):
         """
         Test that a new patient/doctor can be added and check its data after adding
