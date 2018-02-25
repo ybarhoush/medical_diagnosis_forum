@@ -32,13 +32,13 @@ INSERT INTO `messages` VALUES (5,10,'Roberto',2,'getdone','John is shopping. Ton
 INSERT INTO `messages` VALUES (6,11,'Elisa6',3,'finish','John bought new car. John has free time. Tony has free time. Anne has free time. Tony is shopping. ',457,4564);
 INSERT INTO `messages` VALUES (7,17,'Sherrie71',NULL,'stop','Anne bought new car. Anne bought new car. Tony bought new car. John is shopping. John bought new car. ',545,12);
 INSERT INTO `messages` VALUES (8,18,'Dizzy',1,'Dizziness when running','Hi, I need help with this issue real quick. I get very dizzy when I run for few minutes. This is being happening for like 2 weeks now. I really need help with this ! ',124,1519441355);
-INSERT INTO `messages` VALUES (9,9,'Johanna74',3,'start','John is shopping. Anne bought new car. John has free time. Tony bought new car. ',778,886);
+INSERT INTO `messages` VALUES (9,18,'Dizzy',3,'start','John is shopping. Anne bought new car. John has free time. Tony bought new car. ',778,886);
 INSERT INTO `messages` VALUES (10,7,'Brendan',4,'get','Anne bought new car. Tony bought new car. Anne has free time. John has free time. Tony bought new car. ',87,654);
 INSERT INTO `messages` VALUES (11,21,'Helen',2,'saturday','Tony has free time. Anne bought new car. Tony has free time. Anne is shopping. John has free time. ',54,6523);
 INSERT INTO `messages` VALUES (12,22,'Allyson',4,'saq','Anne bought new car. Anne has free time. John has free time. John has free time. ',457,564);
 INSERT INTO `messages` VALUES (13,23,'Neal',5,'dat','Tony bought new car. John is shopping. Anne bought new car. ',45,211564);
 INSERT INTO `messages` VALUES (14,24,'Kirsten',6,'bad','Tony is shopping. Anne is shopping. Tony bought new car. John is shopping. Anne is walking. ',54,478);
-INSERT INTO `messages` VALUES (15,13,'Henry',7,'low','Anne bought new car. Anne bought new car. John has free time. Anne has free time. Tony has free time. ',565,64865);
+INSERT INTO `messages` VALUES (15,18,'Dizzy',7,'low','Anne bought new car. Anne bought new car. John has free time. Anne has free time. Tony has free time. ',565,64865);
 INSERT INTO `messages` VALUES (16,14,'Adrian',8,'high','Tony bought new car. John is shopping. Tony bought new car. ',213,65489);
 INSERT INTO `messages` VALUES (17,15,'Nina',7,'far','Tony is shopping. John is walking. ',54,4154);
 INSERT INTO `messages` VALUES (18,4,'Clarissa',3,'away','John bought new car. Anne is shopping. ',247,654984);
