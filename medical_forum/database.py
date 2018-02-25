@@ -491,7 +491,8 @@ class Connection(object):
         reg_date = row['reg_date']
         return {'public_profile': {'reg_date': reg_date,
                                    'username': row['username'],
-                                   'speciality': row['speciality'],},
+                                   'speciality': row['speciality'],
+                                   'user_type': row['user_type']},
                 'restricted_profile': {'firstname': row['firstname'],
                                        'lastname': row['lastname'],
                                        'work_address': row['work_address'],
@@ -503,8 +504,8 @@ class Connection(object):
     # Modified from _create_user_list_object
     def _create_user_list_object(self, row):
         """
-        Same as :py:meth:`_create_message_object`. However, the resulting
-        dictionary is targeted to build messages in a list.
+        Same as :py:meth:`_create_user_object`. However, the resulting
+        dictionary is targeted to build users in a list.
 
         :param row: The row obtained from the database.
         :type row: sqlite3.Row
