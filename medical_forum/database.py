@@ -464,16 +464,17 @@ class Connection(object):
             .. code-block:: javascript
 
                 {'public_profile':{'reg_date':,'username':'',
-                                   'speciality':'','age':''},
+                                   'speciality':'','user_type':''},
                 'restricted_profile':{'firstname':'','lastname':'',
                                       'work_address':'','gender':'',
-                                      'picture':''}
+                                      'picture':'', age':''}
                 }
 
             where:
 
             * ``reg_date``: UNIX timestamp when the user registered in
                                  the system (long integer)
+            * ``user_type``: either a patient or a doctor
             * ``username``: username of the user
             * ``speciality``: text chosen by the user for speciality
             * ``age``: name of the image file used as age
@@ -490,14 +491,13 @@ class Connection(object):
         reg_date = row['reg_date']
         return {'public_profile': {'reg_date': reg_date,
                                    'username': row['username'],
-                                   'speciality': row['speciality'],
-                                   'age': row['age']},
+                                   'speciality': row['speciality'],},
                 'restricted_profile': {'firstname': row['firstname'],
                                        'lastname': row['lastname'],
-                                       'phone': row['phone'],
                                        'work_address': row['work_address'],
                                        'gender': row['gender'],
-                                       'picture': row['picture']}
+                                       'picture': row['picture'],
+                                       'age': row['age']}
                 }
 
     # Modified from _create_user_list_object
@@ -1071,7 +1071,7 @@ class Connection(object):
                                        'speciality':'', user_type':''},
                     'restricted_profile':{'firstname':'','lastname':'',
                                           'work_address':'','gender':'',
-                                          'picture':'', 'age':'',}
+                                          'picture':'', 'age':''}
                     }
 
                 where:
