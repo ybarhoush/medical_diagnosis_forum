@@ -1,7 +1,7 @@
 PRAGMA foreign_keys=OFF;
 BEGIN TRANSACTION;
 CREATE TABLE IF NOT EXISTS users_profile (
-	user_id	INTEGER NOT NULL,
+	user_id	INTEGER,
 	user_type	INTEGER NOT NULL,
 	firstname	TEXT NOT NULL,
 	lastname	TEXT NOT NULL,
@@ -20,7 +20,7 @@ CREATE TABLE IF NOT EXISTS users_profile (
 	FOREIGN KEY(diagnosis_id) REFERENCES diagnosis(diagnosis_id) ON DELETE SET NULL
 );
 CREATE TABLE IF NOT EXISTS users (
-	user_id	INTEGER NOT NULL UNIQUE,
+	user_id	INTEGER,
 	username	TEXT NOT NULL,
 	pass_hash	TEXT NOT NULL,
 	reg_date	INTEGER,
@@ -29,7 +29,7 @@ CREATE TABLE IF NOT EXISTS users (
 	PRIMARY KEY(user_id)
 );
 CREATE TABLE IF NOT EXISTS messages (
-	message_id	INTEGER NOT NULL UNIQUE,
+	message_id	INTEGER,
 	user_id	INTEGER NOT NULL,
 	username	TEXT NOT NULL,
 	reply_to	INTEGER,
@@ -37,19 +37,19 @@ CREATE TABLE IF NOT EXISTS messages (
 	body	TEXT,
 	views	INTEGER,
 	timestamp	INTEGER,
-	FOREIGN KEY(user_id) REFERENCES users(user_id) ON DELETE SET NULL,
-	FOREIGN KEY(reply_to) REFERENCES messages(message_id),
+	FOREIGN KEY(user_id) REFERENCES users(user_id) ON DELETE CASCADE,
+	FOREIGN KEY(reply_to) REFERENCES messages(message_id) ON DELETE CASCADE,
 	PRIMARY KEY(message_id)
 );
 CREATE TABLE IF NOT EXISTS diagnosis (
-	diagnosis_id	INTEGER NOT NULL,
+	diagnosis_id	INTEGER,
 	user_id	INTEGER NOT NULL,
 	message_id	INTEGER NOT NULL,
 	disease	TEXT,
 	diagnosis_description	TEXT,
 	PRIMARY KEY(diagnosis_id),
-	FOREIGN KEY(user_id) REFERENCES users(user_id) ON DELETE SET NULL,
-	FOREIGN KEY(message_id) REFERENCES messages(message_id) ON DELETE SET NULL
+	FOREIGN KEY(user_id) REFERENCES users(user_id) ON DELETE CASCADE,
+	FOREIGN KEY(message_id) REFERENCES messages(message_id) ON DELETE CASCADE
 );
 COMMIT;
 PRAGMA foreign_keys=ON;
