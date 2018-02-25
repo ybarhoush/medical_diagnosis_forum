@@ -62,8 +62,9 @@ NEW_PATIENT = {'public_profile': {'reg_date': 1362012548,
                                       'work_address': '89 North White Oak Way',
                                       'gender': 'male',
                                       'picture': '',
-                                      'age': 40}
-                }
+                                      'age': 40},
+               'pass_hash': 'testPass'  # TODO we will add hashing creation logic later
+               }
 
 NON_EXIST_PATIENT_USERNAME = 'SuperBoy'
 NON_EXIST_DOCTOR_USERNAME = 'VirusKiller'
@@ -125,10 +126,10 @@ class DatabaseUsersTestCase(unittest.TestCase):
         test_table_populated(self, USERS_PROFILE_TABLE, INITIAL_USERS_PROFILE_COUNT)
 
     def test_create_user_object(self):
-        '''
+        """
         Check that the method create_user_object works return proper values.
-        '''
-        print('('+self.test_create_user_object.__name__+')', self.test_create_user_object.__doc__)
+        """
+        print('(' + self.test_create_user_object.__name__+')', self.test_create_user_object.__doc__)
         # Query to get users and users_profile for the patient
         query = 'SELECT users.*, users_profile.* FROM users, users_profile \
                  WHERE users.user_id = users_profile.user_id'
@@ -136,27 +137,27 @@ class DatabaseUsersTestCase(unittest.TestCase):
         self.assertDictContainsSubset(self.connection._create_user_object(execute_query(self, query, 'one')), PATIENT)
 
     def test_get_user(self):
-        '''
+        """
         Test get_user for patient with username PoorGuy and doctor with username Clarissa
-        '''
-        print('('+self.test_get_user.__name__+')', self.test_get_user.__doc__)
+        """
+        print('(' + self.test_get_user.__name__+')', self.test_get_user.__doc__)
         # test for patient
         self.assertDictContainsSubset(self.connection.get_user(PATIENT_USERNAME), PATIENT)
         # test for doctor
         self.assertDictContainsSubset(self.connection.get_user(DOCTOR_USERNAME), DOCTOR)
 
     def test_get_user_non_exist_id(self):
-        '''
+        """
         Test get_user with  msg-200 (no-existing)
-        '''
-        print('('+self.test_get_user_non_exist_id.__name__+')', self.test_get_user_non_exist_id.__doc__)
+        """
+        print('(' + self.test_get_user_non_exist_id.__name__+')', self.test_get_user_non_exist_id.__doc__)
         self.assertIsNone(self.connection.get_user(NON_EXIST_PATIENT_USERNAME))
 
     def test_get_users(self):
-        '''
+        """
         Test that get_users work correctly and extract required user info
-        '''
-        print('('+self.test_get_users.__name__+')', self.test_get_users.__doc__)
+        """
+        print('(' + self.test_get_users.__name__+')', self.test_get_users.__doc__)
         users = self.connection.get_users()
         # Check we get right size of users table
         self.assertEqual(len(users), INITIAL_USERS_COUNT)
@@ -169,10 +170,10 @@ class DatabaseUsersTestCase(unittest.TestCase):
 
     # TODO not working
     def test_delete_user(self):
-        '''
-        Test that the user Mystery is deleted
-        '''
-        print('('+self.test_delete_user.__name__+')', self.test_delete_user.__doc__)
+        """
+        Test that the user PoorGuy is deleted
+        """
+        print('(' + self.test_delete_user.__name__+')', self.test_delete_user.__doc__)
         # check delete user is successful
         self.assertTrue(self.connection.delete_user(PATIENT_USERNAME))
         # ask to get user and check if it was really deleted
@@ -181,19 +182,18 @@ class DatabaseUsersTestCase(unittest.TestCase):
         self.assertEqual(len(self.connection.get_messages(PATIENT_USERNAME)), 0)
 
     def test_delete_user_non_exist_username(self):
-        '''
-        Test delete_user with  SuperBoy (no-existing)
-        '''
-        print('('+self.test_delete_user_non_exist_username.__name__+')',
+        """
+        Test delete_user with  SuperBoy (no-existing patient)
+        """
+        print('(' + self.test_delete_user_non_exist_username.__name__+')',
               self.test_delete_user_non_exist_username.__doc__)
         self.assertFalse(self.connection.delete_user(NON_EXIST_PATIENT_USERNAME))
 
-    # TODO not done yet
     def test_modify_user(self):
-        '''
-        Test that the user Mystery is modifed
-        '''
-        print('('+self.test_modify_user.__name__+')', self.test_modify_user.__doc__)
+        """
+        Test that the user PoorGuy is modified
+        """
+        print('(' + self.test_modify_user.__name__+')', self.test_modify_user.__doc__)
         # modify the user with provided user dict
         modify_resp = self.connection.modify_user(PATIENT_USERNAME, MODIFIED_PATIENT['public_profile'],
                                                   MODIFIED_PATIENT['restricted_profile'])
@@ -212,74 +212,68 @@ class DatabaseUsersTestCase(unittest.TestCase):
         self.assertDictContainsSubset(get_resp, MODIFIED_PATIENT)
 
     def test_modify_user_non_exist_username(self):
-        '''
-        Test modify_user with  user Batty (no-existing)
-        '''
-        print('('+self.test_modify_user_non_exist_username.__name__+')', self.test_modify_user_non_exist_username.__doc__)
+        """
+        Test modify_user with  user SuperBoy (no-existing)
+        """
+        print('(' + self.test_modify_user_non_exist_username.__name__+')', self.test_modify_user_non_exist_username.__doc__)
         self.assertIsNone(self.connection.modify_user(NON_EXIST_PATIENT_USERNAME, PATIENT['public_profile'],
                                                       PATIENT['restricted_profile']))
 
-    # def test_append_user(self):
-    #     '''
-    #     Test that I can add new users
-    #     '''
-    #     print('('+self.test_append_user.__name__+')', \
-    #           self.test_append_user.__doc__)
-    #     nickname = self.connection.append_user(NEW_USER_NICKNAME, NEW_USER)
-    #     self.assertIsNotNone(nickname)
-    #     self.assertEqual(nickname, NEW_USER_NICKNAME)
-    #     #Check that the messages has been really modified through a get
-    #     resp2 = self.connection.get_user(nickname)
-    #     self.assertDictContainsSubset(NEW_USER['restricted_profile'],
-    #                                   resp2['restricted_profile'])
-    #     self.assertDictContainsSubset(NEW_USER['public_profile'],
-    #                                   resp2['public_profile'])
-    #
-    # def test_append_existing_user(self):
-    #     '''
-    #     Test that I cannot add two users with the same name
-    #     '''
-    #     print('('+self.test_append_existing_user.__name__+')', \
-    #           self.test_append_existing_user.__doc__)
-    #     nickname = self.connection.append_user(USER1_NICKNAME, NEW_USER)
-    #     self.assertIsNone(nickname)
-    #
-    # def test_get_user_id(self):
-    #     '''
-    #     Test that get_user_id returns the right value given a nickname
-    #     '''
-    #     print('('+self.test_get_user_id.__name__+')', \
-    #           self.test_get_user_id.__doc__)
-    #     id = self.connection.get_user_id(USER1_NICKNAME)
-    #     self.assertEqual(USER1_ID, id)
-    #     id = self.connection.get_user_id(USER2_NICKNAME)
-    #     self.assertEqual(USER2_ID, id)
-    #
-    # def test_get_user_id_unknown_user(self):
-    #     '''
-    #     Test that get_user_id returns None when the nickname does not exist
-    #     '''
-    #     print('('+self.test_get_user_id.__name__+')', \
-    #           self.test_get_user_id.__doc__)
-    #     id = self.connection.get_user_id(USER_WRONG_NICKNAME)
-    #     self.assertIsNone(id)
-    #
-    # def test_not_contains_user(self):
-    #     '''
-    #     Check if the database does not contain users with id Batty
-    #     '''
-    #     print('('+self.test_contains_user.__name__+')', \
-    #           self.test_contains_user.__doc__)
-    #     self.assertFalse(self.connection.contains_user(USER_WRONG_NICKNAME))
-    #
-    # def test_contains_user(self):
-    #     '''
-    #     Check if the database contains users with nickname Mystery and HockeyFan
-    #     '''
-    #     print('('+self.test_contains_user.__name__+')', \
-    #           self.test_contains_user.__doc__)
-    #     self.assertTrue(self.connection.contains_user(USER1_NICKNAME))
-    #     self.assertTrue(self.connection.contains_user(USER2_NICKNAME))
+    # TODO not working
+    def test_append_user(self):
+        """
+        Test that a new patient/doctor can be added and check its data after adding
+        """
+        print('(' + self.test_append_user.__name__+')', self.test_append_user.__doc__)
+        new_username = self.connection.append_user(NEW_PATIENT_USERNAME, NEW_PATIENT)
+        # test appended ok
+        self.assertIsNotNone(new_username)
+        # check appended the same user data
+        self.assertEqual(new_username, NEW_PATIENT_USERNAME)
+        # check the added user in db has the same data
+        get_new_patient = self.connection.get_user(new_username)
+        self.assertDictContainsSubset(NEW_PATIENT['restricted_profile'], get_new_patient['restricted_profile'])
+        self.assertDictContainsSubset(NEW_PATIENT['public_profile'], get_new_patient['public_profile'])
+
+    def test_append_existing_user(self):
+        """
+        Test that I cannot add two users with the same name
+        """
+        print('(' + self.test_append_existing_user.__name__+')', self.test_append_existing_user.__doc__)
+        self.assertIsNone(self.connection.append_user(PATIENT_USERNAME, NEW_PATIENT))
+
+    def test_get_user_id(self):
+        """
+        Test that get_user_id returns the right value given a username
+        """
+        print('(' + self.test_get_user_id.__name__+')', self.test_get_user_id.__doc__)
+        # for patient
+        self.assertEqual(PATIENT_ID, self.connection.get_user_id(PATIENT_USERNAME))
+        # for doctor
+        self.assertEqual(DOCTOR_ID, self.connection.get_user_id(DOCTOR_USERNAME))
+
+    def test_get_user_id_unknown_user(self):
+        """
+        Test that get_user_id returns None when the username does not exist
+        """
+        print('(' + self.test_get_user_id.__name__+')', self.test_get_user_id.__doc__)
+        self.assertIsNone(self.connection.get_user_id(NON_EXIST_PATIENT_USERNAME))
+
+    def test_not_contains_user(self):
+        """
+        Check if the database does not contain users with username SuperBoy
+        """
+        print('(' + self.test_not_contains_user.__name__+')', self.test_not_contains_user.__doc__)
+        # non existing doctor, it could be patient as well
+        self.assertFalse(self.connection.contains_user(NON_EXIST_DOCTOR_USERNAME))
+
+    def test_contains_user(self):
+        """
+        Check if the database contains users with username PoorGuy (patient) and Clarissa (doctor)
+        """
+        print('(' + self.test_contains_user.__name__+')', self.test_contains_user.__doc__)
+        self.assertTrue(self.connection.contains_user(PATIENT_USERNAME))
+        self.assertTrue(self.connection.contains_user(DOCTOR_USERNAME))
 
 
 if __name__ == '__main__':
