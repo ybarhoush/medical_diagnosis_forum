@@ -518,7 +518,7 @@ class Connection(object):
         return {'reg_date': row['reg_date'], 'username': row['username']}
 
     # Helpers for diagnosis
-    # Written from scratch
+    # Written from sccratch
     def _create_diagnosis_object(self, row):
         """
         It takes a :py:class:`sqlite3.Row` and transform it into a dictionary.
@@ -538,35 +538,14 @@ class Connection(object):
         """
         diagnosis_id = 'diagnosis-' + str(row['diagnosis_id'])
         user_id = row['user_id']
-        message_id = row['message_id']
+        message_id = 'msg-' + str(row['message_id'])
         disease = row['disease']
         diagnosis_description = row['diagnosis_description']
 
-        diagnosis = {'diagnosis_id': diagnosis_id, 'user_id': user_id,
+        diagnosis = {'user_id': user_id,
                      'message_id': message_id,
                      'disease': disease, 'diagnosis_description': diagnosis_description}
         return diagnosis
-
-    # Written from scratch
-    def _create_diagnosis_list_object(self, row):
-        """
-        Same as :py:meth:`_create_diagnosis_object`. However, the resulting
-        dictionary is targeted to build messages in a list.
-
-        :param row: The row obtained from the database.
-        :type row: sqlite3.Row
-        :return: a dictionary with the keys ``diagnosis_id``, ``user_id``,
-            ``message_id``, ``disease`` and ``diagnosis_description``.
-        """
-        diagnosis_id = 'diagnosis-' + str(row['diagnosis_id'])
-        user_id = row['user_id']
-        message_id = row['message_id']
-        disease = row['disease']
-        diagnosis_description = row['diagnosis_description']
-
-        return {'diagnosis_id': diagnosis_id, 'user_id': user_id,
-                'message_id': message_id,
-                'disease': disease, 'diagnosis_description': diagnosis_description}
 
     # API ITSELF
     # Diagnosis Table API.
@@ -606,13 +585,11 @@ class Connection(object):
         return self._create_diagnosis_object(row)
 
     # Written from scratch
-    def create_diagnosis(self, disease, diagnosis_description, sender):
+    def create_diagnosis(self, diagnosis):
         """
         Create a new message with the data provided as arguments.
 
-        :param str disease: the disease
-        :param str diagnosis_description: the diagnosis description's of the disease
-        :param str sender: the username of the person who is editing this diagnosis.
+        :param diagnosis : the diagnosis object
 
         :return: the id of the created message or None if the message was not
             found. Note that the returned value is a string with the format msg-\d{1,3}.
@@ -621,31 +598,45 @@ class Connection(object):
 
         """
         # Create the SQL statement
-        # SQL to test that the diagnosis which I am answering does exist
-        query1 = 'SELECT * from diagnosis WHERE diagnosis_id = ?'
         # SQL Statement for getting the user id given a username
-        query2 = 'SELECT user_id from users WHERE username = ?'
+        query_u = 'SELECT user_id, user_type from users_profile WHERE user_id = ?'
+        # SQL Statement for getting the user id and his type
+        query_m = 'SELECT message_id from messages WHERE message_id = ?'
         # SQL Statement for inserting the data
-        stmnt = 'INSERT INTO diagnosis(disease, diagnosis_description, username, user_id) \
+        stmnt = 'INSERT INTO diagnosis(disease, diagnosis_description, message_id, user_id) \
                  VALUES(?,?,?,?)'
         # Variables for the statement.
         # user_id is obtained from first statement.
-        user_id = None
         # Activate foreign key support
         self.set_foreign_keys_support()
         # Cursor and row initialization
         self.con.row_factory = sqlite3.Row
         cur = self.con.cursor()
 
-        # Execute SQL Statement to get user_id given username
-        pvalue = (sender,)
-        cur.execute(query2, pvalue)
+        # Execute SQL Statement to get user of given user_id
+        user_id = diagnosis['user_id']
+        pvalue = (user_id,)
+        cur.execute(query_u, pvalue)
         # Extract user id
         row = cur.fetchone()
-        if row is not None:
-            user_id = row["user_id"]
+        if row is None:
+            return None
+        if row['user_type'] != 1:
+            raise ValueError("the user is not a doctor")
+        # Execute SQL Statement to get message_id
+        match = re.match(r'msg-(\d{1,3})', diagnosis['message_id'])
+        if match is None:
+            raise ValueError("The message_id is malformed")
+        message_id = int(match.group(1))
+        pvalue = (message_id,)
+        cur.execute(query_m, pvalue)
+        row = cur.fetchone()
+        if row is None:
+            return None
         # Generate the values for SQL statement
-        pvalue = (self, disease, diagnosis_description, sender, user_id)
+        disease = diagnosis['disease']
+        diagnosis_description = diagnosis['diagnosis_description']
+        pvalue = (disease, diagnosis_description, message_id, user_id)
         # Execute the statement
         cur.execute(stmnt, pvalue)
         self.con.commit()
@@ -1042,16 +1033,33 @@ class Connection(object):
 
         '''
         # Create the SQL Statements
-        # SQL Statement for deleting the user information
-        query = 'DELETE FROM users WHERE username = ?'
+        # get the user_id for username
+        query = 'SELECT user_id FROM users WHERE username = ?'
+        # execute the statement
         # Activate foreign key support
         self.set_foreign_keys_support()
         # Cursor and row initialization
         self.con.row_factory = sqlite3.Row
         cur = self.con.cursor()
+        cur.execute(query, (username, ))
+        # Process the response. Only one possible row is expected.
+        row = cur.fetchone()
+        if row is not None:
+            user_id = row['user_id']
+        else:
+            raise ValueError("the username doesn't exist!")
+
+        # SQL Statement for deleting the user information
+        query_d = 'DELETE FROM diagnosis WHERE user_id = ?'
+        query_m = 'DELETE FROM messages WHERE user_id = ?'
+        query_p = 'DELETE FROM users_profile WHERE user_id = ?'
+        query_u = 'DELETE FROM users WHERE username = ?'
+
         # Execute the statement to delete
-        pvalue = (username,)
-        cur.execute(query, pvalue)
+        cur.execute(query_d, (user_id,))
+        cur.execute(query_m, (user_id,))
+        cur.execute(query_p, (user_id,))
+        cur.execute(query_u, (username,))
         self.con.commit()
         # Check that it has been deleted
         if cur.rowcount < 1:
