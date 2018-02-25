@@ -20,8 +20,8 @@ CREATE TABLE IF NOT EXISTS users_profile (
 	FOREIGN KEY(diagnosis_id) REFERENCES diagnosis(diagnosis_id) ON DELETE SET NULL
 );
 CREATE TABLE IF NOT EXISTS users (
-	user_id	INTEGER,
-	username	TEXT NOT NULL,
+	user_id	INTEGER UNIQUE,
+	username	TEXT NOT NULL UNIQUE,
 	pass_hash	TEXT NOT NULL,
 	reg_date	INTEGER,
 	last_login	INTEGER,
