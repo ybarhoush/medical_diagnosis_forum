@@ -81,7 +81,9 @@ class Engine(object):
         cur.execute(keys_on)
         with con:
             cur = con.cursor()
+            cur.execute("DELETE FROM diagnosis")
             cur.execute("DELETE FROM messages")
+            cur.execute("DELETE FROM users_profile")
             cur.execute("DELETE FROM users")
             #NOTE since we have ON DELETE CASCADE BOTH IN users_profile AND
             #friends, WE DO NOT HAVE TO WORRY TO CLEAR THOSE TABLES.
@@ -406,7 +408,7 @@ class Connection(object):
             * ``body``: message's text
             * ``timestamp``: UNIX timestamp (long integer) that specifies when
               the message was created.
-            * ``replyto``: The id of the parent message. String with the format
+            * ``reply_to``: The id of the parent message. String with the format
               msg-{id}. Its value can be None.
             * ``sender``: The username of the message's creator.
 
@@ -415,14 +417,14 @@ class Connection(object):
 
         """
         message_id = 'msg-' + str(row['message_id'])
-        message_replyto = 'msg-' + str(row['reply_to']) \
+        message_reply_to = 'msg-' + str(row['reply_to']) \
             if row['reply_to'] is not None else None
         message_sender = row['username']
         message_title = row['title']
         message_body = row['body']
         message_timestamp = row['timestamp']
         message = {'message_id': message_id, 'title': message_title,
-                   'timestamp': message_timestamp, 'replyto': message_replyto,
+                   'timestamp': message_timestamp, 'reply_to': message_reply_to,
                    'body': message_body, 'sender': message_sender}
         return message
 
@@ -602,39 +604,39 @@ class Connection(object):
 
     #Message Table API.
 
-    def get_message(self, messageid):
+    def get_message(self, message_id):
         '''
         Extracts a message from the database.
 
-        :param messageid: The id of the message. Note that messageid is a
+        :param message_id: The id of the message. Note that message_id is a
             string with format ``msg-\d{1,3}``.
         :return: A dictionary with the format provided in
             :py:meth:`_create_message_object` or None if the message with target
             id does not exist.
-        :raises ValueError: when ``messageid`` is not well formed
+        :raises ValueError: when ``message_id`` is not well formed
 
         '''
-        #Extracts the int which is the id for a message in the database
-        match = re.match(r'msg-(\d{1,3})', messageid)
+        # Extracts the int which is the id for a message in the database
+        match = re.match(r'msg-(\d{1,3})', message_id)
         if match is None:
-            raise ValueError("The messageid is malformed")
-        messageid = int(match.group(1))
-        #Activate foreign key support
+            raise ValueError("The message_id is malformed")
+        message_id = int(match.group(1))
+        # Activate foreign key support
         self.set_foreign_keys_support()
-        #Create the SQL Query
+        # Create the SQL Query
         query = 'SELECT * FROM messages WHERE message_id = ?'
-        #Cursor and row initialization
+        # Cursor and row initialization
         self.con.row_factory = sqlite3.Row
         cur = self.con.cursor()
-        #Execute main SQL Statement
-        pvalue = (messageid,)
+        # Execute main SQL Statement
+        pvalue = (message_id,)
         cur.execute(query, pvalue)
-        #Process the response.
-        #Just one row is expected
+        # Process the response.
+        # Just one row is expected
         row = cur.fetchone()
         if row is None:
             return None
-        #Build the return object
+        # Build the return object
         return self._create_message_object(row)
 
     def get_messages(self, username=None, number_of_messages=-1,
@@ -660,7 +662,7 @@ class Connection(object):
         :return: A list of messages. Each message is a dictionary containing
             the following keys:
 
-            * ``messageid``: string with the format msg-\d{1,3}.Id of the
+            * ``message_id``: string with the format msg-\d{1,3}.Id of the
                 message.
             * ``sender``: username of the message's author.
             * ``title``: string containing the title of the message.
@@ -674,134 +676,135 @@ class Connection(object):
             timestamps
 
         '''
-        #Create the SQL Statement build the string depending on the existence
-        #of username, numbero_of_messages, before and after arguments.
+        # Create the SQL Statement build the string depending on the existence
+        # of username, numbero_of_messages, before and after arguments.
         query = 'SELECT * FROM messages'
-          #username restriction
+        # username restriction
         if username is not None or before != -1 or after != -1:
             query += ' WHERE'
         if username is not None:
-            query += " user_nickname = '%s'" % username
-          #Before restriction
+            query += " username = '%s'" % username
+        # Before restriction
         if before != -1:
             if username is not None:
                 query += ' AND'
             query += " timestamp < %s" % str(before)
-          #After restriction
+        # After restriction
         if after != -1:
             if username is not None or before != -1:
                 query += ' AND'
             query += " timestamp > %s" % str(after)
-          #Order of results
+        # Order of results
         query += ' ORDER BY timestamp DESC'
-          #Limit the number of resulst return
+        # Limit the number of results return
         if number_of_messages > -1:
             query += ' LIMIT ' + str(number_of_messages)
-        #Activate foreign key support
+        # Activate foreign key support
         self.set_foreign_keys_support()
-        #Cursor and row initialization
+        # Cursor and row initialization
         self.con.row_factory = sqlite3.Row
         cur = self.con.cursor()
-        #Execute main SQL Statement
+        # Execute main SQL Statement
         cur.execute(query)
-        #Get results
+        # Get results
         rows = cur.fetchall()
         if rows is None:
             return None
-        #Build the return object
+        # Build the return object
         messages = []
         for row in rows:
             message = self._create_message_list_object(row)
             messages.append(message)
         return messages
 
-    def delete_message(self, messageid):
+    def delete_message(self, message_id):
         '''
         Delete the message with id given as parameter.
 
-        :param str messageid: id of the message to remove.Note that messageid
+        :param str message_id: id of the message to remove.Note that message_id
             is a string with format ``msg-\d{1,3}``
         :return: True if the message has been deleted, False otherwise
-        :raises ValueError: if the messageId has a wrong format.
+        :raises ValueError: if the message_id has a wrong format.
 
         '''
-        #Extracts the int which is the id for a message in the database
-        match = re.match(r'msg-(\d{1,3})', messageid)
+        # Extracts the int which is the id for a message in the database
+        match = re.match(r'msg-(\d{1,3})', message_id)
         if match is None:
-            raise ValueError("The messageid is malformed")
-        messageid = int(match.group(1))
+            raise ValueError("The message_id is malformed")
+        message_id = int(match.group(1))
 
-        #Create the SQL statment
+        # Create the SQL statement
+        stmnt_dg = 'DELETE FROM diagnosis WHERE message_id = ?'
         stmnt = 'DELETE FROM messages WHERE message_id = ?'
-        #Activate foreign key support
+        # Activate foreign key support
         self.set_foreign_keys_support()
-        #Cursor and row initialization
+        # Cursor and row initialization
         self.con.row_factory = sqlite3.Row
         cur = self.con.cursor()
-        pvalue = (messageid,)
+        pvalue = (message_id,)
         try:
+            cur.execute(stmnt_dg, pvalue)
             cur.execute(stmnt, pvalue)
-            #Commit the message
+            # Commit the message
             self.con.commit()
         except sqlite3.Error as e:
             print("Error %s:" % (e.args[0]))
-        return bool(cur.rowcount)
-    #Modified from modify_message
-    def modify_message(self, messageid, title, body, editor="Anonymous"):
+
+        if cur.rowcount >= 1:
+            return True
+        return False
+
+    # Modified from modify_message
+    def modify_message(self, message_id, title, body):
         '''
         Modify the title, the body and the editor of the message with id
-        ``messageid``
+        ``message_id``
 
-        :param str messageid: The id of the message to remove. Note that
-            messageid is a string with format msg-\d{1,3}
+        :param str message_id: The id of the message to remove. Note that
+            message_id is a string with format msg-\d{1,3}
         :param str title: the message's title
         :param str body: the message's content
-        :param str editor: default 'Anonymous'. The username of the person
-            who is editing this message. If it is not provided "Anonymous"
-            will be stored in db.
         :return: the id of the edited message or None if the message was
               not found. The id of the message has the format ``msg-\d{1,3}``,
               where \d{1,3} is the id of the message in the database.
-        :raises ValueError: if the messageid has a wrong format.
+        :raises ValueError: if the message_id has a wrong format.
 
         '''
-        #Extracts the int which is the id for a message in the database
-        match = re.match(r'msg-(\d{1,3})', messageid)
+        # Extracts the int which is the id for a message in the database
+        match = re.match(r'msg-(\d{1,3})', message_id)
         if match is None:
-            raise ValueError("The messageid is malformed")
-        messageid = int(match.group(1))
-        #Create the SQL statment
-        stmnt = 'UPDATE messages SET title=:title , body=:body, editor_nickname=:editor\
-                 WHERE message_id =:msg_id'
-        #Activate foreign key support
+            raise ValueError("The message_id is malformed")
+        message_id = int(match.group(1))
+        # Create the SQL statement
+        stmnt = 'UPDATE messages SET title=:title , body=:body WHERE message_id =:msg_id'
+        # Activate foreign key support
         self.set_foreign_keys_support()
-        #Cursor and row initialization
+        # Cursor and row initialization
         self.con.row_factory = sqlite3.Row
         cur = self.con.cursor()
-        #Execute main SQL Statement
-        pvalue = {"msg_id": messageid,
+        # Execute main SQL Statement
+        pvalue = {"msg_id": message_id,
                   "title": title,
-                  "body": body,
-                  "editor": editor}
+                  "body": body}
         try:
             cur.execute(stmnt, pvalue)
             self.con.commit()
         except sqlite3.Error as e:
-            print ("Error %s:" % (e.args[0]))
+            print("Error %s:" % (e.args[0]))
         else:
             if cur.rowcount < 1:
                 return None
-        return 'msg-%s' % messageid
+        return 'msg-%s' % message_id
 
-    def create_message(self, title, body, sender="Anonymous", replyto=None):
+    # TODO fix sender cannot be anonymous
+    def create_message(self, title, body, sender, reply_to=None):
         '''
         Create a new message with the data provided as arguments.
 
         :param str title: the message's title
         :param str body: the message's content
-        :param str sender: the username of the person who is editing this
-            message. If it is not provided "Anonymous" will be stored in db.
-        :param str replyto: Only provided if this message is an answer to a
+        :param str sender: the username of the person who is editing this message.
+        :param str reply_to: Only provided if this message is an answer to a
             previous message (parent). Otherwise, Null will be stored in the
             database. The id of the message has the format msg-\d{1,3}
 
@@ -809,67 +812,66 @@ class Connection(object):
             found. Note that the returned value is a string with the format msg-\d{1,3}.
 
         :raises ForumDatabaseError: if the database could not be modified.
-        :raises ValueError: if the replyto has a wrong format.
+        :raises ValueError: if the reply_to has a wrong format.
 
         '''
-        #Extracts the int which is the id for a message in the database
-        if replyto is not None:
-            match = re.match('msg-(\d{1,3})', replyto)
+        # Extracts the int which is the id for a message in the database
+        if reply_to is not None:
+            match = re.match('msg-(\d{1,3})', reply_to)
             if match is None:
-                raise ValueError("The replyto is malformed")
-            replyto = int(match.group(1))
+                raise ValueError("The reply_to is malformed")
+            reply_to = int(match.group(1))
 
-        #Create the SQL statment
-          #SQL to test that the message which I am answering does exist
+        # Create the SQL statement
+        # SQL to test that the message which I am answering does exist
         query1 = 'SELECT * from messages WHERE message_id = ?'
-          #SQL Statement for getting the user id given a username
+        # SQL Statement for getting the user id given a username
         query2 = 'SELECT user_id from users WHERE username = ?'
-          #SQL Statement for inserting the data
-        stmnt = 'INSERT INTO messages (title,body,timestamp, \
-                 timesviewed,reply_to,username,user_id) \
-                 VALUES(?,?,?,?,?,?,?,?)'
-          #Variables for the statement.
-          #user_id is obtained from first statement.
+        # SQL Statement for inserting the data
+        stmnt = 'INSERT INTO messages(title, body, timestamp, \
+                 views, reply_to, username, user_id) \
+                 VALUES(?,?,?,?,?,?,?)'
+        # Variables for the statement.
+        # user_id is obtained from first statement.
         user_id = None
         timestamp = time.mktime(datetime.now().timetuple())
-        #Activate foreign key support
+        # Activate foreign key support
         self.set_foreign_keys_support()
-        #Cursor and row initialization
+        # Cursor and row initialization
         self.con.row_factory = sqlite3.Row
         cur = self.con.cursor()
-        #If exists the replyto argument, check that the message exists in
-        #the database table
-        if replyto is not None:
-            pvalue = (replyto,)
+        # If exists the reply_to argument, check that the message exists in
+        # the database table
+        if reply_to is not None:
+            pvalue = (reply_to,)
             cur.execute(query1, pvalue)
             messages = cur.fetchall()
             if len(messages) < 1:
                 return None
-        #Execute SQL Statement to get userid given username
+        # Execute SQL Statement to get user_id given username
         pvalue = (sender,)
         cur.execute(query2, pvalue)
-        #Extract user id
+        # Extract user id
         row = cur.fetchone()
         if row is not None:
             user_id = row["user_id"]
-        #Generate the values for SQL statement
-        pvalue = (title, body, timestamp, 0, replyto, sender,
-                  user_id)
-        #Execute the statement
+        # Generate the values for SQL statement
+        pvalue = (title, body, timestamp, 0, reply_to, sender, user_id)
+        # Execute the statement
         cur.execute(stmnt, pvalue)
         self.con.commit()
-        #Extract the id of the added message
+        # Extract the id of the added message
         lid = cur.lastrowid
-        #Return the id in
+        # Return the id in
         return 'msg-' + str(lid) if lid is not None else None
 
     #Modified from append_answer
-    def append_answer(self, replyto, title, body, sender="Anonymous"):
+    def append_answer(self, reply_to, title, body, sender="Anonymous"):
         '''
-        Same as :py:meth:`create_message`. The ``replyto`` parameter is not
+        Same as :py:meth:`create_message`. The ``reply_to`` parameter is not
         a keyword argument, though.
 
-        :param str replyto: Only provided if this message is an answer to a
+        :param str reply_to: Only provided if this message is an answer to a
             previous message (parent). Otherwise, Null will be stored in the
             database. The id of the message has the format msg-\d{1,3}
         :param str title: the message's title
@@ -882,23 +884,23 @@ class Connection(object):
             the returned value is a string with the format msg-\d{1,3}.
 
         :raises ForumDatabaseError: if the database could not be modified.
-        :raises ValueError: if the replyto has a wrong format.
+        :raises ValueError: if the reply_to has a wrong format.
 
         '''
-        return self.create_message(title, body, sender, replyto)
+        return self.create_message(title, body, sender, reply_to)
 
     #MESSAGE UTILS
 
-    def contains_message(self, messageid):
+    def contains_message(self, message_id):
         '''
         Checks if a message is in the database.
 
-        :param str messageid: Id of the message to search. Note that messageid
+        :param str message_id: Id of the message to search. Note that message_id
             is a string with the format msg-\d{1,3}.
         :return: True if the message is in the database. False otherwise.
 
         '''
-        return self.get_message(messageid) is not None
+        return self.get_message(message_id) is not None
 
     #ACCESSING THE USER and USER_PROFILE tables
     def get_users(self):
@@ -1042,7 +1044,7 @@ class Connection(object):
         :raise ValueError: if the user argument is not well formed.
         '''
         #Create the SQL Statements
-        #SQL Statement for extracting the userid given a username
+        #SQL Statement for extracting the user_id given a username
         query1 = 'SELECT user_id from users WHERE username = ?'
         #SQL Statement to update the user_profile table
         query2 = 'UPDATE users_profile SET firstname = ?,lastname = ?, \
@@ -1129,10 +1131,10 @@ class Connection(object):
 
         '''
         #Create the SQL Statements
-          #SQL Statement for extracting the userid given a username
+          #SQL Statement for extracting the user_id given a username
         query1 = 'SELECT user_id FROM users WHERE username = ?'
           #SQL Statement to create the row in  users table
-        query2 = 'INSERT INTO users(username,regDate,lastLogin,timesviewed)\
+        query2 = 'INSERT INTO users(username,regDate,lastLogin,views)\
                   VALUES(?,?,?,?)'
           #SQL Statement to create the row in user_profile table
         query3 = 'INSERT INTO users_profile (user_id, firstname,lastname, \
@@ -1144,7 +1146,7 @@ class Connection(object):
         #temporal variables for user table
         #timestamp will be used for lastlogin and regDate.
         timestamp = time.mktime(datetime.now().timetuple())
-        timesviewed = 0
+        views = 0
         #temporal variables for user profiles
         p_profile = user['public_profile']
         r_profile = user['restricted_profile']
@@ -1172,7 +1174,7 @@ class Connection(object):
         if row is None:
             #Add the row in users table
             # Execute the statement
-            pvalue = (username, timestamp, timestamp, timesviewed)
+            pvalue = (username, timestamp, timestamp, views)
             cur.execute(query2, pvalue)
             #Extrat the rowid => user-id
             lid = cur.lastrowid
