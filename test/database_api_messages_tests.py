@@ -222,25 +222,27 @@ class DatabaseMessagesTestCase(unittest.TestCase):
         Test that the message msg-1 has been modified
         """
         print('(' + self.test_modify_message.__name__+')', self.test_modify_message.__doc__)
-        resp = self.connection.modify_message(MESSAGE_1_ID, "new title", "new body", "new editor")
+        resp = self.connection.modify_message(MESSAGE_1_ID, "new title", "new body")
         self.assertEqual(resp, MESSAGE_1_ID)
         # check whether modification was successful
         self.assertDictContainsSubset(self.connection.get_message(MESSAGE_1_ID), MESSAGE_1_MODIFIED)
 
+    # TODO: this is not implemented fully yet
     def test_modify_message_bad_id(self):
         """
         Test that trying to modify message with id (1) and not (msg-1) which actually exist
         """
         print('(' + self.test_modify_message_bad_id.__name__+')', self.test_modify_message_bad_id.__doc__)
         with self.assertRaises(ValueError):
-            self.connection.modify_message(BAD_MESSAGE_ID, "new title", "new body", "editor")
+            self.connection.modify_message(BAD_MESSAGE_ID, "new title", "new body")
 
+    # TODO: this is not implemented fully yet
     def test_modify_message_non_exist_id(self):
         """
         Test that trying to modify message with id (msg-256) which does not exist
         """
         print('(' + self.test_modify_message_non_exist_id.__name__+')', self.test_modify_message_non_exist_id.__doc__)
-        resp = self.connection.modify_message(NON_EXIST_MESSAGE_ID, "new title", "new body", "editor")
+        resp = self.connection.modify_message(NON_EXIST_MESSAGE_ID, "new title", "new body")
         self.assertIsNone(resp)
 
     def test_create_message(self):
