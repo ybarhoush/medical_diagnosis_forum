@@ -19,7 +19,7 @@ DEFAULT_SCHEMA = "db/medical_forum_data_schema.sql"
 DEFAULT_DATA_DUMP = "db/medical_forum_data_dump.sql"
 
 # Copied Class from Exercise 1
-# Unless it is stated in the comment before the method, the method is copied
+# We state if a method is copied, modified or written from scratch before it
 
 
 class Engine(object):
@@ -605,7 +605,7 @@ class Connection(object):
     # TODO imlement create_diagnosis
 
     # Message Table API.
-
+    # Modified from get_message
     def get_message(self, message_id):
         """
         Extracts a message from the database.
@@ -641,6 +641,7 @@ class Connection(object):
         # Build the return object
         return self._create_message_object(row)
 
+    # Modified from get_messages
     def get_messages(self, username=None, number_of_messages=-1,
                      before=-1, after=-1):
         """
@@ -719,6 +720,7 @@ class Connection(object):
             messages.append(message)
         return messages
 
+    # Modified from delete_message
     def delete_message(self, message_id):
         """
         Delete the message with id given as parameter.
@@ -798,7 +800,7 @@ class Connection(object):
                 return None
         return 'msg-%s' % message_id
 
-    # TODO fix sender cannot be anonymous
+    # Modified from create_message
     def create_message(self, title, body, sender, reply_to=None):
         """
         Create a new message with the data provided as arguments.
@@ -868,8 +870,7 @@ class Connection(object):
         return 'msg-' + str(lid) if lid is not None else None
 
     # Modified from append_answer
-    # TODO fix sender cannot be anonymous
-    def append_answer(self, reply_to, title, body, sender="Anonymous"):
+    def append_answer(self, reply_to, title, body, sender):
         """
         Same as :py:meth:`create_message`. The ``reply_to`` parameter is not
         a keyword argument, though.
@@ -880,7 +881,7 @@ class Connection(object):
         :param str title: the message's title
         :param str body: the message's content
         :param str sender: the username of the person who is editing this
-            message. If it is not provided "Anonymous" will be stored in db.
+            message.
 
         :return: the id of the created message or None if the message was not
             found. Note that
@@ -893,6 +894,7 @@ class Connection(object):
         return self.create_message(title, body, sender, reply_to)
 
     # MESSAGE UTILS
+    # Copied from contains_message
     def contains_message(self, message_id):
         """
         Checks if a message is in the database.
@@ -905,6 +907,7 @@ class Connection(object):
         return self.get_message(message_id) is not None
 
     # ACCESSING THE USER and USER_PROFILE tables
+    # Modified from get_users
     def get_users(self):
         '''
         Extracts all users in the database.
@@ -936,6 +939,7 @@ class Connection(object):
             users.append(self._create_user_list_object(row))
         return users
 
+    # Modified from get_users
     def get_user(self, username):
         '''
         Extracts all the information of a user.
@@ -976,6 +980,7 @@ class Connection(object):
         row = cur.fetchone()
         return self._create_user_object(row)
 
+    # Modified from delete_user
     def delete_user(self, username):
         '''
         Remove all user information of the user with the username passed in as
@@ -1003,6 +1008,7 @@ class Connection(object):
             return False
         return True
 
+    # Modified from modify_user
     def modify_user(self, username, p_profile, r_profile):
         '''
         Modify the information of a user.
@@ -1090,6 +1096,7 @@ class Connection(object):
                 return None
             return username
 
+    # Modified from append_user
     def append_user(self, username, user):
         '''
         Create a new user in the database.
@@ -1190,6 +1197,7 @@ class Connection(object):
             return None
 
     # UTILS
+    # Modified from get_user_id
     def get_user_id(self, username):
         '''
         Get the key of the database row which contains the user with the given
@@ -1220,6 +1228,7 @@ class Connection(object):
         else:
             return row[0]
 
+    # Modified from contains_user
     def contains_user(self, username):
         '''
         :return: True if the user is in the database. False otherwise
