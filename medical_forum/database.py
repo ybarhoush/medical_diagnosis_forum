@@ -1100,9 +1100,8 @@ class Connection(object):
         query1 = 'SELECT user_id from users WHERE username = ?'
         # SQL Statement to update the user_profile table
         query2 = 'UPDATE users_profile SET firstname = ?,lastname = ?, speciality = ?, \
-                                           picture = ? \
-                                        = ,work_address = ?, \
-                                           gender = ? , age = ?, WHERE user_id = ?'
+                                           picture = ? ,work_address = ?, \
+                                           gender = ? , age = ? WHERE user_id = ?'
         # temporal variables
         user_id = None
         _firstname = None if not r_profile else r_profile.get('firstname', None)
@@ -1129,7 +1128,7 @@ class Connection(object):
             user_id = row["user_id"]
             # execute the main statement
             pvalue = (_firstname, _lastname, _speciality,
-                      _work_address, _gender, _age, user_id)
+                      _work_address, _gender, _age, user_id,)
             cur.execute(query2, pvalue)
             self.con.commit()
             # Check that I have modified the user
