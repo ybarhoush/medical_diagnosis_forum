@@ -139,8 +139,12 @@ class DatabaseUsersTestCase(unittest.TestCase):
         print('('+self.test_get_user.__name__+')', self.test_get_user.__doc__)
         # test for patient
         self.assertDictContainsSubset(self.connection.get_user(PATIENT_ID), PATIENT)
+        # resp = self.connection.get_user(PATIENT_ID)
+        # self.assertEqual(resp, extract_dict_a_from_b(resp, PATIENT))
         # test for doctor
         self.assertDictContainsSubset(self.connection.get_user(DOCTOR_ID), DOCTOR)
+        # resp = self.connection.get_user(DOCTOR_ID)
+        # self.assertEqual(resp, extract_dict_a_from_b(resp, DOCTOR))
     #
     # def test_get_user_noexistingid(self):
     #     '''
@@ -152,38 +156,33 @@ class DatabaseUsersTestCase(unittest.TestCase):
     #     #Test with an existing user
     #     user = self.connection.get_user(USER_WRONG_NICKNAME)
     #     self.assertIsNone(user)
-    #
-    # def test_get_users(self):
-    #     '''
-    #     Test that get_users work correctly and extract required user info
-    #     '''
-    #     print('('+self.test_get_users.__name__+')', \
-    #           self.test_get_users.__doc__)
-    #     users = self.connection.get_users()
-    #     #Check that the size is correct
-    #     self.assertEqual(len(users), INITIAL_SIZE)
-    #     #Iterate throug users and check if the users with USER1_ID and
-    #     #USER2_ID are correct:
-    #     for user in users:
-    #         if user['nickname'] == USER1_NICKNAME:
-    #             self.assertDictContainsSubset(user, USER1['public_profile'])
-    #         elif user['nickname'] == USER2_NICKNAME:
-    #             self.assertDictContainsSubset(user, USER2['public_profile'])
-    #
-    # def test_delete_user(self):
-    #     '''
-    #     Test that the user Mystery is deleted
-    #     '''
-    #     print('('+self.test_delete_user.__name__+')', \
-    #           self.test_delete_user.__doc__)
-    #     resp = self.connection.delete_user(USER1_NICKNAME)
-    #     self.assertTrue(resp)
-    #     #Check that the users has been really deleted throug a get
-    #     resp2 = self.connection.get_user(USER1_NICKNAME)
-    #     self.assertIsNone(resp2)
-    #     #Check that the user does not have associated any message
-    #     resp3 = self.connection.get_messages(nickname=USER1_NICKNAME)
-    #     self.assertEqual(len(resp3), 0)
+
+    def test_get_users(self):
+        '''
+        Test that get_users work correctly and extract required user info
+        '''
+        print('('+self.test_get_users.__name__+')', self.test_get_users.__doc__)
+        users = self.connection.get_users()
+        # Check we get right size of users table
+        self.assertEqual(len(users), INITIAL_USERS_COUNT)
+        # check PATIENT and DOCTOR data with users object we got
+        for user in users:
+            if user['username'] == PATIENT_USERNAME:
+                self.assertDictContainsSubset(user, PATIENT['public_profile'])
+            elif user['username'] == DOCTOR_USERNAME:
+                self.assertDictContainsSubset(user, DOCTOR['public_profile'])
+
+    def test_delete_user(self):
+        '''
+        Test that the user Mystery is deleted
+        '''
+        print('('+self.test_delete_user.__name__+')', self.test_delete_user.__doc__)
+        # check delete user is successful
+        self.assertTrue(self.connection.delete_user(PATIENT_USERNAME))
+        # ask to get user and check if it was really deleted
+        self.assertIsNone(self.connection.get_user(PATIENT_USERNAME))
+        # Check that the user does not have associated any message
+        self.assertEqual(len(self.connection.get_messages(PATIENT_USERNAME)), 0)
     #
     # def test_delete_user_noexistingnickname(self):
     #     '''
