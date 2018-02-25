@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS users_profile (
 	lastname	TEXT NOT NULL,
 	work_address	TEXT NOT NULL,
 	gender	TEXT NOT NULL,
-	age	TEXT NOT NULL,
+	age	INTEGER NOT NULL,
 	email	TEXT NOT NULL,
 	picture	TEXT,
 	phone	INTEGER,
