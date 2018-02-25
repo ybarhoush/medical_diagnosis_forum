@@ -999,7 +999,7 @@ class Connection(object):
             return False
         return True
 
-    def modify_user(self, username, user):
+    def modify_user(self, username, p_profile,r_profile):
         '''
         Modify the information of a user.
 
@@ -1053,7 +1053,6 @@ class Connection(object):
                                            WHERE user_id = ?'
         #temporal variables
         user_id = None
-        
         _firstname = None if not r_profile else  r_profile.get('firstname', None)
         _lastname = None if not r_profile else r_profile.get('lastname', None)
         _email = None if not r_profile else r_profile.get('email', None)
@@ -1063,6 +1062,7 @@ class Connection(object):
         _work_address = None if not r_profile else r_profile.get('work_address', None)
         _gender = None if not r_profile else r_profile.get('gender', None)
         _usertype = None if not p_profile else p_profile.get('usertype', None)
+
         #Activate foreign key support
         self.set_foreign_keys_support()
         #Cursor and row initialization
@@ -1079,7 +1079,7 @@ class Connection(object):
         else:
             user_id = row["user_id"]
             #execute the main statement
-            pvalue = (_firstname, _lastname, _email, _website, _picture,
+            pvalue = (_firstname, _lastname, _email, _speciality, _picture,
                       _phone, _work_address, _gender,
                       _usertype, user_id)
             cur.execute(query2, pvalue)
@@ -1088,7 +1088,7 @@ class Connection(object):
             if cur.rowcount < 1:
                 return None
             return username
-    # TO DO fix error
+    # TODO fix error
     def append_user(self, username, user):
         '''
         Create a new user in the database.
@@ -1178,7 +1178,7 @@ class Connection(object):
             lid = cur.lastrowid
             #Add the row in users_profile table
             # Execute the statement
-            pvalue = (lid, _firstname, _lastname, _email, _speciality, _picture, _phone, ,_work_address, _gender, _usertype)
+            pvalue = (lid, _firstname, _lastname, _email, _speciality, _picture, _phone,_work_address, _gender, _usertype)
             
             cur.execute(query3, pvalue)
             self.con.commit()
@@ -1186,7 +1186,6 @@ class Connection(object):
             return username
         else:
             return None
-
 
     # UTILS
     def get_user_id(self, username):
