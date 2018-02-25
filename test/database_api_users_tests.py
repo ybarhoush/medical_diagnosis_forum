@@ -151,7 +151,7 @@ class DatabaseUsersTestCase(unittest.TestCase):
 
     def test_get_user_non_exist_id(self):
         """
-        Test get_user with  msg-200 (no-existing)
+        Test get_user with  username SuperBoy (no-existing)
         """
         print('(' + self.test_get_user_non_exist_id.__name__+')', self.test_get_user_non_exist_id.__doc__)
         self.assertIsNone(self.connection.get_user(NON_EXIST_PATIENT_USERNAME))
@@ -171,7 +171,6 @@ class DatabaseUsersTestCase(unittest.TestCase):
             elif user['username'] == DOCTOR_USERNAME:
                 self.assertDictContainsSubset(user, DOCTOR['public_profile'])
 
-    # TODO not working
     def test_delete_user(self):
         """
         Test that the user PoorGuy is deleted
@@ -182,6 +181,8 @@ class DatabaseUsersTestCase(unittest.TestCase):
         # ask to get user and check if it was really deleted
         self.assertIsNone(self.connection.get_user(PATIENT_USERNAME))
         # Check that the user does not have associated any message
+        # since the structure of the db cannot allow the user to be deleted
+        # unless all his messages and diagnoses are deleted along with his profile also.
         self.assertEqual(len(self.connection.get_messages(PATIENT_USERNAME)), 0)
 
     def test_delete_user_non_exist_username(self):
@@ -190,7 +191,8 @@ class DatabaseUsersTestCase(unittest.TestCase):
         """
         print('(' + self.test_delete_user_non_exist_username.__name__+')',
               self.test_delete_user_non_exist_username.__doc__)
-        self.assertFalse(self.connection.delete_user(NON_EXIST_PATIENT_USERNAME))
+        with self.assertRaises(ValueError):
+            self.connection.delete_user(NON_EXIST_PATIENT_USERNAME)
 
     def test_modify_user(self):
         """
