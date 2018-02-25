@@ -33,6 +33,7 @@ MODIFIED_PATIENT = {'public_profile': {'reg_date': 1785505926,
                     'restricted_profile': {'firstname': 'PoorGuy',
                                            'lastname': 'Tell',
                                            'work_address': '54 Middle White Park',
+                                           'gender': 'female',
                                            'picture': '192.219/dab/image45.png',
                                            'age': 36}
                     }
@@ -46,6 +47,7 @@ DOCTOR = {'public_profile': {'reg_date': 715581063,
           'restricted_profile': {'firstname': 'Clarissa',
                                  'lastname': 'Guadalupe',
                                  'work_address': '47 West Rocky Hague Road',
+                                 'gender': 'female',
                                  'picture': '192.219/dab/image.png',
                                  'age': 27}
           }
@@ -58,6 +60,7 @@ NEW_PATIENT = {'public_profile': {'reg_date': 1362012548,
                'restricted_profile': {'firstname': 'sully',
                                       'lastname': 'stolen',
                                       'work_address': '89 North White Oak Way',
+                                      'gender': 'male',
                                       'picture': '',
                                       'age': 40}
                 }
@@ -138,24 +141,16 @@ class DatabaseUsersTestCase(unittest.TestCase):
         '''
         print('('+self.test_get_user.__name__+')', self.test_get_user.__doc__)
         # test for patient
-        self.assertDictContainsSubset(self.connection.get_user(PATIENT_ID), PATIENT)
-        # resp = self.connection.get_user(PATIENT_ID)
-        # self.assertEqual(resp, extract_dict_a_from_b(resp, PATIENT))
+        self.assertDictContainsSubset(self.connection.get_user(PATIENT_USERNAME), PATIENT)
         # test for doctor
-        self.assertDictContainsSubset(self.connection.get_user(DOCTOR_ID), DOCTOR)
-        # resp = self.connection.get_user(DOCTOR_ID)
-        # self.assertEqual(resp, extract_dict_a_from_b(resp, DOCTOR))
-    #
-    # def test_get_user_noexistingid(self):
-    #     '''
-    #     Test get_user with  msg-200 (no-existing)
-    #     '''
-    #     print('('+self.test_get_user_noexistingid.__name__+')', \
-    #           self.test_get_user_noexistingid.__doc__)
-    #
-    #     #Test with an existing user
-    #     user = self.connection.get_user(USER_WRONG_NICKNAME)
-    #     self.assertIsNone(user)
+        self.assertDictContainsSubset(self.connection.get_user(DOCTOR_USERNAME), DOCTOR)
+
+    def test_get_user_non_exist_id(self):
+        '''
+        Test get_user with  msg-200 (no-existing)
+        '''
+        print('('+self.test_get_user_non_exist_id.__name__+')', self.test_get_user_non_exist_id.__doc__)
+        self.assertIsNone(self.connection.get_user(NON_EXIST_PATIENT_USERNAME))
 
     def test_get_users(self):
         '''
@@ -172,6 +167,7 @@ class DatabaseUsersTestCase(unittest.TestCase):
             elif user['username'] == DOCTOR_USERNAME:
                 self.assertDictContainsSubset(user, DOCTOR['public_profile'])
 
+    # TODO not working
     def test_delete_user(self):
         '''
         Test that the user Mystery is deleted
@@ -183,55 +179,46 @@ class DatabaseUsersTestCase(unittest.TestCase):
         self.assertIsNone(self.connection.get_user(PATIENT_USERNAME))
         # Check that the user does not have associated any message
         self.assertEqual(len(self.connection.get_messages(PATIENT_USERNAME)), 0)
-    #
-    # def test_delete_user_noexistingnickname(self):
-    #     '''
-    #     Test delete_user with  Batty (no-existing)
-    #     '''
-    #     print('('+self.test_delete_user_noexistingnickname.__name__+')', \
-    #           self.test_delete_user_noexistingnickname.__doc__)
-    #     #Test with an existing user
-    #     resp = self.connection.delete_user(USER_WRONG_NICKNAME)
-    #     self.assertFalse(resp)
-    #
-    # def test_modify_user(self):
-    #     '''
-    #     Test that the user Mystery is modifed
-    #     '''
-    #     print('('+self.test_modify_user.__name__+')', \
-    #           self.test_modify_user.__doc__)
-    #     #Get the modified user
-    #     resp = self.connection.modify_user(USER1_NICKNAME, MODIFIED_USER1)
-    #     self.assertEqual(resp, USER1_NICKNAME)
-    #     #Check that the users has been really modified through a get
-    #     resp2 = self.connection.get_user(USER1_NICKNAME)
-    #     resp_p_profile = resp2['public_profile']
-    #     resp_r_profile = resp2['restricted_profile']
-    #     #Check the expected values
-    #     p_profile = MODIFIED_USER1['public_profile']
-    #     r_profile = MODIFIED_USER1['restricted_profile']
-    #     self.assertEqual(p_profile['signature'],
-    #                       resp_p_profile['signature'])
-    #     self.assertEqual(p_profile['avatar'], resp_p_profile['avatar'])
-    #     self.assertEqual(r_profile['age'], resp_r_profile['age'])
-    #     self.assertEqual(r_profile['email'], resp_r_profile['email'])
-    #     self.assertEqual(r_profile['website'], resp_r_profile['website'])
-    #     self.assertEqual(r_profile['residence'], resp_r_profile['residence'])
-    #     self.assertEqual(r_profile['mobile'], resp_r_profile['mobile'])
-    #     self.assertEqual(r_profile['skype'], resp_r_profile['skype'])
-    #     self.assertEqual(r_profile['picture'], resp_r_profile['picture'])
-    #     self.assertDictContainsSubset(resp2, MODIFIED_USER1)
-    #
-    # def test_modify_user_noexistingnickname(self):
-    #     '''
-    #     Test modify_user with  user Batty (no-existing)
-    #     '''
-    #     print('('+self.test_modify_user_noexistingnickname.__name__+')', \
-    #           self.test_modify_user_noexistingnickname.__doc__)
-    #     #Test with an existing user
-    #     resp = self.connection.modify_user(USER_WRONG_NICKNAME, USER1)
-    #     self.assertIsNone(resp)
-    #
+
+    def test_delete_user_non_exist_username(self):
+        '''
+        Test delete_user with  SuperBoy (no-existing)
+        '''
+        print('('+self.test_delete_user_non_exist_username.__name__+')',
+              self.test_delete_user_non_exist_username.__doc__)
+        self.assertFalse(self.connection.delete_user(NON_EXIST_PATIENT_USERNAME))
+
+    # TODO not done yet
+    def test_modify_user(self):
+        '''
+        Test that the user Mystery is modifed
+        '''
+        print('('+self.test_modify_user.__name__+')', self.test_modify_user.__doc__)
+        # modify the user with provided user dict
+        modify_resp = self.connection.modify_user(PATIENT_USERNAME, MODIFIED_PATIENT['public_profile'],
+                                                  MODIFIED_PATIENT['restricted_profile'])
+        self.assertEqual(modify_resp, PATIENT_USERNAME)
+        # check each value in the profile with the modified one, see if modification successful
+        # get the get_user response
+        get_resp = self.connection.get_user(PATIENT_USERNAME)
+        resp_r_profile = get_resp['restricted_profile']
+        r_profile = MODIFIED_PATIENT['restricted_profile']
+        self.assertEqual(r_profile['firstname'], resp_r_profile['firstname'])
+        self.assertEqual(r_profile['lastname'], resp_r_profile['lastname'])
+        self.assertEqual(r_profile['work_address'], resp_r_profile['work_address'])
+        self.assertEqual(r_profile['gender'], resp_r_profile['gender'])
+        self.assertEqual(r_profile['picture'], resp_r_profile['picture'])
+        self.assertEqual(r_profile['age'], resp_r_profile['age'])
+        self.assertDictContainsSubset(get_resp, MODIFIED_PATIENT)
+
+    def test_modify_user_non_exist_username(self):
+        '''
+        Test modify_user with  user Batty (no-existing)
+        '''
+        print('('+self.test_modify_user_non_exist_username.__name__+')', self.test_modify_user_non_exist_username.__doc__)
+        self.assertIsNone(self.connection.modify_user(NON_EXIST_PATIENT_USERNAME, PATIENT['public_profile'],
+                                                      PATIENT['restricted_profile']))
+
     # def test_append_user(self):
     #     '''
     #     Test that I can add new users
