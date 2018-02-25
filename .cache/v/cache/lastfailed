@@ -1,0 +1,11 @@
+{
+  "test/database_api_messages_tests.py::DatabaseMessagesTestCase::test_create_message_object": true,
+  "test/database_api_messages_tests.py::DatabaseMessagesTestCase::test_get_message": true,
+  "test/database_api_messages_tests.py::DatabaseMessagesTestCase::test_get_messages": true,
+  "test/database_api_messages_tests.py::DatabaseMessagesTestCase::test_get_messages_specific_user": true,
+  "test/database_api_messages_tests.py::DatabaseMessagesTestCase::test_messages_table_populated": true,
+  "test/database_api_messages_tests.py::test_table_populated": true,
+  "test/database_api_messages_tests.py::test_table_schema": true,
+  "test/database_api_tables_tests.py::test_table_populated": true,
+  "test/database_api_tables_tests.py::test_table_schema": true
+}
