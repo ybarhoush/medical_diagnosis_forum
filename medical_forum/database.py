@@ -599,9 +599,9 @@ class Connection(object):
         return self._create_diagnosis_object(row)
 
     # TODO imlement create_diagnosis
-    # TODO implement get_messages
 
     #Message Table API.
+
     def get_message(self, messageid):
         '''
         Extracts a message from the database.
@@ -636,6 +636,84 @@ class Connection(object):
             return None
         #Build the return object
         return self._create_message_object(row)
+
+    def get_messages(self, username=None, number_of_messages=-1,
+                     before=-1, after=-1):
+        '''
+        Return a list of all the messages in the database filtered by the
+        conditions provided in the parameters.
+
+        :param username: default None. Search messages of a user with the given
+            username. If this parameter is None, it returns the messages of
+            any user in the system.
+        :type username: str
+        :param number_of_messages: default -1. Sets the maximum number of
+            messages returning in the list. If set to -1, there is no limit.
+        :type number_of_messages: int
+        :param before: All timestamps > ``before`` (UNIX timestamp) are removed.
+            If set to -1, this condition is not applied.
+        :type before: long
+        :param after: All timestamps < ``after`` (UNIX timestamp) are removed.
+            If set to -1, this condition is not applied.
+        :type after: long
+
+        :return: A list of messages. Each message is a dictionary containing
+            the following keys:
+
+            * ``messageid``: string with the format msg-\d{1,3}.Id of the
+                message.
+            * ``sender``: username of the message's author.
+            * ``title``: string containing the title of the message.
+            * ``timestamp``: UNIX timestamp (long int) that specifies when the
+                message was created.
+
+            Note that all values in the returned dictionary are string unless
+            otherwise stated.
+
+        :raises ValueError: if ``before`` or ``after`` are not valid UNIX
+            timestamps
+
+        '''
+        #Create the SQL Statement build the string depending on the existence
+        #of username, numbero_of_messages, before and after arguments.
+        query = 'SELECT * FROM messages'
+          #username restriction
+        if username is not None or before != -1 or after != -1:
+            query += ' WHERE'
+        if username is not None:
+            query += " user_nickname = '%s'" % username
+          #Before restriction
+        if before != -1:
+            if username is not None:
+                query += ' AND'
+            query += " timestamp < %s" % str(before)
+          #After restriction
+        if after != -1:
+            if username is not None or before != -1:
+                query += ' AND'
+            query += " timestamp > %s" % str(after)
+          #Order of results
+        query += ' ORDER BY timestamp DESC'
+          #Limit the number of resulst return
+        if number_of_messages > -1:
+            query += ' LIMIT ' + str(number_of_messages)
+        #Activate foreign key support
+        self.set_foreign_keys_support()
+        #Cursor and row initialization
+        self.con.row_factory = sqlite3.Row
+        cur = self.con.cursor()
+        #Execute main SQL Statement
+        cur.execute(query)
+        #Get results
+        rows = cur.fetchall()
+        if rows is None:
+            return None
+        #Build the return object
+        messages = []
+        for row in rows:
+            message = self._create_message_list_object(row)
+            messages.append(message)
+        return messages
 
     def delete_message(self, messageid):
         '''
