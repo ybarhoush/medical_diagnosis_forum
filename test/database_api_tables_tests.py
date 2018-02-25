@@ -18,10 +18,10 @@ DB_PATH = 'db/medical_forum_data_test.db'
 ENGINE = database.Engine(DB_PATH)
 
 # Tables content initial sizes
-INITIAL_MESSAGES_COUNT = 0
-INITIAL_USERS_COUNT = 0
-INITIAL_USERS_PROFILE_COUNT = 0
-INITIAL_DIAGNOSIS_COUNT = 0
+INITIAL_MESSAGES_COUNT = 19
+INITIAL_USERS_COUNT = 25
+INITIAL_USERS_PROFILE_COUNT = 25
+INITIAL_DIAGNOSIS_COUNT = 10
 
 # Tables names
 USERS_TABLE = 'users'
@@ -157,6 +157,5 @@ class TablesCreationTestCase(unittest.TestCase):
 
 if __name__ == '__main__':
     print('Start running tables tests')
-    print(ENGINE)
     unittest.main()
 
