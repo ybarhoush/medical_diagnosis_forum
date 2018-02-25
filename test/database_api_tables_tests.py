@@ -10,24 +10,6 @@ Database API testing unit for tables creation, and whether all created successfu
 from .utils import *
 import unittest
 
-# Import the database of medical_forum
-from medical_forum import database
-
-# Database file path to be used for testing only and create database instance
-DB_PATH = 'db/medical_forum_data_test.db'
-ENGINE = database.Engine(DB_PATH)
-
-# Tables content initial sizes
-INITIAL_MESSAGES_COUNT = 19
-INITIAL_USERS_COUNT = 25
-INITIAL_USERS_PROFILE_COUNT = 25
-INITIAL_DIAGNOSIS_COUNT = 10
-
-# Tables names
-USERS_TABLE = 'users'
-USERS_PROFILE_TABLE = 'users_profile'
-MESSAGES_TABLE = 'messages'
-DIAGNOSIS_TABLE = 'diagnosis'
 
 # Tables names, types and foreign keys constants
 # User table
@@ -52,8 +34,6 @@ MESSAGES_TABLE_FK = [('users', 'user_id', 'user_id'), ('users', 'username', 'use
 DIAGNOSIS_TABLE_NAMES = ['diagnosis_id', 'user_id', 'message_id', 'disease', 'diagnosis_description']
 DIAGNOSIS_TABLE_TYPES = ['INTEGER', 'INTEGER', 'INTEGER', 'TEXT', 'TEXT']
 DIAGNOSIS_TABLE_FK = [('messages', 'message_id', 'message_id'), ('users', 'user_id', 'user_id')]
-
-FOREIGN_KEYS_ON = 'PRAGMA foreign_keys = ON'
 
 
 class TablesCreationTestCase(unittest.TestCase):
@@ -84,7 +64,6 @@ class TablesCreationTestCase(unittest.TestCase):
         try:
             # Get default data from medical_forum_data_dump.sql, populate tables and connect to DB
             ENGINE.populate_tables()
-            print(ENGINE.connect())
             self.connection = ENGINE.connect()
 
         # In case of error/exception in populating tables, clear all tables data
