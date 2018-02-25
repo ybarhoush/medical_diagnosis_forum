@@ -1185,8 +1185,8 @@ class Connection(object):
                   VALUES(?,?,?,?)'
         # SQL Statement to create the row in user_profile table
         query3 = 'INSERT INTO users_profile (user_id, firstname,lastname, \
-                                             email,speciality, \
-                                             picture,phone, \
+                                             speciality, \
+                                             picture,age, \
                                              work_address, \
                                              gender,user_type)\
                   VALUES (?,?,?,?,?,?,?,?,?,?)'
@@ -1199,10 +1199,9 @@ class Connection(object):
         r_profile = user['restricted_profile']
         _firstname = r_profile.get('firstname', None)
         _lastname = r_profile.get('lastname', None)
-        _email = r_profile.get('email', None)
-        _speciality = r_profile.get('speciality', None)
+        _speciality = p_profile.get('speciality', None)
         _picture = r_profile.get('picture', None)
-        _phone = r_profile.get('phone', None)
+        _age = r_profile.get('phone', None)
         _work_address = r_profile.get('work_address', None)
         _gender = r_profile.get('gender', None)
         _user_type = p_profile.get('user_type', None)
@@ -1228,7 +1227,7 @@ class Connection(object):
             # Add the row in users_profile table
             # Execute the statement
             pvalue = (
-            lid, _firstname, _lastname, _email, _speciality, _picture, _phone, _work_address, _gender, _user_type)
+            lid, _firstname, _lastname, _speciality, _picture, _age, _work_address, _gender, _user_type)
 
             cur.execute(query3, pvalue)
             self.con.commit()
