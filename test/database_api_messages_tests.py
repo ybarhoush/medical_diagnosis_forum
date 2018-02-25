@@ -24,8 +24,8 @@ MESSAGE_1 = {
     'message_id': 'msg-1',
     'reply_to': None,  # this means it's a new message or medical case
     'title': 'Soreness in the throat',
-    'body': "Hi, I have this soreness in my throat. It started just yesterday and it's \
-            getting worse by every hour. What should I do, and what is the cause of this.",
+    'body': "Hi, I have this soreness in my throat. It started just yesterday and its \
+            getting worse by every hour. What should I do, and what is the cause of this. ",
     'sender': 'PoorGuy',
     'created_time': 1519474612
 }
@@ -34,8 +34,8 @@ MESSAGE_2 = {
     'message_id': 'msg-8',
     'reply_to': 'msg-1',  # message reply to MESSAGE_1
     'title': 'Dizziness when running',
-    'body': "Hi, I need help with this issue real quick. I get very dizzy when I run for few minutes. \
-            This is being happening for like 2 weeks now. I really need help with this !",
+    'body': "Dizziness when running','Hi, I need help with this issue real quick. I get very dizzy when I run for few minutes. \
+            This is being happening for like 2 weeks now. I really need help with this ! ",
     'sender': 'Dizzy',
     'created_time': 1519441355
 }
