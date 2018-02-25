@@ -475,7 +475,7 @@ class Connection(object):
             * ``firstanme``: given name of the user
             * ``lastname``: family name of the user
             * ``phone``: string showing the user's phone number. Can be None.
-            * ``work_address``: complete user's home address.
+            * ``work_address``: complete user's work address.
             * ``picture``: file which contains an image of the user.
             * ``gender``: User's gender ('male' or 'female').
 
@@ -599,9 +599,9 @@ class Connection(object):
         return self._create_diagnosis_object(row)
 
     # TODO imlement create_diagnosis
-    # TODO implement get_messages
 
     #Message Table API.
+
     def get_message(self, messageid):
         '''
         Extracts a message from the database.
@@ -636,6 +636,84 @@ class Connection(object):
             return None
         #Build the return object
         return self._create_message_object(row)
+
+    def get_messages(self, username=None, number_of_messages=-1,
+                     before=-1, after=-1):
+        '''
+        Return a list of all the messages in the database filtered by the
+        conditions provided in the parameters.
+
+        :param username: default None. Search messages of a user with the given
+            username. If this parameter is None, it returns the messages of
+            any user in the system.
+        :type username: str
+        :param number_of_messages: default -1. Sets the maximum number of
+            messages returning in the list. If set to -1, there is no limit.
+        :type number_of_messages: int
+        :param before: All timestamps > ``before`` (UNIX timestamp) are removed.
+            If set to -1, this condition is not applied.
+        :type before: long
+        :param after: All timestamps < ``after`` (UNIX timestamp) are removed.
+            If set to -1, this condition is not applied.
+        :type after: long
+
+        :return: A list of messages. Each message is a dictionary containing
+            the following keys:
+
+            * ``messageid``: string with the format msg-\d{1,3}.Id of the
+                message.
+            * ``sender``: username of the message's author.
+            * ``title``: string containing the title of the message.
+            * ``timestamp``: UNIX timestamp (long int) that specifies when the
+                message was created.
+
+            Note that all values in the returned dictionary are string unless
+            otherwise stated.
+
+        :raises ValueError: if ``before`` or ``after`` are not valid UNIX
+            timestamps
+
+        '''
+        #Create the SQL Statement build the string depending on the existence
+        #of username, numbero_of_messages, before and after arguments.
+        query = 'SELECT * FROM messages'
+          #username restriction
+        if username is not None or before != -1 or after != -1:
+            query += ' WHERE'
+        if username is not None:
+            query += " user_nickname = '%s'" % username
+          #Before restriction
+        if before != -1:
+            if username is not None:
+                query += ' AND'
+            query += " timestamp < %s" % str(before)
+          #After restriction
+        if after != -1:
+            if username is not None or before != -1:
+                query += ' AND'
+            query += " timestamp > %s" % str(after)
+          #Order of results
+        query += ' ORDER BY timestamp DESC'
+          #Limit the number of resulst return
+        if number_of_messages > -1:
+            query += ' LIMIT ' + str(number_of_messages)
+        #Activate foreign key support
+        self.set_foreign_keys_support()
+        #Cursor and row initialization
+        self.con.row_factory = sqlite3.Row
+        cur = self.con.cursor()
+        #Execute main SQL Statement
+        cur.execute(query)
+        #Get results
+        rows = cur.fetchall()
+        if rows is None:
+            return None
+        #Build the return object
+        messages = []
+        for row in rows:
+            message = self._create_message_list_object(row)
+            messages.append(message)
+        return messages
 
     def delete_message(self, messageid):
         '''
@@ -796,7 +874,7 @@ class Connection(object):
             database. The id of the message has the format msg-\d{1,3}
         :param str title: the message's title
         :param str body: the message's content
-        :param str sender: the nickname of the person who is editing this
+        :param str sender: the username of the person who is editing this
             message. If it is not provided "Anonymous" will be stored in db.
 
         :return: the id of the created message or None if the message was not
@@ -858,14 +936,14 @@ class Connection(object):
         '''
         Extracts all the information of a user.
 
-        :param str nickname: The nickname of the user to search for.
+        :param str username: The username of the user to search for.
         :return: dictionary with the format provided in the method:
             :py:meth:`_create_user_object`
 
         '''
         #Create the SQL Statements
-          #SQL Statement for retrieving the user given a nickname
-        query1 = 'SELECT user_id from users WHERE nickname = ?'
+          #SQL Statement for retrieving the user given a username
+        query1 = 'SELECT user_id from users WHERE username = ?'
           #SQL Statement for retrieving the user information
         query2 = 'SELECT users.*, users_profile.* FROM users, users_profile \
                   WHERE users.user_id = ? \
@@ -877,7 +955,7 @@ class Connection(object):
         #Cursor and row initialization
         self.con.row_factory = sqlite3.Row
         cur = self.con.cursor()
-        #Execute SQL Statement to retrieve the id given a nickname
+        #Execute SQL Statement to retrieve the id given a username
         pvalue = (username,)
         cur.execute(query1, pvalue)
         #Extract the user id
@@ -896,17 +974,17 @@ class Connection(object):
 
     def delete_user(self, username):
         '''
-        Remove all user information of the user with the nickname passed in as
+        Remove all user information of the user with the username passed in as
         argument.
 
-        :param str nickname: The nickname of the user to remove.
+        :param str username: The username of the user to remove.
 
         :return: True if the user is deleted, False otherwise.
 
         '''
         #Create the SQL Statements
           #SQL Statement for deleting the user information
-        query = 'DELETE FROM users WHERE nickname = ?'
+        query = 'DELETE FROM users WHERE username = ?'
         #Activate foreign key support
         self.set_foreign_keys_support()
         #Cursor and row initialization
@@ -921,9 +999,193 @@ class Connection(object):
             return False
         return True
 
-    # TODO def modify_user(self, nickname, user)
-    # TODO def def append_user(self, nickname, user)
+    def modify_user(self, username, p_profile,r_profile):
+        '''
+        Modify the information of a user.
 
+        :param str username: The username of the user to modify
+        :param dict p_profile: a dictionary with the public information 
+                to be modified. The dictionary has the following structure:
+
+                .. code-block:: javascript
+
+                    'public_profile':{'usertype':''}
+        :param dict r_profile: a dictionary with the restricted inforamtion 
+                to be modified. The dictionary has the following structure:
+
+                .. code-block:: javascript
+                    'restricted_profile':{'firstname':'','lastname':'',
+                                          'email':'', 'speciality':'','phone':'',
+                                          'age':'','work_address':'',
+                                          'gender':'', 'picture':''}
+
+                where:
+
+                * ``reg_date``: UNIX timestamp when the user registered
+                    in the system (long integer)
+                * ``usertype``: usertype, either doctor or patient
+                * ``firstanme``: given name of the user
+                * ``lastname``: family name of the user
+                * ``email``: current email of the user.
+                * ``speciality``: url with the user's personal page. Can be None
+                * ``phone``: string showing the user's phone number. Can be
+                    None.
+                * ``: user's username in Can be None.
+                * ``work_address``: complete user's work address.
+                * ``picture``: file which contains an image of the user.
+                * ``gender``: User's gender ('male' or 'female').
+
+            Note that all values are string if they are not otherwise indicated.
+
+        :return: the username of the modified user or None if the
+            ``username`` passed as parameter is not  in the database.
+        :raise ValueError: if the user argument is not well formed.
+        '''
+        #Create the SQL Statements
+        #SQL Statement for extracting the userid given a username
+        query1 = 'SELECT user_id from users WHERE username = ?'
+        #SQL Statement to update the user_profile table
+        query2 = 'UPDATE users_profile SET firstname = ?,lastname = ?, \
+                                           email = ?,speciality = ?, \
+                                           picture = ?,phone = ?, \
+                                        = ,work_address = ?, \
+                                           gender = ?,usertype = ?,\
+                                           WHERE user_id = ?'
+        #temporal variables
+        user_id = None
+        _firstname = None if not r_profile else  r_profile.get('firstname', None)
+        _lastname = None if not r_profile else r_profile.get('lastname', None)
+        _email = None if not r_profile else r_profile.get('email', None)
+        _speciality = None if not r_profile else r_profile.get('speciality', None)
+        _picture = None if not r_profile else r_profile.get('picture', None)
+        _phone = None if not r_profile else r_profile.get('phone', None)
+        _work_address = None if not r_profile else r_profile.get('work_address', None)
+        _gender = None if not r_profile else r_profile.get('gender', None)
+        _usertype = None if not p_profile else p_profile.get('usertype', None)
+
+        #Activate foreign key support
+        self.set_foreign_keys_support()
+        #Cursor and row initialization
+        self.con.row_factory = sqlite3.Row
+        cur = self.con.cursor()
+        #Execute the statement to extract the id associated to a username
+        pvalue = (username,)
+        cur.execute(query1, pvalue)
+        #Only one value expected
+        row = cur.fetchone()
+        #if does not exist, return
+        if row is None:
+            return None
+        else:
+            user_id = row["user_id"]
+            #execute the main statement
+            pvalue = (_firstname, _lastname, _email, _speciality, _picture,
+                      _phone, _work_address, _gender,
+                      _usertype, user_id)
+            cur.execute(query2, pvalue)
+            self.con.commit()
+            #Check that I have modified the user
+            if cur.rowcount < 1:
+                return None
+            return username
+    # TODO fix error
+    def append_user(self, username, user):
+        '''
+        Create a new user in the database.
+
+        :param str username: The username of the user to modify
+        :param dict user: a dictionary with the information to be modified. The
+                dictionary has the following structure:
+
+                .. code-block:: javascript
+
+                    {'public_profile':{'reg_date':,'usertype':''},
+                    'restricted_profile':{'firstname':'','lastname':'',
+                                          'email':'', 'speciality':'','phone':'',
+                                          'work_address':'', 'gender':'', 'picture':''}
+                    }
+
+                where:
+
+                * ``reg_date``: UNIX timestamp when the user registered
+                    in the system (long integer)
+                * ``usertype``: can either be a doctor or patient
+                * ``firstanme``: given name of the user
+                * ``lastname``: family name of the user
+                * ``email``: current email of the user.
+                * ``speciality``: url with the user's personal page. Can be None
+                * ``phone``: string showing the user's phone number. Can be
+                    None.
+                * ``uusername``: user's username in Can be None.
+                * ``work_address``: complete user's work address.
+                * ``picture``: file which contains an image of the user.
+                * ``gender``: User's gender ('male' or 'female').
+
+            Note that all values are string if they are not otherwise indicated.
+
+        :return: the username of the modified user or None if the
+            ``username`` passed as parameter is not  in the database.
+        :raise ValueError: if the user argument is not well formed.
+
+        '''
+        #Create the SQL Statements
+          #SQL Statement for extracting the userid given a username
+        query1 = 'SELECT user_id FROM users WHERE username = ?'
+          #SQL Statement to create the row in  users table
+        query2 = 'INSERT INTO users(username,regDate,lastLogin,timesviewed)\
+                  VALUES(?,?,?,?)'
+          #SQL Statement to create the row in user_profile table
+        query3 = 'INSERT INTO users_profile (user_id, firstname,lastname, \
+                                             email,speciality, \
+                                             picture,phone, \
+                                             work_address, \
+                                             gender,usertype)\
+                  VALUES (?,?,?,?,?,?,?,?,?,?)'
+        #temporal variables for user table
+        #timestamp will be used for lastlogin and regDate.
+        timestamp = time.mktime(datetime.now().timetuple())
+        timesviewed = 0
+        #temporal variables for user profiles
+        p_profile = user['public_profile']
+        r_profile = user['restricted_profile']
+        _firstname = r_profile.get('firstname', None)
+        _lastname = r_profile.get('lastname', None)
+        _email = r_profile.get('email', None)
+        _speciality = r_profile.get('speciality', None)
+        _picture = r_profile.get('picture', None)
+        _phone = r_profile.get('phone', None)
+        _work_address = r_profile.get('work_address', None)
+        _gender = r_profile.get('gender', None)
+        _usertype = p_profile.get('usertype', None)
+        
+        #Activate foreign key support
+        self.set_foreign_keys_support()
+        #Cursor and row initialization
+        self.con.row_factory = sqlite3.Row
+        cur = self.con.cursor()
+        #Execute the main SQL statement to extract the id associated to a username
+        pvalue = (username,)
+        cur.execute(query1, pvalue)
+        #No value expected (no other user with that username expected)
+        row = cur.fetchone()
+        #If there is no user add rows in user and user profile
+        if row is None:
+            #Add the row in users table
+            # Execute the statement
+            pvalue = (username, timestamp, timestamp, timesviewed)
+            cur.execute(query2, pvalue)
+            #Extrat the rowid => user-id
+            lid = cur.lastrowid
+            #Add the row in users_profile table
+            # Execute the statement
+            pvalue = (lid, _firstname, _lastname, _email, _speciality, _picture, _phone,_work_address, _gender, _usertype)
+            
+            cur.execute(query3, pvalue)
+            self.con.commit()
+            #We do not do any comprobation and return the username
+            return username
+        else:
+            return None
 
     # UTILS
     def get_user_id(self, username):
