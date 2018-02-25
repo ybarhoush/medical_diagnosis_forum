@@ -1,3 +1,4 @@
+PRAGMA foreign_keys=OFF;
 BEGIN TRANSACTION;
 CREATE TABLE IF NOT EXISTS users_profile (
 	user_id	INTEGER NOT NULL,
@@ -10,17 +11,17 @@ CREATE TABLE IF NOT EXISTS users_profile (
 	email	TEXT NOT NULL,
 	picture	TEXT,
 	phone	INTEGER,
-	diagnosis_id	INTEGER NOT NULL,
+	diagnosis_id	INTEGER,
 	height	INTEGER,
 	weight	INTEGER,
 	speciality	TEXT,
 	FOREIGN KEY(user_id) REFERENCES users(user_id) ON DELETE SET NULL,
-	FOREIGN KEY(diagnosis_id) REFERENCES diagnosis(diagnosis_id) ON DELETE SET NULL,
-	PRIMARY KEY(user_type)
+	PRIMARY KEY(user_id),
+	FOREIGN KEY(diagnosis_id) REFERENCES diagnosis(diagnosis_id) ON DELETE SET NULL
 );
 CREATE TABLE IF NOT EXISTS users (
-	user_id	INTEGER UNIQUE NOT NULL,
-	username	TEXT UNIQUE NOT NULL,
+	user_id	INTEGER NOT NULL UNIQUE,
+	username	TEXT NOT NULL,
 	pass_hash	TEXT NOT NULL,
 	reg_date	INTEGER,
 	last_login	INTEGER,
@@ -28,7 +29,7 @@ CREATE TABLE IF NOT EXISTS users (
 	PRIMARY KEY(user_id)
 );
 CREATE TABLE IF NOT EXISTS messages (
-	message_id	INTEGER UNIQUE NOT NULL,
+	message_id	INTEGER NOT NULL UNIQUE,
 	user_id	INTEGER NOT NULL,
 	username	TEXT NOT NULL,
 	reply_to	INTEGER,
@@ -36,19 +37,19 @@ CREATE TABLE IF NOT EXISTS messages (
 	body	TEXT,
 	views	INTEGER,
 	timestamp	INTEGER,
-	PRIMARY KEY(message_id),
-	FOREIGN KEY(user_id) REFERENCES users(user_id) ON DELETE CASCADE,
-	FOREIGN KEY(username) REFERENCES users(username),
-	FOREIGN KEY(reply_to) REFERENCES messages(message_id)
+	FOREIGN KEY(user_id) REFERENCES users(user_id) ON DELETE SET NULL,
+	FOREIGN KEY(reply_to) REFERENCES messages(message_id),
+	PRIMARY KEY(message_id)
 );
 CREATE TABLE IF NOT EXISTS diagnosis (
-	diagnosis_id	INTEGER UNIQUE NOT NULL,
+	diagnosis_id	INTEGER NOT NULL,
 	user_id	INTEGER NOT NULL,
 	message_id	INTEGER NOT NULL,
 	disease	TEXT,
 	diagnosis_description	TEXT,
 	PRIMARY KEY(diagnosis_id),
-	FOREIGN KEY(message_id) REFERENCES messages(message_id) ON DELETE SET NULL,
-	FOREIGN KEY(user_id) REFERENCES users(user_id) ON DELETE SET NULL
+	FOREIGN KEY(user_id) REFERENCES users(user_id) ON DELETE SET NULL,
+	FOREIGN KEY(message_id) REFERENCES messages(message_id) ON DELETE SET NULL
 );
 COMMIT;
+PRAGMA foreign_keys=ON;
