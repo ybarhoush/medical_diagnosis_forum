@@ -227,6 +227,53 @@ class ForumObject(MasonObject):
 
     # TODO def add_control_reply_to_diagnosis(self):
 
+    # Schema
+
+    def _msg_schema(self, edit=False):
+        """
+        Creates a schema dictionary for messages. If we're editing a message
+        the editor field should be set. If the message is new, the author field
+        should be set instead. This is controlled by the edit flag.
+
+        This schema can also be accessed from the urls /forum/schema/edit-msg/ and
+        /forum/schema/add-msg/.
+
+        : param bool edit: is this schema for an edit form
+        : rtype:: dict
+        """
+
+        if edit:
+            user_field = "editor"
+        else:
+            user_field = "author"
+
+        schema = {
+            "type": "object",
+            "properties": {},
+            "required": ["headline", "articleBody"]
+        }
+
+        props = schema["properties"]
+        props["headline"] = {
+            "title": "Headline",
+            "description": "Message headline",
+            "type": "string"
+        }
+        props["articleBody"] = {
+            "title": "Contents",
+            "description": "Message contents",
+            "type": "string"
+        }
+        props[user_field] = {
+            "title": user_field.capitalize(),
+            "description": "Name of the message {}".format(user_field),
+            "type": "string"
+        }
+        return schema
+
+
+# TODO def _public_profile_schema(self):
+# TODO def _dgs_schema(self): -- we need to modify database.py; replace msg with dgs for diagnosis
 
 # ERROR HANDLERS
 
@@ -350,7 +397,7 @@ class Messages(Resource):
         envelope.add_namespace("medical_forum", LINK_RELATIONS_URL)
 
         envelope.add_control("self", href=api.url_for(Messages))
-        envelope.add_control_users_all()
+        # TODO envelope.add_control_users_all()
         envelope.add_control_add_message()
 
         items = envelope["items"] = []
