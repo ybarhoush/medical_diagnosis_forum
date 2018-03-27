@@ -273,7 +273,7 @@ class ForumObject(MasonObject):
 
 
 # TODO def _public_profile_schema(self):
-# TODO def _dgs_schema(self): -- we need to modify database.py; replace msg with dgs for diagnosis
+# TODO def _dgs_schema(self): --shall we modify database.py; replace msg with dgs for diagnosis?
 
 # ERROR HANDLERS
 
@@ -735,7 +735,7 @@ api.add_resource(Message, "/medical_forum/api/messages/<regex('msg-\d+'):message
 # TODO api.add_resource for Diagnoses
 # TODO api.add_resource for Diagnosis
 
-# TODO Define the routes for diagnosis/diagnoses
+# TODO Define the routes for Diagnosis/Diagnoses
 
 # Redirect profile
 @app.route("/profiles/<profile_name>/")
