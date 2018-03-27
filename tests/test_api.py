@@ -78,10 +78,32 @@ class ResourcesAPITestCase(unittest.TestCase):
         self.app_context.pop()
 
 
-# TODO class MessagesTestCase (ResourcesAPITestCase):
 class MessagesTestCase(ResourcesAPITestCase):
     url = "/medical_forum/api/messages/"
 
+    existing_user_request = {
+        "headline": "sad",
+        "articleBody": "Tony bought new car. Anne bought new car. John bought new car. ",
+        "author": "Chad"
+    }
+
+    non_existing_user_request = {
+        "headline": "Can you help?",
+        "articleBody": "I came here a months ago talking about the same problem in which i feel like ...",
+        "author": "NoBodyKnows"
+    }
+
+    no_headline_wrong = {
+        "articleBody": "I am not sure about my test results, I am here to ask for ...",
+        "author": "Ellen"
+    }
+
+    no_body_wrong = {
+        "headline": "Knee problems",
+        "author": "Dizzy"
+    }
+
+    # Copied from test_url(self):
     def test_url(self):
         """
         Checks that the URL points to the right resource
@@ -94,6 +116,7 @@ class MessagesTestCase(ResourcesAPITestCase):
 
     # TODO def test_get_messages(self):
 
+    # Copied frm test_get_messages_mimetype(self)
     def test_get_messages_mimetype(self):
         """
         Checks that GET Messages return correct status code and data format
@@ -106,11 +129,99 @@ class MessagesTestCase(ResourcesAPITestCase):
         self.assertEqual(resp.headers.get("Content-Type", None),
                          "{};{}".format(MASONJSON, FORUM_MESSAGE_PROFILE))
 
+    # Modified from test_add_message(self):
     # TODO def test_add_message(self):
-    # TODO def test_add_message_wrong_media(self):
+
+    def test_add_message_wrong_media(self):
+        """
+        Test adding messages with a media different than json
+        """
+        print("(" + self.test_add_message_wrong_media.__name__ + ")", self.test_add_message_wrong_media.__doc__)
+        resp = self.client.post(resources.api.url_for(resources.Messages),
+                                headers={"Content-Type": "text"},
+                                data=self.message_1_request.__str__()
+                                )
+        self.assertTrue(resp.status_code == 415)
+
+    # Modified from test_add_message_wrong_media(self):
+    def test_add_message_wrong_media(self):
+        """
+        Test adding messages with a media different than json
+        """
+        print("(" + self.test_add_message_wrong_media.__name__ + ")", self.test_add_message_wrong_media.__doc__)
+        resp = self.client.post(resources.api.url_for(resources.Messages),
+                                headers={"Content-Type": "text"},
+                                data=self.existing_user_request.__str__()
+                                )
+        self.assertTrue(resp.status_code == 415)
+
+    # Modified from test_add_message_incorrect_format(self):
+    def test_add_message_incorrect_format(self):
+        """
+        Test that add message response correctly when sending erroneous message
+        format.
+        """
+        print("(" + self.test_add_message_incorrect_format.__name__ + ")",
+              self.test_add_message_incorrect_format.__doc__)
+        resp = self.client.post(resources.api.url_for(resources.Messages),
+                                headers={"Content-Type": JSON},
+                                data=json.dumps(self.no_headline_wrong)
+                                )
+        self.assertTrue(resp.status_code == 400)
+
+        resp = self.client.post(resources.api.url_for(resources.Messages),
+                                headers={"Content-Type": JSON},
+                                data=json.dumps(self.no_body_wrong)
+                                )
+        self.assertTrue(resp.status_code == 400)
 
 
-# TODO class MessageTestCase(ResourcesAPITestCase):
+class MessageTestCase(ResourcesAPITestCase):
+    # Modified from def setUp(self):
+    def setUp(self):
+        super(MessageTestCase, self).setUp()
+        self.url = resources.api.url_for(resources.Message,
+                                         message_id="msg-1",
+                                         _external=False)
+        self.url_wrong = resources.api.url_for(resources.Message,
+                                               message_id="msg-290",
+                                               _external=False)
+
+    # Modified from def setUp(self):
+    def test_url(self):
+        """
+        Checks that the URL points to the right resource
+        """
+        _url = "/medical_forum/api/messages/msg-1/"
+        print("(" + self.test_url.__name__ + ")", self.test_url.__doc__)
+        with resources.app.test_request_context(_url):
+            rule = flask.request.url_rule
+            view_point = resources.app.view_functions[rule.endpoint].view_class
+            self.assertEqual(view_point, resources.Message)
+
+    # Copied from def setUp(self):
+    def test_wrong_url(self):
+        """
+        Checks that GET Message return correct status code if given a
+        wrong message
+        """
+        resp = self.client.get(self.url_wrong)
+        self.assertEqual(resp.status_code, 404)
+
+    # TODO def test_get_message(self):
+    # TODO def test_get_message_mimetype(self):
+    # TODO def test_add_reply_unexisting_message(self):
+    # TODO def test_add_reply_wrong_message(self):
+    # TODO def test_add_reply_wrong_type(self):
+    # TODO def test_add_reply(self):
+    # TODO def test_modify_message(self):
+    # TODO def test_modify_unexisting_message(self):
+    # TODO def test_modify_wrong_message(self):
+    # TODO def test_delete_message(self):
+    # TODO def test_delete_unexisting_message(self):
+
+
+
 # TODO class MessageTestCase (ResourcesAPITestCase):
 # TODO class UsersTestCase (ResourcesAPITestCase):
 # TODO class UserTestCase (ResourcesAPITestCase):
