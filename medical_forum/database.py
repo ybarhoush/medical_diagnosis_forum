@@ -255,7 +255,7 @@ class Engine(object):
         return True
 
     # Modified from create_users_profile_table
-    def create_diagnosis_table(self):
+    def create_diagnoses_table(self):
         """
         Create the table ``diagnosis`` programmatically, without using .sql file.
 
@@ -584,6 +584,10 @@ class Connection(object):
         # Build the return object
         return self._create_diagnosis_object(row)
 
+    # TODO get_diagnoses --Extra
+    # Return a list of all the diagnoses in the database filtered by the
+    # conditions provided in the parameters.
+
     # Written from scratch
     def create_diagnosis(self, diagnosis):
         """
@@ -644,6 +648,10 @@ class Connection(object):
         lid = cur.lastrowid
         # Return the id in
         return 'diagnosis-' + str(lid) if lid is not None else None
+
+    # TODO def delete_diagnosis(self, diagnosis_id) --Extra
+    # TODO def modify_diagnosis(self, diagnosis_id, disease, diagnosis_description) --Extra
+    # TODO def append_diagnosis(self, reply_to, disease, diagnosis_description, sender) --Needed?
 
     # Message Table API.
     # Modified from get_message
