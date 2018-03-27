@@ -114,7 +114,65 @@ class MessagesTestCase(ResourcesAPITestCase):
             view_point = resources.app.view_functions[rule.endpoint].view_class
             self.assertEqual(view_point, resources.Messages)
 
-    # TODO def test_get_messages(self):
+    # Modified from def test_get_messages(self):
+    def test_get_messages(self):
+        """
+        Checks that GET Messages return correct status code and data format
+        """
+        print("(" + self.test_get_messages.__name__ + ")", self.test_get_messages.__doc__)
+
+        # Check that I receive status code 200
+        resp = self.client.get(flask.url_for("messages"))
+        self.assertEqual(resp.status_code, 200)
+
+        # Check that I receive a collection and adequate href
+        data = json.loads(resp.data.decode("utf-8"))
+
+        # Check controls
+        controls = data["@controls"]
+        self.assertIn("self", controls)
+        self.assertIn("medical_forum:add-message", controls)
+        # TODO self.assertIn("medical_forum:users-all", controls)
+
+        self.assertIn("href", controls["self"])
+        self.assertEqual(controls["self"]["href"], self.url)
+
+        # TODO Check that users-all control is correct
+        # users_ctrl = controls["forum:users-all"]
+        # self.assertIn("title", users_ctrl)
+        # self.assertIn("href", users_ctrl)
+        # self.assertEqual(users_ctrl["href"], "/medical_forum/api/users/")
+
+        # Check that add-message control is correct
+        msg_ctrl = controls["medical_forum:add-message"]
+        self.assertIn("title", msg_ctrl)
+        self.assertIn("href", msg_ctrl)
+        self.assertEqual(msg_ctrl["href"], "/medical_forum/api/messages/")
+        self.assertIn("encoding", msg_ctrl)
+        self.assertEqual(msg_ctrl["encoding"], "json")
+        self.assertIn("method", msg_ctrl)
+        self.assertEqual(msg_ctrl["method"], "POST")
+        self.assertIn("schema", msg_ctrl)
+
+        schema_data = msg_ctrl["schema"]
+        self.assertIn("type", schema_data)
+        self.assertIn("properties", schema_data)
+        self.assertIn("required", schema_data)
+
+        props = schema_data["properties"]
+        self.assertIn("headline", props)
+        self.assertIn("articleBody", props)
+        self.assertIn("author", props)
+
+        req = schema_data["required"]
+        self.assertIn("headline", req)
+        self.assertIn("articleBody", req)
+
+        for key, value in list(props.items()):
+            self.assertIn("description", value)
+            self.assertIn("title", value)
+            self.assertIn("type", value)
+            self.assertEqual("string", value["type"])
 
     # Copied frm test_get_messages_mimetype(self)
     def test_get_messages_mimetype(self):
@@ -130,7 +188,32 @@ class MessagesTestCase(ResourcesAPITestCase):
                          "{};{}".format(MASONJSON, FORUM_MESSAGE_PROFILE))
 
     # Modified from test_add_message(self):
-    # TODO def test_add_message(self):
+    # TODO fix database lock: def test_add_message(self):
+    # def test_add_message(self):
+    #     """
+    #     Test adding messages to the database.
+    #     """
+    #     print("(" + self.test_add_message.__name__ + ")", self.test_add_message.__doc__)
+    #
+    #     resp = self.client.post(resources.api.url_for(resources.Messages),
+    #                             headers={"Content-Type": JSON},
+    #                             data=json.dumps(self.existing_user_request)
+    #                             )
+    #     self.assertTrue(resp.status_code == 201)
+    #     url = resp.headers.get("Location")
+    #     self.assertIsNotNone(url)
+    #     resp = self.client.get(url)
+    #     self.assertTrue(resp.status_code == 200)
+    #
+    #     resp = self.client.post(resources.api.url_for(resources.Messages),
+    #                             headers={"Content-Type": JSON},
+    #                             data=json.dumps(self.non_existing_user_request)
+    #                             )
+    #     self.assertTrue(resp.status_code == 201)
+    #     url = resp.headers.get("Location")
+    #     self.assertIsNotNone(url)
+    #     resp = self.client.get(url)
+    #     self.assertTrue(resp.status_code == 200)
 
     def test_add_message_wrong_media(self):
         """
@@ -177,6 +260,30 @@ class MessagesTestCase(ResourcesAPITestCase):
 
 
 class MessageTestCase(ResourcesAPITestCase):
+    # ATTENTION: json.loads return unicode
+    message_req_1 = {
+        "headline": "Soreness in the throat",
+        "articleBody": "Hi, I have this soreness in my throat. It started just yesterday and its getting worse by "
+                       "every hour. What should I do, and what is the cause of this. ",
+        "author": "PoorGuy"
+    }
+
+    message_modify_req_1 = {
+        "headline": "Dizziness when running",
+        "articleBody": "Hi, I need help with this issue real quick. I get very dizzy when I run for few minutes. This "
+                       "is being happening for like 2 weeks now. I really need help with this ! ",
+        "author": "Dizzy",
+        # "editor": "AxelW"
+    }
+
+    message_wrong_req_1 = {
+        "headline": "Dizziness when running"
+    }
+
+    message_wrong_req_2 = {
+        "articleBody": "Tony bought new car. John is shopping. Anne bought new car. ",
+    }
+
     # Modified from def setUp(self):
     def setUp(self):
         super(MessageTestCase, self).setUp()
@@ -208,18 +315,230 @@ class MessageTestCase(ResourcesAPITestCase):
         resp = self.client.get(self.url_wrong)
         self.assertEqual(resp.status_code, 404)
 
-    # TODO def test_get_message(self):
-    # TODO def test_get_message_mimetype(self):
-    # TODO def test_add_reply_unexisting_message(self):
-    # TODO def test_add_reply_wrong_message(self):
-    # TODO def test_add_reply_wrong_type(self):
-    # TODO def test_add_reply(self):
-    # TODO def test_modify_message(self):
-    # TODO def test_modify_unexisting_message(self):
-    # TODO def test_modify_wrong_message(self):
-    # TODO def test_delete_message(self):
-    # TODO def test_delete_unexisting_message(self):
+    def test_get_message(self):
+        """
+        Checks that GET Message return correct status code and data format
+        """
+        print("(" + self.test_get_message.__name__ + ")", self.test_get_message.__doc__)
+        with resources.app.test_client() as client:
+            resp = client.get(self.url)
+            self.assertEqual(resp.status_code, 200)
+            data = json.loads(resp.data.decode("utf-8"))
 
+            controls = data["@controls"]
+            self.assertIn("self", controls)
+            self.assertIn("profile", controls)
+            self.assertIn("author", controls)
+            self.assertIn("collection", controls)
+            self.assertIn("edit", controls)
+            self.assertIn("medical_forum:delete", controls)
+            self.assertIn("medical_forum:reply", controls)
+            self.assertIn("atom-thread:in-reply-to", controls)
+
+            edit_ctrl = controls["edit"]
+            self.assertIn("title", edit_ctrl)
+            self.assertIn("href", edit_ctrl)
+            self.assertEqual(edit_ctrl["href"], self.url)
+            self.assertIn("encoding", edit_ctrl)
+            self.assertEqual(edit_ctrl["encoding"], "json")
+            self.assertIn("method", edit_ctrl)
+            self.assertEqual(edit_ctrl["method"], "PUT")
+            self.assertIn("schema", edit_ctrl)
+
+            reply_ctrl = controls["medical_forum:reply"]
+            self.assertIn("title", reply_ctrl)
+            self.assertIn("href", reply_ctrl)
+            self.assertEqual(reply_ctrl["href"], self.url)
+            self.assertIn("encoding", reply_ctrl)
+            self.assertEqual(reply_ctrl["encoding"], "json")
+            self.assertIn("method", reply_ctrl)
+            self.assertEqual(reply_ctrl["method"], "POST")
+            self.assertIn("schema", reply_ctrl)
+
+            # Test edit schema
+            schema_data = edit_ctrl["schema"]
+            self.assertIn("type", schema_data)
+            self.assertIn("properties", schema_data)
+            self.assertIn("required", schema_data)
+
+            props = schema_data["properties"]
+            self.assertIn("headline", props)
+            self.assertIn("articleBody", props)
+            # self.assertIn("editor", props)
+
+            req = schema_data["required"]
+            self.assertIn("headline", req)
+            self.assertIn("articleBody", req)
+
+            # Test reply schema
+            schema_data = reply_ctrl["schema"]
+            self.assertIn("type", schema_data)
+            self.assertIn("properties", schema_data)
+            self.assertIn("required", schema_data)
+
+            props = schema_data["properties"]
+            self.assertIn("headline", props)
+            self.assertIn("articleBody", props)
+            self.assertIn("author", props)
+
+            req = schema_data["required"]
+            self.assertIn("headline", req)
+            self.assertIn("articleBody", req)
+
+            self.assertIn("href", controls["self"])
+            self.assertEqual(controls["self"]["href"], self.url)
+
+            self.assertIn("href", controls["profile"])
+            self.assertEqual(controls["profile"]["href"], FORUM_MESSAGE_PROFILE)
+            # TODO test_get_message(self) -- author name AxelW not PoorGuy
+            self.assertIn("href", controls["author"])
+            self.assertEqual(controls["author"]["href"], resources.api.url_for(
+                resources.User, username="PoorGuy", _external=False
+            ))
+
+            self.assertIn("href", controls["collection"])
+            self.assertEqual(controls["collection"]["href"], resources.api.url_for(
+                resources.Messages, _external=False
+            ))
+
+            self.assertIn("href", controls["atom-thread:in-reply-to"])
+            self.assertEqual(controls["atom-thread:in-reply-to"]["href"], None)
+
+            del_ctrl = controls["medical_forum:delete"]
+            self.assertIn("href", del_ctrl)
+            self.assertEqual(del_ctrl["href"], self.url)
+            self.assertIn("method", del_ctrl)
+            self.assertEqual(del_ctrl["method"], "DELETE")
+
+            # Check rest attributes
+            self.assertIn("articleBody", data)
+            self.assertIn("author", data)
+            self.assertIn("headline", data)
+            # self.assertIn("editor", data)
+
+    def test_get_message_mimetype(self):
+        """
+        Checks that GET Messages return correct status code and data format
+        """
+        print("(" + self.test_get_message_mimetype.__name__ + ")", self.test_get_message_mimetype.__doc__)
+
+        # Check that I receive status code 200
+        resp = self.client.get(self.url)
+        self.assertEqual(resp.status_code, 200)
+        self.assertEqual(resp.headers.get("Content-Type", None),
+                         "{};{}".format(MASONJSON, FORUM_MESSAGE_PROFILE))
+
+    def test_add_reply_nonexisting_message(self):
+        """
+        Try to add a reply to an nonexisting message
+        """
+        print("(" + self.test_add_reply_nonexisting_message.__name__ + ")",
+              self.test_add_reply_nonexisting_message.__doc__)
+        resp = self.client.post(self.url_wrong,
+                                data=json.dumps(self.message_req_1),
+                                headers={"Content-Type": JSON})
+        self.assertEqual(resp.status_code, 404)
+
+    def test_add_reply_wrong_message(self):
+        """
+        Try to add a reply to a message sending wrong data
+        """
+        print("(" + self.test_add_reply_wrong_message.__name__ + ")", self.test_add_reply_wrong_message.__doc__)
+        resp = self.client.post(self.url,
+                                data=json.dumps(self.message_wrong_req_1),
+                                headers={"Content-Type": JSON})
+        self.assertEqual(resp.status_code, 400)
+        resp = self.client.post(self.url,
+                                data=json.dumps(self.message_wrong_req_2),
+                                headers={"Content-Type": JSON})
+        self.assertEqual(resp.status_code, 400)
+
+    def test_add_reply_wrong_type(self):
+        """
+        Checks that returns the correct status code if the Content-Type is wrong
+        """
+        print("(" + self.test_add_reply_wrong_type.__name__ + ")", self.test_add_reply_wrong_type.__doc__)
+        resp = self.client.post(self.url,
+                                data=json.dumps(self.message_req_1),
+                                headers={"Content-Type": "text/html"})
+        self.assertEqual(resp.status_code, 415)
+
+    # TODO fix database lock: def test_add_message(self):
+    # def test_add_reply(self):
+    #     """
+    #     Add a new message and check that I receive the same data
+    #     """
+    #     print("(" + self.test_add_reply.__name__ + ")", self.test_add_reply.__doc__)
+    #     resp = self.client.post(self.url,
+    #                             data=json.dumps(self.message_req_1),
+    #                             headers={"Content-Type": JSON})
+    #     self.assertEqual(resp.status_code, 201)
+    #     self.assertIn("Location", resp.headers)
+    #     message_url = resp.headers["Location"]
+    #     # Check that the message is stored
+    #     resp2 = self.client.get(message_url)
+    #     self.assertEqual(resp2.status_code, 200)
+    #     # data = json.loads(resp2.data)
+    #     # self.assertEquals(data, self.message_resp_1)
+
+    def test_modify_message(self):
+        """
+        Modify an exsiting message and check that the message has been modified correctly in the server
+        """
+        print("(" + self.test_modify_message.__name__ + ")", self.test_modify_message.__doc__)
+        resp = self.client.put(self.url,
+                               data=json.dumps(self.message_modify_req_1),
+                               headers={"Content-Type": JSON})
+        self.assertEqual(resp.status_code, 204)
+        # Check that the message has been modified
+        resp2 = self.client.get(self.url)
+        self.assertEqual(resp2.status_code, 200)
+        data = json.loads(resp2.data.decode("utf-8"))
+        # Check that the title and the body of the message has been modified with the new data
+        self.assertEqual(data["headline"], self.message_modify_req_1["headline"])
+        self.assertEqual(data["articleBody"], self.message_modify_req_1["articleBody"])
+
+    def test_modify_nonexisting_message(self):
+        """
+        Try to modify a message that does not exist
+        """
+        print("(" + self.test_modify_nonexisting_message.__name__ + ")", self.test_modify_nonexisting_message.__doc__)
+        resp = self.client.put(self.url_wrong,
+                               data=json.dumps(self.message_modify_req_1),
+                               headers={"Content-Type": JSON})
+        self.assertEqual(resp.status_code, 404)
+
+    def test_modify_wrong_message(self):
+        """
+        Try to modify a message sending wrong data
+        """
+        print("(" + self.test_modify_wrong_message.__name__ + ")", self.test_modify_wrong_message.__doc__)
+        resp = self.client.put(self.url,
+                               data=json.dumps(self.message_wrong_req_1),
+                               headers={"Content-Type": JSON})
+        self.assertEqual(resp.status_code, 400)
+        resp = self.client.put(self.url,
+                               data=json.dumps(self.message_wrong_req_2),
+                               headers={"Content-Type": JSON})
+        self.assertEqual(resp.status_code, 400)
+
+    def test_delete_message(self):
+        """
+        Checks that Delete Message return correct status code if corrected delete
+        """
+        print("(" + self.test_delete_message.__name__ + ")", self.test_delete_message.__doc__)
+        resp = self.client.delete(self.url)
+        self.assertEqual(resp.status_code, 204)
+        resp2 = self.client.get(self.url)
+        self.assertEqual(resp2.status_code, 404)
+
+    def test_delete_nonexisting_message(self):
+        """
+        Checks that Delete Message return correct status code if given a wrong address
+        """
+        print("(" + self.test_delete_nonexisting_message.__name__ + ")", self.test_delete_nonexisting_message.__doc__)
+        resp = self.client.delete(self.url_wrong)
+        self.assertEqual(resp.status_code, 404)
 
 
 # TODO class MessageTestCase (ResourcesAPITestCase):

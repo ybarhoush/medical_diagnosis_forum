@@ -188,16 +188,16 @@ class ForumObject(MasonObject):
 
     # TODO def add_control_delete_diagnosis(self):
 
-    def add_control_edit_message(self, msgid):
+    def add_control_edit_message(self, msg_id):
         """
         Adds a the edit control to a message object. For the schema we need
-        the one that's intended for editing (it has editor instead of author).
+        the one that's intended for editing
 
         : param str msgid: message id in the msg-N form
         """
 
         self["@controls"]["edit"] = {
-            "href": api.url_for(Message, message_id=msgid),
+            "href": api.url_for(Message, message_id=msg_id),
             "title": "Edit this message",
             "encoding": "json",
             "method": "PUT",
@@ -231,9 +231,7 @@ class ForumObject(MasonObject):
 
     def _msg_schema(self, edit=False):
         """
-        Creates a schema dictionary for messages. If we're editing a message
-        the editor field should be set. If the message is new, the author field
-        should be set instead. This is controlled by the edit flag.
+        Creates a schema dictionary for messages.
 
         This schema can also be accessed from the urls /forum/schema/edit-msg/ and
         /forum/schema/add-msg/.
@@ -242,10 +240,7 @@ class ForumObject(MasonObject):
         : rtype:: dict
         """
 
-        if edit:
-            user_field = "editor"
-        else:
-            user_field = "author"
+        user_field = "author"
 
         schema = {
             "type": "object",
@@ -454,7 +449,6 @@ class Messages(Resource):
             title = request_body["headline"]
             body = request_body["articleBody"]
             sender = request_body.get("author")
-            ipaddress = request.remote_addr
 
         except KeyError:
             # This is launched if either title or body does not exist or if
@@ -462,7 +456,7 @@ class Messages(Resource):
             return create_error_response(400, "Wrong request format",
                                          "Be sure you include message title and body")
         # Create the new message and build the response code"
-        newmessageid = g.con.create_message(title, body, sender, ipaddress)
+        newmessageid = g.con.create_message(title, body, sender)
         if not newmessageid:
             return create_error_response(500, "Problem with the database",
                                          "Cannot access the database")
@@ -499,8 +493,7 @@ class Message(Resource):
             Link relations used: self, collection, author, replies and
             in-reply-to
 
-            Semantic descriptors used: articleBody, headline, editor and author
-            NOTE: editor should not be included in the output if the database
+            Semantic descriptors used: articleBody, headline
             return None.
 
         RESPONSE STATUS CODE
@@ -523,15 +516,14 @@ class Message(Resource):
                   resource_id=message_id)
 
         sender = message_db.get("sender")
-        parent = message_db.get("replyto", None)
+        parent = message_db.get("reply_to", None)
 
         # FILTER AND GENERATE RESPONSE
         # Create the envelope:
         envelope = ForumObject(
             headline=message_db["title"],
             articleBody=message_db["body"],
-            author=sender,
-            editor=message_db["editor"]
+            author=sender
         )
 
         envelope.add_namespace("medical_forum", LINK_RELATIONS_URL)
@@ -543,7 +535,7 @@ class Message(Resource):
         envelope.add_control("profile", href=FORUM_MESSAGE_PROFILE)
         envelope.add_control("collection", href=api.url_for(Messages))
         envelope.add_control("self", href=api.url_for(Message, message_id=message_id))
-        # TODO envelope.add_control("author", href=api.url_for(User, username=sender))
+        envelope.add_control("author", href=api.url_for(User, username=sender))
 
         if parent:
             envelope.add_control("atom-thread:in-reply-to", href=api.url_for(Message, message_id=parent))
@@ -576,7 +568,7 @@ class Message(Resource):
 
     def put(self, message_id):
         """
-        Modifies the title, body and editor properties of this message.
+        Modifies the title and body properties of this message.
 
         INPUT PARAMETERS:
        : param str message_id: The id of the message to be deleted
@@ -624,8 +616,6 @@ class Message(Resource):
         try:
             title = request_body["headline"]
             body = request_body["articleBody"]
-            editor = request_body.get("editor")
-            ipaddress = request.remote_addr
 
         except KeyError:
             # This is launched if either title or body does not exist or if
@@ -634,7 +624,7 @@ class Message(Resource):
                                          "Be sure you include message title and body")
         else:
             # Modify the message in the database
-            if not g.con.modify_message(message_id, title, body, editor):
+            if not g.con.modify_message(message_id, title, body):
                 return create_error_response(500, "Internal error",
                                              "Message information for %s cannot be updated" % message_id
                                              )
@@ -684,12 +674,11 @@ class Message(Resource):
                                          "Use a JSON compatible format")
         request_body = request.get_json(force=True)
         # It throws a BadRequest exception, and hence a 400 code if the JSON is
-        # not wellformed
+        # not well-formed
         try:
             title = request_body["headline"]
             body = request_body["articleBody"]
             sender = request_body.get("author")
-            ipaddress = request.remote_addr
 
         except KeyError:
             # This is launched if either title or body does not exist or if
@@ -698,8 +687,7 @@ class Message(Resource):
                                          "Be sure you include message title and body")
 
         # Create the new message and build the response code"
-        newmessageid = g.con.append_answer(message_id, title, body,
-                                           sender, ipaddress)
+        newmessageid = g.con.append_answer(message_id, title, body, sender)
         if not newmessageid:
             abort(500)
 
@@ -710,10 +698,76 @@ class Message(Resource):
         # Return the response
         return Response(status=201, headers={"Location": url})
 
-    # TODO class Users(Resource):
-    # TODO class User(Resource):
-    # TODO class User_public(Resource):
-    # TODO class User_restricted(Resource):
+
+# TODO class Users(Resource):
+class User(Resource):
+    """
+    User Resource. Public and private profile are separate resources.
+    """
+
+    def get(self, username):
+        """
+        Get basic information of a user:
+
+        INPUT PARAMETER:
+       : param str nickname: username of the required user.
+
+        OUTPUT:
+         * Return 200 if the nickname exists.
+         * Return 404 if the nickname is not stored in the system.
+
+        RESPONSE ENTITY BODY:
+
+        * Media type recommended: application/vnd.mason+json
+        * Profile recommended: application/vnd.mason+json
+
+        Link relations used: self, collection, public-data, private-data,
+        messages.
+
+        Semantic descriptors used: nickname and registrationdate
+
+        NOTE:
+        The: py: method:`Connection.get_user()` returns a dictionary with the
+        the following format.
+        # TODO fix profile comments underneath
+        {"public_profile":{"registrationdate":,"nickname":""
+                               "signature":"","avatar":""},
+        "restricted_profile":{"firstname":"","lastname":"","email":"",
+                              "website":"","mobile":"","skype":"",
+                              "birthday":"","residence":"","gender":"",
+                              "picture":""}
+            }
+        """
+
+        # PERFORM OPERATIONS
+        user_db = g.con.get_user(username)
+        if not user_db:
+            return create_error_response(404, "Unknown user",
+                                         "There is no a user with nickname %s"
+                                         % username)
+        # FILTER AND GENERATE RESPONSE
+        # Create the envelope:
+        envelope = ForumObject(
+            nickname=username,
+            registrationdate=user_db["public_profile"]["registrationdate"]
+        )
+
+        envelope.add_namespace("medical_forum", LINK_RELATIONS_URL)
+        envelope.add_control("self", href=api.url_for(User, nickname=username))
+        envelope.add_control("profile", href=FORUM_USER_PROFILE)
+        # envelope.add_control("medical_forum:private-data", href=api.url_for(User_restricted, nickname=username))
+        # envelope.add_control("medical_forum:public-data", href=api.url_for(User_public, nickname=username))
+        envelope.add_control_messages_history(username)
+        envelope.add_control_messages_all()
+        # envelope.add_control("collection", href=api.url_for(Users))
+        envelope.add_control_delete_user(username)
+
+        return Response(json.dumps(envelope), 200, mimetype=MASON + ";" + FORUM_USER_PROFILE)
+
+
+# TODO class User(Resource):
+# TODO class User_public(Resource):
+# TODO class User_restricted(Resource):
 
 
 # Add the Regex Converter so we can use regex expressions when we define the
@@ -727,11 +781,14 @@ api.add_resource(Messages, "/medical_forum/api/messages/",
 api.add_resource(Message, "/medical_forum/api/messages/<regex('msg-\d+'):message_id>/",
                  endpoint="message")
 
-
 # TODO api.add_resource for User_public
 # TODO api.add_resource for User_restricted
 # TODO api.add_resource for Users
 # TODO api.add_resource for User
+api.add_resource(User, "/forum/api/users/<username>/",
+                 endpoint="user")
+
+
 # TODO api.add_resource for Diagnoses
 # TODO api.add_resource for Diagnosis
 
