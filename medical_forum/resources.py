@@ -444,7 +444,7 @@ class Messages(Resource):
                                          "Use a JSON compatible format")
         request_body = request.get_json(force=True)
         # It throws a BadRequest exception, and hence a 400 code if the JSON is
-        # not wellformed
+        # not well-formed
         try:
             title = request_body["headline"]
             body = request_body["articleBody"]
@@ -456,13 +456,13 @@ class Messages(Resource):
             return create_error_response(400, "Wrong request format",
                                          "Be sure you include message title and body")
         # Create the new message and build the response code"
-        newmessageid = g.con.create_message(title, body, sender)
-        if not newmessageid:
+        new_message_id = g.con.create_message(title, body, sender)
+        if not new_message_id:
             return create_error_response(500, "Problem with the database",
                                          "Cannot access the database")
 
         # Create the Location header with the id of the message created
-        url = api.url_for(Message, message_id=newmessageid)
+        url = api.url_for(Message, message_id=new_message_id)
 
         # RENDER
         # Return the response

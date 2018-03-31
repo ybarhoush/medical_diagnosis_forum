@@ -84,7 +84,7 @@ class Engine(object):
         cur.execute(keys_on)
         with con:
             cur = con.cursor()
-            cur.execute("DELETE FROM diagnosis")
+            # cur.execute("DELETE FROM diagnosis")
             cur.execute("DELETE FROM messages")
             cur.execute("DELETE FROM users_profile")
             cur.execute("DELETE FROM users")
@@ -881,9 +881,7 @@ class Connection(object):
         # SQL Statement for getting the user id given a username
         query2 = 'SELECT user_id from users WHERE username = ?'
         # SQL Statement for inserting the data
-        stmnt = 'INSERT INTO messages(title, body, timestamp, \
-                 views, reply_to, username, user_id) \
-                 VALUES(?,?,?,?,?,?,?)'
+        stmnt = 'INSERT INTO messages(title, body, timestamp, views, reply_to, username, user_id) VALUES(?,?,?,?,?,?,?)'
         # Variables for the statement.
         # user_id is obtained from first statement.
         user_id = None

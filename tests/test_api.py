@@ -188,43 +188,43 @@ class MessagesTestCase(ResourcesAPITestCase):
                          "{};{}".format(MASONJSON, FORUM_MESSAGE_PROFILE))
 
     # Modified from test_add_message(self):
-    # TODO fix database lock: def test_add_message(self):
-    # def test_add_message(self):
-    #     """
-    #     Test adding messages to the database.
-    #     """
-    #     print("(" + self.test_add_message.__name__ + ")", self.test_add_message.__doc__)
-    #
-    #     resp = self.client.post(resources.api.url_for(resources.Messages),
-    #                             headers={"Content-Type": JSON},
-    #                             data=json.dumps(self.existing_user_request)
-    #                             )
-    #     self.assertTrue(resp.status_code == 201)
-    #     url = resp.headers.get("Location")
-    #     self.assertIsNotNone(url)
-    #     resp = self.client.get(url)
-    #     self.assertTrue(resp.status_code == 200)
-    #
-    #     resp = self.client.post(resources.api.url_for(resources.Messages),
-    #                             headers={"Content-Type": JSON},
-    #                             data=json.dumps(self.non_existing_user_request)
-    #                             )
-    #     self.assertTrue(resp.status_code == 201)
-    #     url = resp.headers.get("Location")
-    #     self.assertIsNotNone(url)
-    #     resp = self.client.get(url)
-    #     self.assertTrue(resp.status_code == 200)
+    def test_add_message(self):
+        """
+        Test adding messages to the database.
+        """
+        print("(" + self.test_add_message.__name__ + ")", self.test_add_message.__doc__)
 
-    def test_add_message_wrong_media(self):
-        """
-        Test adding messages with a media different than json
-        """
-        print("(" + self.test_add_message_wrong_media.__name__ + ")", self.test_add_message_wrong_media.__doc__)
         resp = self.client.post(resources.api.url_for(resources.Messages),
-                                headers={"Content-Type": "text"},
-                                data=self.message_1_request.__str__()
+                                headers={"Content-Type": JSON},
+                                data=json.dumps(self.existing_user_request)
                                 )
-        self.assertTrue(resp.status_code == 415)
+        self.assertTrue(resp.status_code == 201)
+        url = resp.headers.get("Location")
+        self.assertIsNotNone(url)
+        resp = self.client.get(url)
+        self.assertTrue(resp.status_code == 200)
+
+        # TODO fix database lock: def test_add_message(self): will try again after users is implemented
+        # resp = self.client.post(resources.api.url_for(resources.Messages),
+        #                         headers={"Content-Type": JSON},
+        #                         data=json.dumps(self.non_existing_user_request)
+        #                         )
+        # self.assertTrue(resp.status_code == 201)
+        # url = resp.headers.get("Location")
+        # self.assertIsNotNone(url)
+        # resp = self.client.get(url)
+        # self.assertTrue(resp.status_code == 200)
+
+    # def test_add_message_wrong_media(self):
+    #     """
+    #     Test adding messages with a media different than json
+    #     """
+    #     print("(" + self.test_add_message_wrong_media.__name__ + ")", self.test_add_message_wrong_media.__doc__)
+    #     resp = self.client.post(resources.api.url_for(resources.Messages),
+    #                             headers={"Content-Type": "text"},
+    #                             data=self.message_1_request.__str__()
+    #                             )
+    #     self.assertTrue(resp.status_code == 415)
 
     # Modified from test_add_message_wrong_media(self):
     def test_add_message_wrong_media(self):
@@ -260,7 +260,6 @@ class MessagesTestCase(ResourcesAPITestCase):
 
 
 class MessageTestCase(ResourcesAPITestCase):
-    # ATTENTION: json.loads return unicode
     message_req_1 = {
         "headline": "Soreness in the throat",
         "articleBody": "Hi, I have this soreness in my throat. It started just yesterday and its getting worse by "
@@ -315,6 +314,7 @@ class MessageTestCase(ResourcesAPITestCase):
         resp = self.client.get(self.url_wrong)
         self.assertEqual(resp.status_code, 404)
 
+    # Modified from test_get_message(self):
     def test_get_message(self):
         """
         Checks that GET Message return correct status code and data format
@@ -416,6 +416,7 @@ class MessageTestCase(ResourcesAPITestCase):
             self.assertIn("headline", data)
             # self.assertIn("editor", data)
 
+    # Copied from def test_get_message_mimetype(self):
     def test_get_message_mimetype(self):
         """
         Checks that GET Messages return correct status code and data format
@@ -428,6 +429,7 @@ class MessageTestCase(ResourcesAPITestCase):
         self.assertEqual(resp.headers.get("Content-Type", None),
                          "{};{}".format(MASONJSON, FORUM_MESSAGE_PROFILE))
 
+    # Copied from def test_add_reply_nonexisting_message(self):
     def test_add_reply_nonexisting_message(self):
         """
         Try to add a reply to an nonexisting message
@@ -439,6 +441,7 @@ class MessageTestCase(ResourcesAPITestCase):
                                 headers={"Content-Type": JSON})
         self.assertEqual(resp.status_code, 404)
 
+    # Copied from def test_add_reply_wrong_message(self):
     def test_add_reply_wrong_message(self):
         """
         Try to add a reply to a message sending wrong data
@@ -453,6 +456,7 @@ class MessageTestCase(ResourcesAPITestCase):
                                 headers={"Content-Type": JSON})
         self.assertEqual(resp.status_code, 400)
 
+    # Copied from def test_add_reply_wrong_type(self):
     def test_add_reply_wrong_type(self):
         """
         Checks that returns the correct status code if the Content-Type is wrong
@@ -463,24 +467,23 @@ class MessageTestCase(ResourcesAPITestCase):
                                 headers={"Content-Type": "text/html"})
         self.assertEqual(resp.status_code, 415)
 
-    # TODO fix database lock: def test_add_message(self):
-    # def test_add_reply(self):
-    #     """
-    #     Add a new message and check that I receive the same data
-    #     """
-    #     print("(" + self.test_add_reply.__name__ + ")", self.test_add_reply.__doc__)
-    #     resp = self.client.post(self.url,
-    #                             data=json.dumps(self.message_req_1),
-    #                             headers={"Content-Type": JSON})
-    #     self.assertEqual(resp.status_code, 201)
-    #     self.assertIn("Location", resp.headers)
-    #     message_url = resp.headers["Location"]
-    #     # Check that the message is stored
-    #     resp2 = self.client.get(message_url)
-    #     self.assertEqual(resp2.status_code, 200)
-    #     # data = json.loads(resp2.data)
-    #     # self.assertEquals(data, self.message_resp_1)
+    # Modified from def test_add_reply(self):
+    def test_add_reply(self):
+        """
+        Add a new message and check that I receive the same data
+        """
+        print("(" + self.test_add_reply.__name__ + ")", self.test_add_reply.__doc__)
+        resp = self.client.post(self.url,
+                                data=json.dumps(self.message_req_1),
+                                headers={"Content-Type": JSON})
+        self.assertEqual(resp.status_code, 201)
+        self.assertIn("Location", resp.headers)
+        message_url = resp.headers["Location"]
+        # Check that the message is stored
+        resp2 = self.client.get(message_url)
+        self.assertEqual(resp2.status_code, 200)
 
+    # Modified from def test_modify_message(self):
     def test_modify_message(self):
         """
         Modify an exsiting message and check that the message has been modified correctly in the server
@@ -498,6 +501,7 @@ class MessageTestCase(ResourcesAPITestCase):
         self.assertEqual(data["headline"], self.message_modify_req_1["headline"])
         self.assertEqual(data["articleBody"], self.message_modify_req_1["articleBody"])
 
+    # Modified from def test_modify_nonexisting_message(self):
     def test_modify_nonexisting_message(self):
         """
         Try to modify a message that does not exist
@@ -508,6 +512,7 @@ class MessageTestCase(ResourcesAPITestCase):
                                headers={"Content-Type": JSON})
         self.assertEqual(resp.status_code, 404)
 
+    # Modified from def test_modify_wrong_message(self):
     def test_modify_wrong_message(self):
         """
         Try to modify a message sending wrong data
@@ -522,6 +527,7 @@ class MessageTestCase(ResourcesAPITestCase):
                                headers={"Content-Type": JSON})
         self.assertEqual(resp.status_code, 400)
 
+    # Modified from def test_delete_message(self):
     def test_delete_message(self):
         """
         Checks that Delete Message return correct status code if corrected delete
@@ -532,6 +538,7 @@ class MessageTestCase(ResourcesAPITestCase):
         resp2 = self.client.get(self.url)
         self.assertEqual(resp2.status_code, 404)
 
+    # Modified from def test_delete_nonexisting_message(self):
     def test_delete_nonexisting_message(self):
         """
         Checks that Delete Message return correct status code if given a wrong address
