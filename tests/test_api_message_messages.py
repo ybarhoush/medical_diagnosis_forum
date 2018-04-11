@@ -23,7 +23,7 @@ ENGINE = database.Engine(DEFAULT_DB_PATH)
 MASONJSON = "application/vnd.mason+json"
 JSON = "application/json"
 HAL = "application/hal+json"
-FORUM_USER_PROFILE = "/profiles/user-profile/"
+
 FORUM_MESSAGE_PROFILE = "/profiles/message-profile/"
 ATOM_THREAD_PROFILE = "https://tools.ietf.org/html/rfc4685"
 
@@ -37,7 +37,6 @@ resources.app.config.update({"Engine": ENGINE})
 
 # Other database parameters.
 initial_messages = 19
-initial_users = 25
 
 
 # Copied Class ResourcesAPITestCase from Ex. 4
@@ -546,13 +545,6 @@ class MessageTestCase(ResourcesAPITestCase):
         print("(" + self.test_delete_nonexisting_message.__name__ + ")", self.test_delete_nonexisting_message.__doc__)
         resp = self.client.delete(self.url_wrong)
         self.assertEqual(resp.status_code, 404)
-
-
-# TODO class MessageTestCase (ResourcesAPITestCase):
-# TODO class UsersTestCase (ResourcesAPITestCase):
-# TODO class UserTestCase (ResourcesAPITestCase):
-# TODO class DiagnosesTestCase (ResourcesAPITestCase):
-# TODO class DiagnosisTestCase (ResourcesAPITestCase):
 
 
 if __name__ == "__main__":

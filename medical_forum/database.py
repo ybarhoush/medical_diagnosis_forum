@@ -84,7 +84,7 @@ class Engine(object):
         cur.execute(keys_on)
         with con:
             cur = con.cursor()
-            # cur.execute("DELETE FROM diagnosis")
+            # cur.execute("DELETE FROM diagnoses")
             cur.execute("DELETE FROM messages")
             cur.execute("DELETE FROM users_profile")
             cur.execute("DELETE FROM users")
@@ -257,7 +257,7 @@ class Engine(object):
     # Modified from create_users_profile_table
     def create_diagnoses_table(self):
         """
-        Create the table ``diagnosis`` programmatically, without using .sql file.
+        Create the table ``diagnoses`` programmatically, without using .sql file.
 
         Print an error message in the console if it could not be created.
 
@@ -518,7 +518,7 @@ class Connection(object):
         return {'reg_date': row['reg_date'], 'username': row['username']}
 
     # Helpers for diagnosis
-    # Written from sccratch
+    # Written from scratch
     def _create_diagnosis_object(self, row):
         """
         It takes a :py:class:`sqlite3.Row` and transform it into a dictionary.
@@ -536,7 +536,7 @@ class Connection(object):
             Note that all values in the returned dictionary are string unless
             otherwise stated.
         """
-        diagnosis_id = 'diagnosis-' + str(row['diagnosis_id'])
+        diagnosis_id = 'dgs-' + str(row['diagnosis_id'])
         user_id = row['user_id']
         message_id = 'msg-' + str(row['message_id'])
         disease = row['disease']
@@ -554,7 +554,7 @@ class Connection(object):
         Extracts a diagnosis from the database.
 
         :param diagnosis_id: The id of the diagnosis. Note that diagnosis_id is a
-            string with format ``diagnosis-\d{1,3}``.
+            string with format ``dgs-\d{1,3}``.
         :return: A dictionary with the format provided in
             :py:meth:`_create_diagnosis_object` or None if the diagnosis with target
             id does not exist.
@@ -562,7 +562,7 @@ class Connection(object):
 
         """
         # Extracts the int which is the id for a diagnosis in the database
-        match = re.match(r'diagnosis-(\d{1,3})', diagnosis_id)
+        match = re.match(r'dgs-(\d{1,3})', diagnosis_id)
         if match is None:
             raise ValueError("The diagnosis is malformed")
         diagnosis_id = int(match.group(1))
@@ -647,7 +647,7 @@ class Connection(object):
         # Extract the id of the added message
         lid = cur.lastrowid
         # Return the id in
-        return 'diagnosis-' + str(lid) if lid is not None else None
+        return 'dgs-' + str(lid) if lid is not None else None
 
     # TODO def delete_diagnosis(self, diagnosis_id) --Extra
     # TODO def modify_diagnosis(self, diagnosis_id, disease, diagnosis_description) --Extra

@@ -148,7 +148,15 @@ class ForumObject(MasonObject):
 
     # TODO def add_control_users_all(self):
 
-    # TODO def add_control_diagnoses_all(self):
+    def add_control_diagnoses_all(self):
+        """
+        Adds the diagnosis-all link to an object. Intended for the document object.
+        """
+
+        self["@controls"]["medical_forum:diagnoses-all"] = {
+            "href": api.url_for(Diagnoses),
+            "title": "All diagnoses"
+        }
 
     def add_control_add_message(self):
         """
@@ -168,7 +176,21 @@ class ForumObject(MasonObject):
 
     # TODO def add_control_add_user(self):
 
-    # TODO def add_control_add_diagnosis(self):
+    def add_control_add_diagnosis(self):
+        """
+        This adds the add-diagnosis control to an object. Intended for the
+        document object. Here you can see that adding the control is a bunch of
+        lines where all we're basically doing is nested dictionaries to
+        achieve the correctly formed JSON document representation.
+        """
+
+        self["@controls"]["medical_forum:add-diagnosis"] = {
+            "href": api.url_for(Diagnoses),
+            "title": "Create diagnosis",
+            "encoding": "json",
+            "method": "POST",
+            "schema": self._dgs_schema()
+        }
 
     def add_control_delete_message(self, msgid):
         """
@@ -185,8 +207,6 @@ class ForumObject(MasonObject):
         }
 
     # TODO def add_control_delete_user(self, username):
-
-    # TODO def add_control_delete_diagnosis(self):
 
     def add_control_edit_message(self, msg_id):
         """
@@ -208,8 +228,6 @@ class ForumObject(MasonObject):
 
     # TODO def add_control_edit_private_profile(self, username):
 
-    # TODO def add_control_edit_diagnosis(self):
-
     def add_control_reply_to(self, msgid):
         """
         Adds a reply-to control to a message.
@@ -226,6 +244,20 @@ class ForumObject(MasonObject):
         }
 
     # TODO def add_control_reply_to_diagnosis(self):
+    def add_control_reply_to_diagnosis(self, dgsid):
+        """
+        Adds a reply-to control to a diagnosis.
+
+        : param str dgsid: diagnosis id in the dgs-N form
+        """
+
+        self["@controls"]["medical_forum:reply"] = {
+            "href": api.url_for(Diagnosis, diagnosis_id=dgsid),
+            "title": "Reply to this diagnosis",
+            "encoding": "json",
+            "method": "POST",
+            "schema": self._dgs_schema()
+        }
 
     # Schema
 
@@ -266,9 +298,47 @@ class ForumObject(MasonObject):
         }
         return schema
 
+    def _dgs_schema(self, edit=False):
+        """
+        Creates a schema dictionary for diagnoses.
+
+        This schema can also be accessed from the urls /forum/schema/edit-dgs/ and
+        /forum/schema/add-dgs/.
+
+        : param bool edit: is this schema for an edit form
+        : rtype:: dict
+        """
+
+        user_id = "user_id"
+
+        schema = {
+            "type": "object",
+            "properties": {},
+            "required": ["disease", "diagnosis_description"]
+        }
+
+        props = schema["properties"]
+
+        props["disease"] = {
+            "title": "disease",
+            "description": "diagnosis disease",
+            "type": "string"
+        }
+        props["diagnosis_description"] = {
+            "title": "diagnosis description",
+            "description": "diagnosis description",
+            "type": "string"
+        }
+
+        props[user_id] = {
+            "title": user_id,
+            "description": "user_ide {}".format(user_id),
+            "type": "Integer"
+        }
+        return schema
+
 
 # TODO def _public_profile_schema(self):
-# TODO def _dgs_schema(self): --shall we modify database.py; replace msg with dgs for diagnosis?
 
 # ERROR HANDLERS
 
@@ -687,12 +757,12 @@ class Message(Resource):
                                          "Be sure you include message title and body")
 
         # Create the new message and build the response code"
-        newmessageid = g.con.append_answer(message_id, title, body, sender)
-        if not newmessageid:
+        new_message_id = g.con.append_answer(message_id, title, body, sender)
+        if not new_message_id:
             abort(500)
 
         # Create the Location header with the id of the message created
-        url = api.url_for(Message, message_id=newmessageid)
+        url = api.url_for(Message, message_id=new_message_id)
 
         # RENDER
         # Return the response
@@ -748,19 +818,18 @@ class User(Resource):
         # FILTER AND GENERATE RESPONSE
         # Create the envelope:
         envelope = ForumObject(
-            nickname=username,
+            username=username,
             registrationdate=user_db["public_profile"]["registrationdate"]
         )
 
         envelope.add_namespace("medical_forum", LINK_RELATIONS_URL)
-        envelope.add_control("self", href=api.url_for(User, nickname=username))
+        envelope.add_control("self", href=api.url_for(User, username=username))
         envelope.add_control("profile", href=FORUM_USER_PROFILE)
         # envelope.add_control("medical_forum:private-data", href=api.url_for(User_restricted, nickname=username))
         # envelope.add_control("medical_forum:public-data", href=api.url_for(User_public, nickname=username))
-        envelope.add_control_messages_history(username)
         envelope.add_control_messages_all()
         # envelope.add_control("collection", href=api.url_for(Users))
-        envelope.add_control_delete_user(username)
+        # envelope.add_control_delete_user(username)
 
         return Response(json.dumps(envelope), 200, mimetype=MASON + ";" + FORUM_USER_PROFILE)
 
@@ -768,6 +837,271 @@ class User(Resource):
 # TODO class User(Resource):
 # TODO class User_public(Resource):
 # TODO class User_restricted(Resource):
+
+class Diagnoses(Resource):
+    """
+    Resource Diagnoses implementation
+    """
+
+    def get(self):
+        """
+        Get all diagnoses.
+
+        INPUT parameters:
+          None
+
+        RESPONSE ENTITY BODY:
+        * Media type: Mason
+          https://github.com/JornWildt/Mason
+         * Profile: Forum_Diagnosis
+          /profiles/diagnosis_profile
+
+        NOTE:
+         * The attribute disease is obtained from the column diagnoses.disease
+         * The attribute diagnosis is obtained from the column diagnoses.diagnosis_description
+         * The attribute message_id is obtained from the column diagnoses.message_id
+         * The attribute user_id is obtained from the column diagnoses.user_id
+        """
+
+        # Extract diagnoses from database
+        diagnoses_db = g.con.get_diagnoses()
+
+        envelope = ForumObject()
+        envelope.add_namespace("medical_forum", LINK_RELATIONS_URL)
+
+        envelope.add_control("self", href=api.url_for(Diagnoses))
+        # TODO envelope.add_control_users_all()
+        envelope.add_control_add_diagnosis()
+
+        items = envelope["items"] = []
+
+        for dgs in diagnoses_db:
+            item = ForumObject(id=dgs["diagnosis_id"], disease=dgs["disease"])
+            item.add_control("self", href=api.url_for(Diagnosis, diagnosis_id=dgs["diagnosis_id"]))
+            item.add_control("profile", href=FORUM_DIAGNOSIS_PROFILE)
+            items.append(item)
+
+        # RENDER
+        return Response(json.dumps(envelope), 200, mimetype=MASON + ";" + FORUM_DIAGNOSIS_PROFILE)
+
+    def post(self):
+        """
+        Adds a a new diagnosis.
+
+        REQUEST ENTITY BODY:
+         * Media type: JSON:
+         * Profile: Forum_Diagnosis
+          /profiles/diagnosis_profile
+
+        NOTE:
+         * The attribute disease is obtained from the column diagnoses.disease
+         * The attribute diagnosis_description is obtained from the column diagnoses.diagnosis_description
+         * The attribute message_id is obtained from the column diagnoses.message_id
+         * The attribute user_id is obtained from the column diagnoses.user_id
+
+        The body should be a JSON document that matches the schema for new diagnoses
+
+        RESPONSE STATUS CODE:
+         * Returns 201 if the diagnosis has been added correctly.
+           The Location header contains the path of the new diagnosis
+         * Returns 400 if the diagnosis is not well formed or the entity body is
+           empty.
+         * Returns 415 if the format of the response is not json
+         * Returns 500 if the diagnosis could not be added to database.
+
+        """
+
+        # Extract the request body. In general would be request.data
+        # Since the request is JSON I use request.get_json
+        # get_json returns a python dictionary after serializing the request body
+        # get_json returns None if the body of the request is not formatted
+        # using JSON. We use force=True since the input media type is not
+        # application/json.
+
+        if JSON != request.headers.get("Content-Type", ""):
+            return create_error_response(415, "UnsupportedMediaType",
+                                         "Use a JSON compatible format")
+        request_body = request.get_json(force=True)
+        # It throws a BadRequest exception, and hence a 400 code if the JSON is
+        # not well-formed
+        try:
+            disease = request_body["disease"]
+            diagnosis_description = request_body["diagnosis_description"]
+            message_id = request_body.get("message_id")
+            user_id = request_body.get("user_id")
+
+        except KeyError:
+            # This is launched if either title or body does not exist or if
+            # the template.data array does not exist.
+            return create_error_response(400, "Wrong request format",
+                                         "Be sure you include diagnosis and disease")
+
+        # Create the new diagnosis and build the response code"
+        user_id = int(user_id)
+        message_id = 'msg-' + message_id
+
+        diagnosis = {'user_id': user_id,
+                     'message_id': message_id,
+                     'disease': disease, 'diagnosis_description': diagnosis_description}
+
+        new_diagnosis_id = g.con.create_diagnosis(diagnosis)
+        if not new_diagnosis_id:
+            return create_error_response(500, "Problem with the database",
+                                         "Cannot access the database")
+
+        # Create the Location header with the id of the diagnosis created
+        url = api.url_for(Diagnosis, diagnosis_id=new_diagnosis_id)
+
+        # RENDER
+        # Return the response
+        return Response(status=201, headers={"Location": url})
+
+
+class Diagnosis(Resource):
+    """
+    Resource that represents a single diagnosis in the API.
+    """
+
+    def get(self, diagnosis_id):
+        """
+        Get the disease, the diagnosis and the id of a specific diagnosis and its message id.
+
+        Returns status code 404 if the diagnosis_id does not exist in the database.
+
+        INPUT PARAMETER
+       : param str diagnosis_id: The id of the diagnosis to be retrieved from the
+            system
+
+        RESPONSE ENTITY BODY:
+         * Media type: application/vnd.mason+json:
+             https://github.com/JornWildt/Mason
+         * Profile: Forum_Diagnosis
+           /profiles/diagnosis-profile
+
+            Link relations used: self, collection, user_id,
+            # ToDo, and reply?
+
+            Semantic descriptors used: diagnosis, disease
+            return None.
+
+        RESPONSE STATUS CODE
+         * Return status code 200 if everything OK.
+         * Return status code 404 if the diagnosis was not found in the database.
+
+        NOTE:
+         * The attribute disease is obtained from the column diagnoses.disease
+         * The attribute diagnosis is obtained from the column diagnoses.diagnosis_description
+         * The attribute message_id is obtained from the column diagnoses.message_id
+         * The attribute user_id is obtained from the column diagnoses.user_id
+        """
+
+        # PEFORM OPERATIONS INITIAL CHECKS
+        # Get the diagnosis from db
+        diagnosis_db = g.con.get_diagnosis(diagnosis_id)
+        if not diagnosis_db:
+            abort(404, diagnosis="There is no a diagnosis with id %s" % diagnosis_id,
+                  resource_type="Diagnosis",
+                  resource_url=request.path,
+                  resource_id=diagnosis_id)
+
+        user_id = diagnosis_db.get("user_id")
+        message_id = diagnosis_db.get("message_id")
+        # parent = diagnosis_db.get("reply_to", None)
+
+        # FILTER AND GENERATE RESPONSE
+        # Create the envelope:
+        envelope = ForumObject(
+            disease=diagnosis_db["disease"],
+            diagnosis_description=diagnosis_db["diagnosis_description"],
+            user_id=user_id,
+            message_id=message_id
+        )
+
+        envelope.add_namespace("medical_forum", LINK_RELATIONS_URL)
+        envelope.add_namespace("atom-thread", ATOM_THREAD_PROFILE)
+
+        envelope.add_control_reply_to(diagnosis_id)
+        envelope.add_control("profile", href=FORUM_DIAGNOSIS_PROFILE)
+        envelope.add_control("collection", href=api.url_for(Diagnoses))
+        envelope.add_control("self", href=api.url_for(Diagnosis, diagnosis_id=diagnosis_id))
+        envelope.add_control("user_id", href=api.url_for(User, username=user_id))
+
+        # if parent:
+        #     envelope.add_control("atom-thread:in-reply-to", href=api.url_for(Diagnosis, diagnosis_id=parent))
+        # else:
+        #     envelope.add_control("atom-thread:in-reply-to", href=None)
+        envelope.add_control("atom-thread:in-reply-to", href=None)
+        # RENDER
+        return Response(json.dumps(envelope), 200, mimetype=MASON + ";" + FORUM_DIAGNOSIS_PROFILE)
+
+    def post(self, diagnosis_id):
+        """
+        Adds a response to a diagnosis with id <diagnosis_id>.
+
+        INPUT PARAMETERS:
+       : param str diagnosis_id: The id of the diagnosis to be posted
+
+        REQUEST ENTITY BODY:
+        * Media type: JSON
+         * Profile: Forum_Diagnosis
+          /profiles/diagnosis-profile
+
+        The body should be a JSON document that matches the schema for new diagnoses
+
+        RESPONSE HEADERS:
+         * Location: Contains the URL of the new diagnosis
+
+        RESPONSE STATUS CODE:
+         * Returns 201 if the diagnosis has been added correctly.
+           The Location header contains the path of the new diagnosis
+         * Returns 400 if the diagnosis is not well formed or empty diagnosis
+         * Returns 404 if there is no diagnosis with diagnosis_id
+         * Returns 415 if the format of the response is not json
+         * Returns 500 if the diagnosis could not be added to database.
+
+        NOTE:
+         * The attribute disease is obtained from the column diagnoses.disease
+         * The attribute diagnosis is obtained from the column diagnoses.diagnosis_description
+         * The attribute message_id is obtained from the column diagnoses.message_id
+         * The attribute user_id is obtained from the column diagnoses.user_id
+        """
+
+        # CHECK THAT MESSAGE EXISTS
+        # If the diagnosis with diagnosis_id does not exist return status code 404
+        if not g.con.contains_diagnosis(diagnosis_id):
+            return create_error_response(404, "Diagnosis not found",
+                                         "There is no a diagnosis with id %s" % diagnosis_id
+                                         )
+
+        if JSON != request.headers.get("Content-Type", ""):
+            return create_error_response(415, "UnsupportedMediaType",
+                                         "Use a JSON compatible format")
+        request_body = request.get_json(force=True)
+        # It throws a BadRequest exception, and hence a 400 code if the JSON is
+        # not well-formed
+        try:
+            disease = request_body["disease"]
+            diagnosis = request_body["diagnosis_description"]
+            user_id = request_body.get("user_id")
+            message_id = request_body.get("message_id")
+
+        except KeyError:
+            # This is launched if either title or body does not exist or if
+            # the template.data array does not exist.
+            return create_error_response(400, "Wrong request format",
+                                         "Be sure you include diagnosis title and body")
+
+        # Create the new diagnosis and build the response code"
+        new_diagnosis_id = g.con.append_answer(user_id, message_id, disease, diagnosis)
+        if not new_diagnosis_id:
+            abort(500)
+
+        # Create the Location header with the id of the diagnosis created
+        url = api.url_for(Diagnosis, diagnosis_id=new_diagnosis_id)
+
+        # RENDER
+        # Return the response
+        return Response(status=201, headers={"Location": url})
 
 
 # Add the Regex Converter so we can use regex expressions when we define the
@@ -780,19 +1114,17 @@ api.add_resource(Messages, "/medical_forum/api/messages/",
                  endpoint="messages")
 api.add_resource(Message, "/medical_forum/api/messages/<regex('msg-\d+'):message_id>/",
                  endpoint="message")
-
 # TODO api.add_resource for User_public
 # TODO api.add_resource for User_restricted
 # TODO api.add_resource for Users
-# TODO api.add_resource for User
 api.add_resource(User, "/forum/api/users/<username>/",
                  endpoint="user")
+# TODO api.add_resource for User
+api.add_resource(Diagnoses, "/medical_forum/api/diagnoses/",
+                 endpoint="diagnoses")
+api.add_resource(Diagnosis, "/medical_forum/api/diagnoses/<regex('dgs-\d+'):diagnosis_id>/",
+                 endpoint="diagnosis")
 
-
-# TODO api.add_resource for Diagnoses
-# TODO api.add_resource for Diagnosis
-
-# TODO Define the routes for Diagnosis/Diagnoses
 
 # Redirect profile
 @app.route("/profiles/<profile_name>/")
