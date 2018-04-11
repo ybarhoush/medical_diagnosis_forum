@@ -12,13 +12,13 @@ import unittest
 from .utils import *
 
 # declare constants
-DIAGNOSIS_1_ID = 'diagnosis-1'
+DIAGNOSIS_1_ID = 'dgs-1'
 DIAGNOSIS_1 = {'user_id': 1,
                'message_id': 'msg-7',
                'disease': 'blood',
                'diagnosis_description': 'Anne bought new car. Tony bought new car. Anne has free time. '
                                         'John has free time. Tony bought new car. '}
-DIAGNOSIS_2_ID = 'diagnosis-12'
+DIAGNOSIS_2_ID = 'dgs-12'
 DIAGNOSIS_2 = {'user_id': 9,
                'message_id': 'msg-3',
                'disease': 'eyes',
@@ -33,10 +33,10 @@ NEW_DIAGNOSIS = {'user_id': DOCTOR_ID,
                  'diagnosis_description': 'You need to stay and calm and not panic.'}
 
 BAD_DIAGNOSIS_ID = '100'
-NON_EXIST_DIAGNOSIS_ID = 'diagnosis-100'
+NON_EXIST_DIAGNOSIS_ID = 'dgs-100'
 
 
-class DatabaseDiagnosisTestCase(unittest.TestCase):
+class DatabaseDiagnosesTestCase(unittest.TestCase):
     """
     Test cases for different database diagnosis table methods
     """
