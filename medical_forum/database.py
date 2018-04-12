@@ -1213,7 +1213,8 @@ class Connection(object):
         # temporal variables for user table
         # timestamp will be used for last login and reg_date.
         timestamp = time.mktime(datetime.now().timetuple())
-        pass_hash = user['pass_hash']
+        # ToDo pass_hash = user['pass_hash']
+        pass_hash = 'pass_hash'
         # temporal variables for user profiles
         p_profile = user['public_profile']
         r_profile = user['restricted_profile']

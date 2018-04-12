@@ -131,16 +131,16 @@ class MessagesTestCase(ResourcesAPITestCase):
         controls = data["@controls"]
         self.assertIn("self", controls)
         self.assertIn("medical_forum:add-message", controls)
-        # TODO self.assertIn("medical_forum:users-all", controls)
+        # self.assertIn("medical_forum:users-all", controls)
 
         self.assertIn("href", controls["self"])
         self.assertEqual(controls["self"]["href"], self.url)
 
-        # TODO Check that users-all control is correct
-        # users_ctrl = controls["forum:users-all"]
-        # self.assertIn("title", users_ctrl)
-        # self.assertIn("href", users_ctrl)
-        # self.assertEqual(users_ctrl["href"], "/medical_forum/api/users/")
+        # Check that users-all control is correct
+        users_ctrl = controls["medical_forum:users-all"]
+        self.assertIn("title", users_ctrl)
+        self.assertIn("href", users_ctrl)
+        self.assertEqual(users_ctrl["href"], "/medical_forum/api/users/")
 
         # Check that add-message control is correct
         msg_ctrl = controls["medical_forum:add-message"]
