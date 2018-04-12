@@ -121,8 +121,8 @@ class DiagnosesTestCase(ResourcesAPITestCase):
             view_point = resources.app.view_functions[rule.endpoint].view_class
             self.assertEqual(view_point, resources.Diagnoses)
 
-    # ToDo def test_get_diagnoses(self) -- not implemented in database.py
-    # ToDo def test_get_diagnoses_mimetype(self) -- not implemented in database.py
+    # ToDo def test_get_diagnoses(self) -- not implemented in database.py, extra
+    # ToDo def test_get_diagnoses_mimetype(self) -- not implemented in database.py, extra
 
     def test_add_diagnosis(self):
         """
@@ -245,7 +245,7 @@ class DiagnosisTestCase(ResourcesAPITestCase):
 
             self.assertIn("href", controls["profile"])
             self.assertEqual(controls["profile"]["href"], FORUM_DIAGNOSIS_PROFILE)
-            # ToDo assertEqual(controls["user_id"]
+            # ToDo self.assertEqual(controls["user_id"])
             # self.assertIn("href", controls["user_id"])
             # self.assertEqual(controls["user_id"]["href"], resources.api.url_for(
             #     resources.User, user_id=4, _external=False

@@ -146,7 +146,16 @@ class ForumObject(MasonObject):
             "title": "All messages"
         }
 
-    # TODO def add_control_users_all(self):
+    # Copied from add_control_users_all
+    def add_control_users_all(self):
+        """
+        This adds the users-all link to an object. Intended for the document object.
+        """
+
+        self["@controls"]["medical_forum:users-all"] = {
+            "href": api.url_for(Users),
+            "title": "List users"
+        }
 
     def add_control_diagnoses_all(self):
         """
@@ -174,7 +183,22 @@ class ForumObject(MasonObject):
             "schema": self._msg_schema()
         }
 
-    # TODO def add_control_add_user(self):
+    # copied from def add_control_add_user(self)
+    def add_control_add_user(self):
+        """
+        This adds the add-user control to an object. Intended for the
+        document object. Instead of adding a schema dictionary we are pointing
+        to a schema url instead for two reasons: 1) to demonstrate both options;
+        2) the user schema is relatively large.
+        """
+
+        self["@controls"]["forum:add-user"] = {
+            "href": api.url_for(Users),
+            "title": "Create user",
+            "encoding": "json",
+            "method": "POST",
+            "schemaUrl": USER_SCHEMA_URL
+        }
 
     def add_control_add_diagnosis(self):
         """
@@ -206,7 +230,20 @@ class ForumObject(MasonObject):
             "method": "DELETE"
         }
 
-    # TODO def add_control_delete_user(self, username):
+    # copied from def add_control_delete_user(self, username):
+    def add_control_delete_user(self, username):
+        """
+        Adds the delete control to an object. This is intended for any
+        object that represents a user.
+
+        : param str username: The username of the user to remove
+        """
+
+        self["@controls"]["forum:delete"] = {
+            "href": api.url_for(User, username=username),
+            "title": "Delete this user",
+            "method": "DELETE"
+        }
 
     def add_control_edit_message(self, msg_id):
         """
@@ -224,9 +261,40 @@ class ForumObject(MasonObject):
             "schema": self._msg_schema(edit=True)
         }
 
-    # TODO def add_control_edit_public_profile(self, username):
+    # copied from def add_control_edit_public_profile(self, username):
+    def add_control_edit_public_profile(self, username):
+        """
+        Adds the edit control to a public profile object. Editing a public
+        profile uses a limited version of the full user schema.
 
-    # TODO def add_control_edit_private_profile(self, username):
+        : param str username: username of the user whose profile is edited
+        """
+
+        self["@controls"]["edit"] = {
+            "href": api.url_for(User_public, username=username),
+            "title": "Edit this public profile",
+            "encoding": "json",
+            "method": "PUT",
+            "schema": self._public_profile_schema()
+        }
+
+    # copied from def add_control_edit_private_profile(self, username)
+    def add_control_edit_private_profile(self, username):
+        """
+        Adds the edit control to a private profile object. Editing a private
+        profile uses large subset of the user schema, so we're just going to
+        use a URL this time.
+
+        : param str username: username of the user whose profile is edited
+        """
+
+        self["@controls"]["edit"] = {
+            "href": api.url_for(User_restricted, username=username),
+            "title": "Edit this private profile",
+            "encoding": "json",
+            "method": "PUT",
+            "schemaUrl": PRIVATE_PROFILE_SCHEMA_URL
+        }
 
     def add_control_reply_to(self, msgid):
         """
@@ -243,7 +311,7 @@ class ForumObject(MasonObject):
             "schema": self._msg_schema()
         }
 
-    # TODO def add_control_reply_to_diagnosis(self):
+    # TODO def add_control_reply_to_diagnosis(self) --Not Used
     def add_control_reply_to_diagnosis(self, dgsid):
         """
         Adds a reply-to control to a diagnosis.
@@ -337,8 +405,34 @@ class ForumObject(MasonObject):
         }
         return schema
 
+    def _public_profile_schema(self):
+        """
+        Creates a schema dictionary for editing public profiles of users.
 
-# TODO def _public_profile_schema(self):
+        :rtype:: dict
+        """
+
+        schema = {
+            "type": "object",
+            "properties": {},
+            "required": ["lastname", "picture"]
+        }
+
+        props = schema["properties"]
+        props["signature"] = {
+            "description": "User's signature",
+            "title": "Signature",
+            "type": "string"
+        }
+
+        props["picture"] = {
+            "description": "image file location",
+            "title": "picture",
+            "type": "string"
+        }
+
+        return schema
+
 
 # ERROR HANDLERS
 
@@ -462,7 +556,7 @@ class Messages(Resource):
         envelope.add_namespace("medical_forum", LINK_RELATIONS_URL)
 
         envelope.add_control("self", href=api.url_for(Messages))
-        # TODO envelope.add_control_users_all()
+        envelope.add_control_users_all()
         envelope.add_control_add_message()
 
         items = envelope["items"] = []
@@ -769,7 +863,156 @@ class Message(Resource):
         return Response(status=201, headers={"Location": url})
 
 
-# TODO class Users(Resource):
+class Users(Resource):
+
+    def get(self):
+        """
+        Gets a list of all the users in the database.
+
+        It returns always status code 200.
+
+        RESPONSE ENTITY BODY:
+
+         OUTPUT:
+            * Media type: application/vnd.mason+json
+                https://github.com/JornWildt/Mason
+            * Profile: Forum_User
+                /profiles/user-profile
+
+        Link relations used in items: messages
+
+        Semantic descriptions used in items: username, reg_date
+
+        Link relations used in links: messages-all
+
+        Semantic descriptors used in template: speciality, weight, Height, diagnosis_id
+        phone, picture, email, age, gender, work_address, firstname, lastname, user_type
+
+        NOTE:
+         * Attributes match one-to-one with column names in the database.
+        """
+        # PERFORM OPERATIONS
+        # Create the messages list
+        users_db = g.con.get_users()
+
+        # FILTER AND GENERATE THE RESPONSE
+        # Create the envelope
+        envelope = ForumObject()
+
+        envelope.add_namespace("forum", LINK_RELATIONS_URL)
+
+        envelope.add_control_add_user()
+        envelope.add_control_messages_all()
+        envelope.add_control("self", href=api.url_for(Users))
+
+        items = envelope["items"] = []
+
+        for user in users_db:
+            item = ForumObject(
+                username=user["username"],
+                reg_date=user["reg_date"]
+            )
+            item.add_control("self", href=api.url_for(User, username=user["username"]))
+            item.add_control("profile", href=FORUM_USER_PROFILE)
+            items.append(item)
+
+        # RENDER
+        return Response(json.dumps(envelope), 200, mimetype=MASON + ";" + FORUM_USER_PROFILE)
+
+    def post(self):
+        """
+        Adds a new user in the database.
+
+        REQUEST ENTITY BODY:
+         * Media type: JSON
+         * Profile: Forum_User
+
+        Semantic descriptors used in template:
+        # ToDo mandatory/optional fields
+
+        RESPONSE STATUS CODE:
+         * Returns 201 + the url of the new resource in the Location header
+         * Return 409 Conflict if there is another user with the same username
+         * Return 400 if the body is not well formed
+         * Return 415 if it receives a media type != application/json
+
+        NOTE:
+         * The attributes match one-to-one with column names in the database.
+
+        NOTE:
+        The: py: method:`Connection.append_user()` receives as a parameter a
+        dictionary with the following format.
+               {'public_profile':{'reg_date':,'username':'',
+                                   'speciality':'','user_type':''},
+                'restricted_profile':{'firstname':'','lastname':'',
+                                      'work_address':'','gender':'',
+                                      'picture':'', age':'', email':''}
+                }
+
+        """
+
+        if JSON != request.headers.get("Content-Type", ""):
+            abort(415)
+        # PARSE THE REQUEST:
+        request_body = request.get_json(force=True)
+        if not request_body:
+            return create_error_response(415, "Unsupported Media Type",
+                                         "Use a JSON compatible format",
+                                         )
+
+        # Get the request body and serialize it to object
+        # We should check that the format of the request body is correct. Check
+        # That mandatory attributes are there.
+
+        # pick up username so we can check for conflicts
+        try:
+            username = request_body["username"]
+        except KeyError:
+            return create_error_response(400, "Wrong request format", "User username was missing from the request")
+
+        # Conflict if user already exist
+        if g.con.contains_user(username):
+            return create_error_response(409, "Wrong username",
+                                         "There is already a user with same"
+                                         "username:%s." % username)
+
+        # pick up rest of the mandatory fields
+        try:
+            speciality = request_body["speciality"]
+            user_type = request_body["user_type"]
+            reg_date = request_body["reg_date"]
+            firstname = request_body["firstname"]
+            lastname = request_body["lastname"]
+            work_address = request_body["work_address"]
+        except KeyError:
+            return create_error_response(400, "Wrong request format", "Be sure to include all mandatory properties")
+
+        # pick up rest of the optional fields
+        picture = request_body.get("picture", "")
+        gender = request_body["gender"]
+        age = request_body.get("age", "")
+        email = request_body.get("email", "")
+
+        user = {'public_profile': {'reg_date': reg_date, 'username': username,
+                                   'speciality': speciality, 'user_type': user_type},
+
+                'restricted_profile': {'firstname': firstname, 'lastname': lastname,
+                                       'work_address': work_address, 'gender': gender,
+                                       'picture': picture, 'age': age, 'email': email}
+                }
+        try:
+            username = g.con.append_user(username, user)
+        except ValueError:
+            return create_error_response(400, "Wrong request format",
+                                         "Be sure you include all"
+                                         " mandatory properties"
+                                         )
+
+        # CREATE RESPONSE AND RENDER
+        return Response(status=201,
+                        headers={"Location": api.url_for(User, username=username)})
+
+
 class User(Resource):
     """
     User Resource. Public and private profile are separate resources.
@@ -780,11 +1023,11 @@ class User(Resource):
         Get basic information of a user:
 
         INPUT PARAMETER:
-       : param str nickname: username of the required user.
+       : param str username: username of the required user.
 
         OUTPUT:
-         * Return 200 if the nickname exists.
-         * Return 404 if the nickname is not stored in the system.
+         * Return 200 if the username exists.
+         * Return 404 if the username is not stored in the system.
 
         RESPONSE ENTITY BODY:
 
@@ -794,49 +1037,217 @@ class User(Resource):
         Link relations used: self, collection, public-data, private-data,
         messages.
 
-        Semantic descriptors used: nickname and registrationdate
+        Semantic descriptors used: username and reg_date
 
         NOTE:
         The: py: method:`Connection.get_user()` returns a dictionary with the
         the following format.
-        # TODO fix profile comments underneath
-        {"public_profile":{"registrationdate":,"nickname":""
-                               "signature":"","avatar":""},
-        "restricted_profile":{"firstname":"","lastname":"","email":"",
-                              "website":"","mobile":"","skype":"",
-                              "birthday":"","residence":"","gender":"",
-                              "picture":""}
-            }
+
+               {'public_profile':{'reg_date':,'username':'',
+                                   'speciality':'','user_type':''},
+                'restricted_profile':{'firstname':'','lastname':'',
+                                      'work_address':'','gender':'',
+                                      'picture':'', age':'', email':''}
+                }
         """
 
         # PERFORM OPERATIONS
         user_db = g.con.get_user(username)
         if not user_db:
             return create_error_response(404, "Unknown user",
-                                         "There is no a user with nickname %s"
+                                         "There is no a user with username %s"
                                          % username)
         # FILTER AND GENERATE RESPONSE
         # Create the envelope:
         envelope = ForumObject(
             username=username,
-            registrationdate=user_db["public_profile"]["registrationdate"]
+            reg_date=user_db["public_profile"]["reg_date"]
         )
 
-        envelope.add_namespace("medical_forum", LINK_RELATIONS_URL)
+        envelope.add_namespace("forum", LINK_RELATIONS_URL)
         envelope.add_control("self", href=api.url_for(User, username=username))
         envelope.add_control("profile", href=FORUM_USER_PROFILE)
-        # envelope.add_control("medical_forum:private-data", href=api.url_for(User_restricted, nickname=username))
-        # envelope.add_control("medical_forum:public-data", href=api.url_for(User_public, nickname=username))
+        envelope.add_control("medical_forum:private-data", href=api.url_for(User_restricted, username=username))
+        envelope.add_control("medical_forum:public-data", href=api.url_for(User_public, username=username))
         envelope.add_control_messages_all()
-        # envelope.add_control("collection", href=api.url_for(Users))
-        # envelope.add_control_delete_user(username)
+        envelope.add_control("collection", href=api.url_for(Users))
+        envelope.add_control_delete_user(username)
 
         return Response(json.dumps(envelope), 200, mimetype=MASON + ";" + FORUM_USER_PROFILE)
 
+    def delete(self, username):
+        """
+        Delete a user in the system.
 
-# TODO class User(Resource):
-# TODO class User_public(Resource):
-# TODO class User_restricted(Resource):
+       : param str username: username of the required user.
+
+        RESPONSE STATUS CODE:
+         * If the user is deleted returns 204.
+         * If the username does not exist return 404
+        """
+
+        # PEROFRM OPERATIONS
+        # Try to  delete the user. If it could not be deleted, the database
+        # returns None.
+        if g.con.delete_user(username):
+            # RENDER RESPONSE
+            return '', 204
+        else:
+            # GENERATE ERROR RESPONSE
+            return create_error_response(404, "Unknown user",
+                                         "There is no a user with username %s"
+                                         % username)
+
+
+class User_public(Resource):
+
+    def get(self, username):
+        """
+
+        Get the public profile (picture and lastname) of a single user.
+
+        RESPONSE ENTITY BODY:
+        * Media type: Mason
+          https://github.com/JornWildt/Mason
+         * Profile: Forum_User_Profile
+        """
+
+        user_db = g.con.get_user(username)
+        if not user_db:
+            return create_error_response(404, "Unknown user",
+                                         "There is no a user with username %s"
+                                         % username)
+
+        pub_profile = user_db["public_profile"]
+
+        envelope = ForumObject(
+            username=username,
+            reg_date=pub_profile["reg_date"],
+            signature=pub_profile["picture"],
+            avatar=pub_profile["lastname"],
+        )
+
+        envelope.add_namespace("forum", LINK_RELATIONS_URL)
+        envelope.add_control("self", href=api.url_for(User_public, username=username))
+        envelope.add_control("up", href=api.url_for(User, username=username))
+        envelope.add_control("forum:private-data", href=api.url_for(User_restricted, username=username))
+        envelope.add_control_edit_public_profile(username)
+
+        return Response(json.dumps(envelope), 200, mimetype=MASON + ";" + FORUM_USER_PROFILE)
+
+    def put(self, username):
+        """
+        Modify the public profile of a user.
+
+        REQUEST ENTITY BODY:
+        * Media type: JSON
+
+        """
+
+        if not g.con.contains_user(username):
+            return create_error_response(404, "Unknown user", "There is no user with username {}".format(username))
+
+        request_body = request.get_json()
+        if not request_body:
+            return create_error_response(415, "Unsupported Media Type", "Use a JSON compatible format")
+
+        try:
+            picture = request_body["picture"]
+            lastname = request_body["lastname"]
+        except KeyError:
+            return create_error_response(400, "Wrong request format", "Be sure to include all mandatory properties")
+
+        user_public = {
+            "picture": picture,
+            "lastname": lastname
+        }
+
+        if not g.con.modify_user(username, user_public, None):
+            return create_error_response(404, "Unknown user", "There is no user with username {}".format(username))
+
+        return "", 204
+
+
+class User_restricted(Resource):
+
+    def get(self, username):
+        """
+        Get the private profile of a user
+
+        RESPONSE ENTITY BODY:
+        * Media type: Mason
+          https://github.com/JornWildt/Mason
+         * Profile: Forum_User_Profile
+        """
+
+        user_db = g.con.get_user(username)
+        if not user_db:
+            return create_error_response(404, "Unknown user",
+                                         "There is no a user with username %s"
+                                         % username)
+
+        priv_profile = user_db["restricted_profile"]
+
+        envelope = ForumObject(
+            username=username,
+            user_type=priv_profile["user_type"],
+            firstname=priv_profile["firstname"],
+            work_address=priv_profile["work_address"],
+            gender=priv_profile["gender"],
+            age=priv_profile["age"],
+            email=priv_profile["email"],
+            phone=priv_profile["phone"],
+            diagnosis_id=priv_profile["diagnosis_id"],
+            height=priv_profile["height"],
+            weight=priv_profile["weight"],
+            speciality=priv_profile["speciality"]
+        )
+
+        envelope.add_namespace("forum", LINK_RELATIONS_URL)
+        envelope.add_control("self", href=api.url_for(User_restricted, username=username))
+        envelope.add_control("up", href=api.url_for(User, username=username))
+        envelope.add_control("forum:public-data", href=api.url_for(User_public, username=username))
+        envelope.add_control_edit_private_profile(username)
+
+        return Response(json.dumps(envelope), 200, mimetype=MASON + ";" + FORUM_USER_PROFILE)
+
+    def put(self, username):
+        """
+        Edit the private profile of a user
+
+        REQUEST ENTITY BODY:
+        * Media type: JSON
+        """
+
+        if not g.con.contains_user(username):
+            return create_error_response(404, "Unknown user", "There is no user with username {}".format(username))
+
+        request_body = request.get_json()
+        if not request_body:
+            return create_error_response(415, "Unsupported Media Type", "Use  JSON format")
+
+        try:
+            priv_profile = dict(
+                user_id=request_body["user_id"],
+                user_type=request_body["user_type"],
+                work_address=request_body["work_address"],
+                email=request_body["email"],
+                firstname=request_body["firstname"],
+                gender=request_body["gender"],
+                age=request_body["age"],
+                phone=request_body["phone"],
+                diagnosis_id=request_body.get("diagnosis_id", ""),
+                height=request_body.get("height", ""),
+                weight=request_body.get("weight", ""),
+                speciality=request_body.get("speciality", "")
+            )
+        except KeyError:
+            return create_error_response(400, "Wrong request format", "Be sure to include all mandatory properties")
+
+        if not g.con.modify_user(username, None, priv_profile):
+            return NotFound()
+        return "", 204
+
 
 class Diagnoses(Resource):
     """
@@ -1114,12 +1525,14 @@ api.add_resource(Messages, "/medical_forum/api/messages/",
                  endpoint="messages")
 api.add_resource(Message, "/medical_forum/api/messages/<regex('msg-\d+'):message_id>/",
                  endpoint="message")
-# TODO api.add_resource for User_public
-# TODO api.add_resource for User_restricted
-# TODO api.add_resource for Users
-api.add_resource(User, "/forum/api/users/<username>/",
+api.add_resource(User_public, "/medical_forum/api/users/<username>/public_profile/",
+                 endpoint="public_profile")
+api.add_resource(User_restricted, "/medical_forum/api/users/<username>/restricted_profile/",
+                 endpoint="restricted_profile")
+api.add_resource(User, "/medical_forum/api/users/<username>/",
                  endpoint="user")
-# TODO api.add_resource for User
+api.add_resource(Users, "/medical_forum/api/users/",
+                 endpoint="users")
 api.add_resource(Diagnoses, "/medical_forum/api/diagnoses/",
                  endpoint="diagnoses")
 api.add_resource(Diagnosis, "/medical_forum/api/diagnoses/<regex('dgs-\d+'):diagnosis_id>/",
