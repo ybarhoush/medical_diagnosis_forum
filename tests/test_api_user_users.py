@@ -143,7 +143,7 @@ class UsersTestCase(ResourcesAPITestCase):
         'email': 'pbxim@f-hq--.com'
     }
 
-    # Missing mandatory
+    # Missing mandatory.
     user_wrong_3_request = {
         'reg_date': 1785505926,
         'username': PATIENT_USERNAME,
