@@ -6,34 +6,44 @@ Database API testing unit for tables creation, and whether all created successfu
 @author: Issam
 """
 
-# Importing required modules
-from .utils import *
 import unittest
+from .utils import ENGINE, test_table_populated, test_table_schema
+from .utils import USERS_PROFILE_TABLE, USERS_TABLE, INITIAL_USERS_COUNT
+from .utils import MESSAGES_TABLE, DIAGNOSIS_TABLE
 
 
 # Tables names, types and foreign keys constants
 # User table
-USERS_TABLE_NAMES = ['user_id', 'username', 'pass_hash', 'reg_date', 'last_login', 'msg_count']
-USERS_TABLE_TYPES = ['INTEGER', 'TEXT', 'TEXT', 'INTEGER', 'INTEGER', 'INTEGER']
+USERS_TABLE_NAMES = ['user_id', 'username',
+                     'pass_hash', 'reg_date', 'last_login', 'msg_count']
+USERS_TABLE_TYPES = ['INTEGER', 'TEXT',
+                     'TEXT', 'INTEGER', 'INTEGER', 'INTEGER']
 USERS_TABLE_FK = [()]
 
 # Profile table
-USERS_PROFILE_TABLE_NAMES = ['user_id', 'user_type', 'firstname', 'lastname', 'work_address', 'gender',
-                             'age', 'email', 'picture', 'phone', 'diagnosis_id', 'height', 'weight', 'speciality']
-USERS_PROFILE_TABLE_TYPES = ['INTEGER', 'INTEGER', 'TEXT', 'TEXT', 'TEXT', 'TEXT', 'INTEGER', 'TEXT', 'TEXT',
-                             'INTEGER', 'INTEGER', 'INTEGER', 'INTEGER', 'TEXT']
-USERS_PROFILE_TABLE_FK = [('users', 'user_id', 'user_id'), ('diagnosis', 'diagnosis_id', 'diagnosis_id')]
+USERS_PROFILE_TABLE_NAMES = ['user_id', 'user_type', 'firstname', 'lastname',
+                             'work_address', 'gender', 'age', 'email', 'picture',
+                             'phone', 'diagnosis_id', 'height', 'weight', 'speciality']
+USERS_PROFILE_TABLE_TYPES = ['INTEGER', 'INTEGER', 'TEXT', 'TEXT', 'TEXT', 'TEXT',
+                             'INTEGER', 'TEXT', 'TEXT', 'INTEGER', 'INTEGER', 'INTEGER',
+                             'INTEGER', 'TEXT']
+USERS_PROFILE_TABLE_FK = [
+    ('users', 'user_id', 'user_id'), ('diagnosis', 'diagnosis_id', 'diagnosis_id')]
 
 # Messages table
-MESSAGES_TABLE_NAMES = ['message_id', 'user_id', 'username', 'reply_to', 'title', 'body', 'views', 'timestamp']
-MESSAGES_TABLE_TYPES = ['INTEGER', 'INTEGER', 'TEXT', 'INTEGER', 'TEXT', 'TEXT', 'INTEGER', 'INTEGER']
+MESSAGES_TABLE_NAMES = ['message_id', 'user_id', 'username',
+                        'reply_to', 'title', 'body', 'views', 'timestamp']
+MESSAGES_TABLE_TYPES = ['INTEGER', 'INTEGER', 'TEXT',
+                        'INTEGER', 'TEXT', 'TEXT', 'INTEGER', 'INTEGER']
 MESSAGES_TABLE_FK = [('users', 'user_id', 'user_id'), ('users', 'username', 'username'),
                      ('messages', 'reply_to', 'message_id')]
 
 # Diagnosis table
-DIAGNOSIS_TABLE_NAMES = ['diagnosis_id', 'user_id', 'message_id', 'disease', 'diagnosis_description']
+DIAGNOSIS_TABLE_NAMES = ['diagnosis_id', 'user_id',
+                         'message_id', 'disease', 'diagnosis_description']
 DIAGNOSIS_TABLE_TYPES = ['INTEGER', 'INTEGER', 'INTEGER', 'TEXT', 'TEXT']
-DIAGNOSIS_TABLE_FK = [('messages', 'message_id', 'message_id'), ('users', 'user_id', 'user_id')]
+DIAGNOSIS_TABLE_FK = [
+    ('messages', 'message_id', 'message_id'), ('users', 'user_id', 'user_id')]
 
 
 class TablesCreationTestCase(unittest.TestCase):
@@ -67,8 +77,8 @@ class TablesCreationTestCase(unittest.TestCase):
             self.connection = ENGINE.connect()
 
         # In case of error/exception in populating tables, clear all tables data
-        except Exception as e:
-            print(e)
+        except Exception as exception:
+            print(exception)
             ENGINE.clear()
 
     def tearDown(self):
@@ -80,61 +90,71 @@ class TablesCreationTestCase(unittest.TestCase):
         """
         Checks that the users table has the right schema.
         """
-        print('(' + self.test_users_table_schema.__name__ + ')', self.test_users_table_schema.__doc__)
-        test_table_schema(self, USERS_TABLE, USERS_TABLE_NAMES, USERS_TABLE_TYPES, USERS_TABLE_FK, False)
+        print('(' + self.test_users_table_schema.__name__ + ')',
+              self.test_users_table_schema.__doc__)
+        test_table_schema(self, USERS_TABLE, USERS_TABLE_NAMES,
+                          USERS_TABLE_TYPES, USERS_TABLE_FK, False)
 
     def test_users_profile_table_schema(self):
         """
         Checks that the users profile table has the right schema.
         """
-        print('(' + self.test_users_profile_table_schema.__name__ + ')', self.test_users_profile_table_schema.__doc__)
-        test_table_schema(self, USERS_PROFILE_TABLE, USERS_PROFILE_TABLE_NAMES, USERS_PROFILE_TABLE_TYPES,
-                          USERS_PROFILE_TABLE_FK, True)
+        print('(' + self.test_users_profile_table_schema.__name__ + ')',
+              self.test_users_profile_table_schema.__doc__)
+        test_table_schema(self, USERS_PROFILE_TABLE, USERS_PROFILE_TABLE_NAMES,
+                          USERS_PROFILE_TABLE_TYPES, USERS_PROFILE_TABLE_FK, True)
 
     def test_messages_table_schema(self):
         """
         Checks that the messages table has the right schema.
         """
-        print('(' + self.test_messages_table_schema.__name__ + ')', self.test_messages_table_schema.__doc__)
-        test_table_schema(self, MESSAGES_TABLE, MESSAGES_TABLE_NAMES, MESSAGES_TABLE_TYPES, MESSAGES_TABLE_FK, True)
+        print('(' + self.test_messages_table_schema.__name__ + ')',
+              self.test_messages_table_schema.__doc__)
+        test_table_schema(self, MESSAGES_TABLE, MESSAGES_TABLE_NAMES,
+                          MESSAGES_TABLE_TYPES, MESSAGES_TABLE_FK, True)
 
     def test_diagnosis_table_schema(self):
         """
         Checks that the diagnosis table has the right schema.
         """
-        print('(' + self.test_diagnosis_table_schema.__name__ + ')', self.test_diagnosis_table_schema.__doc__)
-        test_table_schema(self, DIAGNOSIS_TABLE, DIAGNOSIS_TABLE_NAMES, DIAGNOSIS_TABLE_TYPES, DIAGNOSIS_TABLE_FK, True)
+        print('(' + self.test_diagnosis_table_schema.__name__ + ')',
+              self.test_diagnosis_table_schema.__doc__)
+        test_table_schema(self, DIAGNOSIS_TABLE, DIAGNOSIS_TABLE_NAMES,
+                          DIAGNOSIS_TABLE_TYPES, DIAGNOSIS_TABLE_FK, True)
 
     def test_users_table_populated(self):
         """
         Check that the users table has been populated with default data successfully.
          """
-        print('(' + self.test_users_table_populated.__name__ + ')', self.test_users_table_populated.__doc__)
+        print('(' + self.test_users_table_populated.__name__ + ')',
+              self.test_users_table_populated.__doc__)
         test_table_populated(self, USERS_TABLE, INITIAL_USERS_COUNT)
 
-    def test_users_profile_table_populated(self):
+    def test_profiles_table_populated(self):
         """
         Check that the users profile table has been populated with default data successfully.
          """
-        print('(' + self.test_users_profile_table_populated.__name__ + ')', self.test_users_profile_table_populated.__doc__)
+        print('(' + self.test_profiles_table_populated.__name__ + ')',
+              self.test_profiles_table_populated.__doc__)
         test_table_populated(self, USERS_TABLE, INITIAL_USERS_COUNT)
 
     def test_messages_table_populated(self):
         """
         Check that the messages table has been populated with default data successfully.
          """
-        print('(' + self.test_messages_table_populated.__name__ + ')', self.test_messages_table_populated.__doc__)
+        print('(' + self.test_messages_table_populated.__name__ + ')',
+              self.test_messages_table_populated.__doc__)
         test_table_populated(self, USERS_TABLE, INITIAL_USERS_COUNT)
 
     def test_diagnosis_table_populated(self):
         """
         Check that the diagnosis table has been populated with default data successfully.
          """
-        print('(' + self.test_diagnosis_table_populated.__name__ + ')', self.test_diagnosis_table_populated.__doc__)
+        print('(' + self.test_diagnosis_table_populated.__name__ + ')',
+              self.test_diagnosis_table_populated.__doc__)
         test_table_populated(self, USERS_TABLE, INITIAL_USERS_COUNT)
 
 
 if __name__ == '__main__':
     print('Start running tables tests')
     unittest.main()
-

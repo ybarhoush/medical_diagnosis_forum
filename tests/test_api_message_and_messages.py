@@ -5,13 +5,12 @@ Modified on 26.03.2017
 @author: mika oja
 @author: yazan barhoush
 """
-import unittest, copy
+import unittest
 import json
-
 import flask
 
 import medical_forum.resources as resources
-import medical_forum.database as database
+import medical_forum.database_engine as database
 
 # Default paths for .db and .sql files to create and populate the database.
 DEFAULT_DB_PATH = 'db/medical_forum_data_test.db'
@@ -28,20 +27,21 @@ FORUM_MESSAGE_PROFILE = "/profiles/message-profile/"
 ATOM_THREAD_PROFILE = "https://tools.ietf.org/html/rfc4685"
 
 # Tell Flask that I am running it in testing mode.
-resources.app.config["TESTING"] = True
+resources.APP.config["TESTING"] = True
 # Necessary for correct translation in url_for
-resources.app.config["SERVER_NAME"] = "localhost:5000"
+resources.APP.config["SERVER_NAME"] = "localhost:5000"
 
 # Database Engine utilized in our testing
-resources.app.config.update({"Engine": ENGINE})
+resources.APP.config.update({"Engine": ENGINE})
 
 # Other database parameters.
-initial_messages = 19
+INITIAL_MESSAGES = 19
 
 
 # Copied Class ResourcesAPITestCase from Ex. 4
 class ResourcesAPITestCase(unittest.TestCase):
-    # INITIATION AND TEARDOWN METHODS
+    """Messages resource setup and teardown"""
+
     @classmethod
     def setUpClass(cls):
         """ Creates the database structure. Removes first any preexisting
@@ -64,10 +64,10 @@ class ResourcesAPITestCase(unittest.TestCase):
         # This method load the initial values from forum_data_dump.sql
         ENGINE.populate_tables()
         # Activate app_context for using url_for
-        self.app_context = resources.app.app_context()
+        self.app_context = resources.APP.app_context()
         self.app_context.push()
         # Create a test client
-        self.client = resources.app.test_client()
+        self.client = resources.APP.test_client()
 
     def tearDown(self):
         """
@@ -78,6 +78,7 @@ class ResourcesAPITestCase(unittest.TestCase):
 
 
 class MessagesTestCase(ResourcesAPITestCase):
+    """Messages resource API tests"""
     url = "/medical_forum/api/messages/"
 
     existing_user_request = {
@@ -88,7 +89,8 @@ class MessagesTestCase(ResourcesAPITestCase):
 
     non_existing_user_request = {
         "headline": "Can you help?",
-        "articleBody": "I came here a months ago talking about the same problem in which i feel like ...",
+        "articleBody": ("I came here a months ago talking about the same problem in "
+                        "which i feel like ..."),
         "author": "NoBodyKnows"
     }
 
@@ -107,10 +109,11 @@ class MessagesTestCase(ResourcesAPITestCase):
         """
         Checks that the URL points to the right resource
         """
-        print("(" + self.test_url.__name__ + ")", self.test_url.__doc__, end=' ')
-        with resources.app.test_request_context(self.url):
+        print("(" + self.test_url.__name__ + ")",
+              self.test_url.__doc__, end=' ')
+        with resources.APP.test_request_context(self.url):
             rule = flask.request.url_rule
-            view_point = resources.app.view_functions[rule.endpoint].view_class
+            view_point = resources.APP.view_functions[rule.endpoint].view_class
             self.assertEqual(view_point, resources.Messages)
 
     # Modified from def test_get_messages(self):
@@ -118,7 +121,8 @@ class MessagesTestCase(ResourcesAPITestCase):
         """
         Checks that GET Messages return correct status code and data format
         """
-        print("(" + self.test_get_messages.__name__ + ")", self.test_get_messages.__doc__)
+        print("(" + self.test_get_messages.__name__ + ")",
+              self.test_get_messages.__doc__)
 
         # Check that I receive status code 200
         resp = self.client.get(flask.url_for("messages"))
@@ -178,7 +182,8 @@ class MessagesTestCase(ResourcesAPITestCase):
         """
         Checks that GET Messages return correct status code and data format
         """
-        print("(" + self.test_get_messages_mimetype.__name__ + ")", self.test_get_messages_mimetype.__doc__)
+        print("(" + self.test_get_messages_mimetype.__name__ + ")",
+              self.test_get_messages_mimetype.__doc__)
 
         # Check that I receive status code 200
         resp = self.client.get(flask.url_for("messages"))
@@ -191,19 +196,20 @@ class MessagesTestCase(ResourcesAPITestCase):
         """
         Test adding messages to the database.
         """
-        print("(" + self.test_add_message.__name__ + ")", self.test_add_message.__doc__)
+        print("(" + self.test_add_message.__name__ + ")",
+              self.test_add_message.__doc__)
 
-        resp = self.client.post(resources.api.url_for(resources.Messages),
+        resp = self.client.post(resources.API.url_for(resources.Messages),
                                 headers={"Content-Type": JSON},
-                                data=json.dumps(self.existing_user_request)
-                                )
+                                data=json.dumps(self.existing_user_request))
         self.assertTrue(resp.status_code == 201)
         url = resp.headers.get("Location")
         self.assertIsNotNone(url)
         resp = self.client.get(url)
         self.assertTrue(resp.status_code == 200)
 
-        # TODO fix database lock: def test_add_message(self): will try again after users is implemented
+        # TODO fix database lock: def test_add_message(self):
+        # will try again after users is implemented
         # resp = self.client.post(resources.api.url_for(resources.Messages),
         #                         headers={"Content-Type": JSON},
         #                         data=json.dumps(self.non_existing_user_request)
@@ -218,7 +224,8 @@ class MessagesTestCase(ResourcesAPITestCase):
     #     """
     #     Test adding messages with a media different than json
     #     """
-    #     print("(" + self.test_add_message_wrong_media.__name__ + ")", self.test_add_message_wrong_media.__doc__)
+    #     print("(" + self.test_add_message_wrong_media.__name__ + ")",
+    #               self.test_add_message_wrong_media.__doc__)
     #     resp = self.client.post(resources.api.url_for(resources.Messages),
     #                             headers={"Content-Type": "text"},
     #                             data=self.message_1_request.__str__()
@@ -230,46 +237,47 @@ class MessagesTestCase(ResourcesAPITestCase):
         """
         Test adding messages with a media different than json
         """
-        print("(" + self.test_add_message_wrong_media.__name__ + ")", self.test_add_message_wrong_media.__doc__)
-        resp = self.client.post(resources.api.url_for(resources.Messages),
+        print("(" + self.test_add_message_wrong_media.__name__ + ")",
+              self.test_add_message_wrong_media.__doc__)
+        resp = self.client.post(resources.API.url_for(resources.Messages),
                                 headers={"Content-Type": "text"},
-                                data=self.existing_user_request.__str__()
-                                )
+                                data=self.existing_user_request.__str__())
         self.assertTrue(resp.status_code == 415)
 
     # Modified from test_add_message_incorrect_format(self):
-    def test_add_message_incorrect_format(self):
+    def test_add_message_bad_format(self):
         """
         Test that add message response correctly when sending erroneous message
         format.
         """
-        print("(" + self.test_add_message_incorrect_format.__name__ + ")",
-              self.test_add_message_incorrect_format.__doc__)
-        resp = self.client.post(resources.api.url_for(resources.Messages),
+        print("(" + self.test_add_message_bad_format.__name__ + ")",
+              self.test_add_message_bad_format.__doc__)
+        resp = self.client.post(resources.API.url_for(resources.Messages),
                                 headers={"Content-Type": JSON},
-                                data=json.dumps(self.no_headline_wrong)
-                                )
+                                data=json.dumps(self.no_headline_wrong))
         self.assertTrue(resp.status_code == 400)
 
-        resp = self.client.post(resources.api.url_for(resources.Messages),
+        resp = self.client.post(resources.API.url_for(resources.Messages),
                                 headers={"Content-Type": JSON},
-                                data=json.dumps(self.no_body_wrong)
-                                )
+                                data=json.dumps(self.no_body_wrong))
         self.assertTrue(resp.status_code == 400)
 
 
 class MessageTestCase(ResourcesAPITestCase):
+    """Message resource API tests"""
     message_req_1 = {
         "headline": "Soreness in the throat",
-        "articleBody": "Hi, I have this soreness in my throat. It started just yesterday and its getting worse by "
-                       "every hour. What should I do, and what is the cause of this. ",
+        "articleBody": "Hi, I have this soreness in my throat. It started \
+                        just yesterday and its getting worse by every hour. What should I \
+                        do, and what is the cause of this. ",
         "author": "PoorGuy"
     }
 
     message_modify_req_1 = {
         "headline": "Dizziness when running",
-        "articleBody": "Hi, I need help with this issue real quick. I get very dizzy when I run for few minutes. This "
-                       "is being happening for like 2 weeks now. I really need help with this ! ",
+        "articleBody": "Hi, I need help with this issue real quick. I \
+                        get very dizzy when I run for few minutes. This is being \
+                        happening for like 2 weeks now. I really need help with this ! ",
         "author": "Dizzy",
         # "editor": "AxelW"
     }
@@ -285,10 +293,10 @@ class MessageTestCase(ResourcesAPITestCase):
     # Modified from def setUp(self):
     def setUp(self):
         super(MessageTestCase, self).setUp()
-        self.url = resources.api.url_for(resources.Message,
+        self.url = resources.API.url_for(resources.Message,
                                          message_id="msg-1",
                                          _external=False)
-        self.url_wrong = resources.api.url_for(resources.Message,
+        self.url_wrong = resources.API.url_for(resources.Message,
                                                message_id="msg-290",
                                                _external=False)
 
@@ -299,9 +307,9 @@ class MessageTestCase(ResourcesAPITestCase):
         """
         _url = "/medical_forum/api/messages/msg-1/"
         print("(" + self.test_url.__name__ + ")", self.test_url.__doc__)
-        with resources.app.test_request_context(_url):
+        with resources.APP.test_request_context(_url):
             rule = flask.request.url_rule
-            view_point = resources.app.view_functions[rule.endpoint].view_class
+            view_point = resources.APP.view_functions[rule.endpoint].view_class
             self.assertEqual(view_point, resources.Message)
 
     # Copied from def setUp(self):
@@ -318,8 +326,9 @@ class MessageTestCase(ResourcesAPITestCase):
         """
         Checks that GET Message return correct status code and data format
         """
-        print("(" + self.test_get_message.__name__ + ")", self.test_get_message.__doc__)
-        with resources.app.test_client() as client:
+        print("(" + self.test_get_message.__name__ + ")",
+              self.test_get_message.__doc__)
+        with resources.APP.test_client() as client:
             resp = client.get(self.url)
             self.assertEqual(resp.status_code, 200)
             data = json.loads(resp.data.decode("utf-8"))
@@ -388,15 +397,16 @@ class MessageTestCase(ResourcesAPITestCase):
             self.assertEqual(controls["self"]["href"], self.url)
 
             self.assertIn("href", controls["profile"])
-            self.assertEqual(controls["profile"]["href"], FORUM_MESSAGE_PROFILE)
+            self.assertEqual(controls["profile"]
+                             ["href"], FORUM_MESSAGE_PROFILE)
             # TODO test_get_message(self) -- author name AxelW not PoorGuy
             self.assertIn("href", controls["author"])
-            self.assertEqual(controls["author"]["href"], resources.api.url_for(
+            self.assertEqual(controls["author"]["href"], resources.API.url_for(
                 resources.User, username="PoorGuy", _external=False
             ))
 
             self.assertIn("href", controls["collection"])
-            self.assertEqual(controls["collection"]["href"], resources.api.url_for(
+            self.assertEqual(controls["collection"]["href"], resources.API.url_for(
                 resources.Messages, _external=False
             ))
 
@@ -420,7 +430,8 @@ class MessageTestCase(ResourcesAPITestCase):
         """
         Checks that GET Messages return correct status code and data format
         """
-        print("(" + self.test_get_message_mimetype.__name__ + ")", self.test_get_message_mimetype.__doc__)
+        print("(" + self.test_get_message_mimetype.__name__ + ")",
+              self.test_get_message_mimetype.__doc__)
 
         # Check that I receive status code 200
         resp = self.client.get(self.url)
@@ -429,12 +440,12 @@ class MessageTestCase(ResourcesAPITestCase):
                          "{};{}".format(MASONJSON, FORUM_MESSAGE_PROFILE))
 
     # Copied from def test_add_reply_nonexisting_message(self):
-    def test_add_reply_nonexisting_message(self):
+    def test_reply_nonexisting_message(self):
         """
         Try to add a reply to an nonexisting message
         """
-        print("(" + self.test_add_reply_nonexisting_message.__name__ + ")",
-              self.test_add_reply_nonexisting_message.__doc__)
+        print("(" + self.test_reply_nonexisting_message.__name__ + ")",
+              self.test_reply_nonexisting_message.__doc__)
         resp = self.client.post(self.url_wrong,
                                 data=json.dumps(self.message_req_1),
                                 headers={"Content-Type": JSON})
@@ -445,7 +456,8 @@ class MessageTestCase(ResourcesAPITestCase):
         """
         Try to add a reply to a message sending wrong data
         """
-        print("(" + self.test_add_reply_wrong_message.__name__ + ")", self.test_add_reply_wrong_message.__doc__)
+        print("(" + self.test_add_reply_wrong_message.__name__ + ")",
+              self.test_add_reply_wrong_message.__doc__)
         resp = self.client.post(self.url,
                                 data=json.dumps(self.message_wrong_req_1),
                                 headers={"Content-Type": JSON})
@@ -460,7 +472,8 @@ class MessageTestCase(ResourcesAPITestCase):
         """
         Checks that returns the correct status code if the Content-Type is wrong
         """
-        print("(" + self.test_add_reply_wrong_type.__name__ + ")", self.test_add_reply_wrong_type.__doc__)
+        print("(" + self.test_add_reply_wrong_type.__name__ + ")",
+              self.test_add_reply_wrong_type.__doc__)
         resp = self.client.post(self.url,
                                 data=json.dumps(self.message_req_1),
                                 headers={"Content-Type": "text/html"})
@@ -471,7 +484,8 @@ class MessageTestCase(ResourcesAPITestCase):
         """
         Add a new message and check that I receive the same data
         """
-        print("(" + self.test_add_reply.__name__ + ")", self.test_add_reply.__doc__)
+        print("(" + self.test_add_reply.__name__ + ")",
+              self.test_add_reply.__doc__)
         resp = self.client.post(self.url,
                                 data=json.dumps(self.message_req_1),
                                 headers={"Content-Type": JSON})
@@ -485,9 +499,11 @@ class MessageTestCase(ResourcesAPITestCase):
     # Modified from def test_modify_message(self):
     def test_modify_message(self):
         """
-        Modify an exsiting message and check that the message has been modified correctly in the server
+        Modify an exsiting message and check that the message has been
+        modified correctly in the server
         """
-        print("(" + self.test_modify_message.__name__ + ")", self.test_modify_message.__doc__)
+        print("(" + self.test_modify_message.__name__ + ")",
+              self.test_modify_message.__doc__)
         resp = self.client.put(self.url,
                                data=json.dumps(self.message_modify_req_1),
                                headers={"Content-Type": JSON})
@@ -497,15 +513,18 @@ class MessageTestCase(ResourcesAPITestCase):
         self.assertEqual(resp2.status_code, 200)
         data = json.loads(resp2.data.decode("utf-8"))
         # Check that the title and the body of the message has been modified with the new data
-        self.assertEqual(data["headline"], self.message_modify_req_1["headline"])
-        self.assertEqual(data["articleBody"], self.message_modify_req_1["articleBody"])
+        self.assertEqual(data["headline"],
+                         self.message_modify_req_1["headline"])
+        self.assertEqual(data["articleBody"],
+                         self.message_modify_req_1["articleBody"])
 
     # Modified from def test_modify_nonexisting_message(self):
     def test_modify_nonexisting_message(self):
         """
         Try to modify a message that does not exist
         """
-        print("(" + self.test_modify_nonexisting_message.__name__ + ")", self.test_modify_nonexisting_message.__doc__)
+        print("(" + self.test_modify_nonexisting_message.__name__ + ")",
+              self.test_modify_nonexisting_message.__doc__)
         resp = self.client.put(self.url_wrong,
                                data=json.dumps(self.message_modify_req_1),
                                headers={"Content-Type": JSON})
@@ -516,7 +535,8 @@ class MessageTestCase(ResourcesAPITestCase):
         """
         Try to modify a message sending wrong data
         """
-        print("(" + self.test_modify_wrong_message.__name__ + ")", self.test_modify_wrong_message.__doc__)
+        print("(" + self.test_modify_wrong_message.__name__ + ")",
+              self.test_modify_wrong_message.__doc__)
         resp = self.client.put(self.url,
                                data=json.dumps(self.message_wrong_req_1),
                                headers={"Content-Type": JSON})
@@ -531,7 +551,8 @@ class MessageTestCase(ResourcesAPITestCase):
         """
         Checks that Delete Message return correct status code if corrected delete
         """
-        print("(" + self.test_delete_message.__name__ + ")", self.test_delete_message.__doc__)
+        print("(" + self.test_delete_message.__name__ + ")",
+              self.test_delete_message.__doc__)
         resp = self.client.delete(self.url)
         self.assertEqual(resp.status_code, 204)
         resp2 = self.client.get(self.url)
@@ -542,7 +563,8 @@ class MessageTestCase(ResourcesAPITestCase):
         """
         Checks that Delete Message return correct status code if given a wrong address
         """
-        print("(" + self.test_delete_nonexisting_message.__name__ + ")", self.test_delete_nonexisting_message.__doc__)
+        print("(" + self.test_delete_nonexisting_message.__name__ + ")",
+              self.test_delete_nonexisting_message.__doc__)
         resp = self.client.delete(self.url_wrong)
         self.assertEqual(resp.status_code, 404)
 

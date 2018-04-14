@@ -9,21 +9,24 @@ Database API testing unit for users related methods from medical_forum/database.
 # Importing required modules
 import unittest
 # import helper different methods
-from .utils import *
+from .utils import execute_query, ENGINE, test_table_populated
+from .utils import DIAGNOSIS_TABLE, INITIAL_DIAGNOSIS_COUNT
 
 # declare constants
 DIAGNOSIS_1_ID = 'dgs-1'
 DIAGNOSIS_1 = {'user_id': 1,
                'message_id': 'msg-7',
                'disease': 'blood',
-               'diagnosis_description': 'Anne bought new car. Tony bought new car. Anne has free time. '
-                                        'John has free time. Tony bought new car. '}
+               'diagnosis_description': ('Anne bought new car. Tony bought new car. '
+                                         'Anne has free time. John has free time. '
+                                         'Tony bought new car. ')}
 DIAGNOSIS_2_ID = 'dgs-12'
 DIAGNOSIS_2 = {'user_id': 9,
                'message_id': 'msg-3',
                'disease': 'eyes',
-               'diagnosis_description': 'Tony has free time. Anne is shopping. Tony bought new car. '
-                                        'John bought new car. John bought new car. '}
+               'diagnosis_description': ('Tony has free time. Anne is shopping. Tony '
+                                         'bought new car. John bought new car. '
+                                         'John bought new car. ')}
 
 DOCTOR_ID = 4
 NOT_DOCTOR_ID = 1
@@ -64,8 +67,8 @@ class DatabaseDiagnosesTestCase(unittest.TestCase):
             self.connection = ENGINE.connect()
 
         # In case of error/exception in populating tables, clear all tables data
-        except Exception as e:
-            print(e)
+        except Exception as exception:
+            print(exception)
             ENGINE.clear()
 
     def tearDown(self):
@@ -77,33 +80,38 @@ class DatabaseDiagnosesTestCase(unittest.TestCase):
         """
         Check that the diagnosis table has been populated with default data successfully.
          """
-        print('(' + self.test_diagnosis_table_populated.__name__ + ')', self.test_diagnosis_table_populated.__doc__)
+        print('(' + self.test_diagnosis_table_populated.__name__ + ')',
+              self.test_diagnosis_table_populated.__doc__)
         test_table_populated(self, DIAGNOSIS_TABLE, INITIAL_DIAGNOSIS_COUNT)
 
     def test_create_diagnosis_object(self):
         """
         Check that the method create_diagnosis_object works return proper values for diagnosis id 1
         """
-        print('(' + self.test_create_diagnosis_object.__name__+')', self.test_create_diagnosis_object.__doc__)
+        print('(' + self.test_create_diagnosis_object.__name__+')',
+              self.test_create_diagnosis_object.__doc__)
         # Query to get users and users_profile for the patient
         query = 'SELECT * FROM diagnosis WHERE diagnosis_id = 1'
         # assert if result doesn't contain patient
-        self.assertDictContainsSubset(self.connection._create_diagnosis_object(execute_query(self, query, 'one')),
-                                      DIAGNOSIS_1)
+        self.assertDictContainsSubset(self.connection._create_diagnosis_object(
+            execute_query(self, query, 'one')), DIAGNOSIS_1)
 
     def test_get_diagnosis(self):
         """
         Test get_diagnosis with diagnosis_id
         """
-        print('(' + self.test_get_diagnosis.__name__+')', self.test_get_diagnosis.__doc__)
+        print('(' + self.test_get_diagnosis.__name__+')',
+              self.test_get_diagnosis.__doc__)
         # test for patient
-        self.assertDictContainsSubset(self.connection.get_diagnosis(DIAGNOSIS_1_ID), DIAGNOSIS_1)
+        self.assertDictContainsSubset(
+            self.connection.get_diagnosis(DIAGNOSIS_1_ID), DIAGNOSIS_1)
 
     def test_get_bad_diagnosis(self):
         """
         Test get_diagnosis with  diagnosis-100 (no-existing)
         """
-        print('(' + self.test_get_bad_diagnosis.__name__+')', self.test_get_bad_diagnosis.__doc__)
+        print('(' + self.test_get_bad_diagnosis.__name__+')',
+              self.test_get_bad_diagnosis.__doc__)
         with self.assertRaises(ValueError):
             self.connection.get_diagnosis(BAD_DIAGNOSIS_ID)
 
@@ -111,14 +119,17 @@ class DatabaseDiagnosesTestCase(unittest.TestCase):
         """
         Test get_diagnosis with  diagnosis-100 (no-existing)
         """
-        print('(' + self.test_get_non_exist_diagnosis.__name__+')', self.test_get_non_exist_diagnosis.__doc__)
-        self.assertIsNone(self.connection.get_diagnosis(NON_EXIST_DIAGNOSIS_ID))
+        print('(' + self.test_get_non_exist_diagnosis.__name__+')',
+              self.test_get_non_exist_diagnosis.__doc__)
+        self.assertIsNone(
+            self.connection.get_diagnosis(NON_EXIST_DIAGNOSIS_ID))
 
     def test_append_diagnosis(self):
         """
         Test that a new diagnosis can be added and check its data after adding
         """
-        print('(' + self.test_append_diagnosis.__name__+')', self.test_append_diagnosis.__doc__)
+        print('(' + self.test_append_diagnosis.__name__+')',
+              self.test_append_diagnosis.__doc__)
         new_diagnosis_id = self.connection.create_diagnosis(NEW_DIAGNOSIS)
         # test appended ok
         self.assertIsNotNone(new_diagnosis_id)
@@ -126,12 +137,12 @@ class DatabaseDiagnosesTestCase(unittest.TestCase):
         get_new_diagnosis = self.connection.get_diagnosis(new_diagnosis_id)
         self.assertDictContainsSubset(NEW_DIAGNOSIS, get_new_diagnosis)
 
-    def test_append_diagnosis_by_non_doctor(self):
+    def test_append_diagnosis_nondoctor(self):
         """
         Test that a new diagnosis cannot be added by a non-doctor user
         """
-        print('(' + self.test_append_diagnosis_by_non_doctor.__name__+')',
-              self.test_append_diagnosis_by_non_doctor.__doc__)
+        print('(' + self.test_append_diagnosis_nondoctor.__name__+')',
+              self.test_append_diagnosis_nondoctor.__doc__)
         no_doctor_diagnosis = NEW_DIAGNOSIS
         no_doctor_diagnosis['user_id'] = NOT_DOCTOR_ID
         with self.assertRaises(ValueError):
