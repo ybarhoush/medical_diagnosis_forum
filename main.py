@@ -1,7 +1,9 @@
-from medical_forum.resources import app
+"""
+Main medical forum server
+"""
 
-# Start the application
-# DATABASE SHOULD HAVE BEEN POPULATED PREVIOUSLY
+from medical_forum.resources import APP
+
 if __name__ == '__main__':
     # Debug true activates automatic code reloading and improved error messages
-    app.run(debug=True)
+    APP.run(debug=True)

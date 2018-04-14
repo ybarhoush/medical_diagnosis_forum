@@ -3,13 +3,12 @@ Created on 26.01.2013
 Modified on 11.04.2017
 @author: yazan barhoush
 """
-import unittest, copy
+import unittest
 import json
 
 import flask
-
 import medical_forum.resources as resources
-import medical_forum.database as database
+import medical_forum.database_engine as database
 
 # Default paths for .db and .sql files to create and populate the database.
 DEFAULT_DB_PATH = 'db/medical_forum_data_test.db'
@@ -26,19 +25,21 @@ FORUM_DIAGNOSIS_PROFILE = "/profiles/diagnosis-profile/"
 ATOM_THREAD_PROFILE = "https://tools.ietf.org/html/rfc4685"
 
 # Tell Flask that I am running it in testing mode.
-resources.app.config["TESTING"] = True
+resources.APP.config["TESTING"] = True
 # Necessary for correct translation in url_for
-resources.app.config["SERVER_NAME"] = "localhost:5000"
+resources.APP.config["SERVER_NAME"] = "localhost:5000"
 
 # Database Engine utilized in our testing
-resources.app.config.update({"Engine": ENGINE})
+resources.APP.config.update({"Engine": ENGINE})
 
 # Other database parameters.
-initial_diagnoses = 10
+INITIAL_DIAGNOSES = 10
 
 
 # Copied Class ResourcesAPITestCase from Ex. 4
 class ResourcesAPITestCase(unittest.TestCase):
+    """API Resources test setup and teardown funcitons"""
+
     # INITIATION AND TEARDOWN METHODS
     @classmethod
     def setUpClass(cls):
@@ -62,10 +63,10 @@ class ResourcesAPITestCase(unittest.TestCase):
         # This method load the initial values from forum_data_dump.sql
         ENGINE.populate_tables()
         # Activate app_context for using url_for
-        self.app_context = resources.app.app_context()
+        self.app_context = resources.APP.app_context()
         self.app_context.push()
         # Create a test client
-        self.client = resources.app.test_client()
+        self.client = resources.APP.test_client()
 
     def tearDown(self):
         """
@@ -76,36 +77,34 @@ class ResourcesAPITestCase(unittest.TestCase):
 
 
 class DiagnosesTestCase(ResourcesAPITestCase):
+    """Diagnoses resources API tests"""
+
     url = "/medical_forum/api/diagnoses/"
 
-    # Doctor user
-    diagnosis_1_request = {
+    diagnosis_by_doctor = {
         "disease": "Soreness in the throat",
-        "diagnosis_description": "Hi, I have this soreness in my throat. It started just yesterday and its getting "
-                                 "worse by",
+        "diagnosis_description": ("Hi, I have this soreness in my throat. "
+                                  "It started just yesterday and its getting worse by"),
         "user_id": "4",
         "message_id": "1"
     }
 
-    # Non Doctor user
-    diagnosis_2_request = {
+    diagnosis_by_patient = {
         "disease": "Soreness in the throat",
-        "diagnosis_description": "Hi, I have this soreness in my throat. It started just yesterday and its getting "
-                                 "worse by",
+        "diagnosis_description": ("Hi, I have this soreness in my throat. "
+                                  "It started just yesterday and its getting worse by"),
         "user_id": "1",
         "message_id": "1"
     }
 
-    # Missing the disease
-    diagnosis_3_wrong = {
-        "diagnosis_description": "Hi, I have this soreness in my throat. It started just yesterday and its getting "
-                                 "worse by",
+    diagnosis_missing_disease = {
+        "diagnosis_description": ("Hi, I have this soreness in my throat. "
+                                  "It started just yesterday and its getting worse by"),
         "user_id": "4",
         "message_id": "1"
     }
 
-    # Missing the diagnosis
-    diagnosis_4_wrong = {
+    diagnosis_missing_diagnosis = {
         "disease": "Soreness in the throat",
         "user_id": "4",
         "message_id": "1"
@@ -115,62 +114,74 @@ class DiagnosesTestCase(ResourcesAPITestCase):
         """
         Checks that the URL points to the right resource
         """
-        print("(" + self.test_url.__name__ + ")", self.test_url.__doc__, end=' ')
-        with resources.app.test_request_context(self.url):
+        print("(" + self.test_url.__name__ + ")",
+              self.test_url.__doc__, end=' ')
+        with resources.APP.test_request_context(self.url):
             rule = flask.request.url_rule
-            view_point = resources.app.view_functions[rule.endpoint].view_class
+            view_point = resources.APP.view_functions[rule.endpoint].view_class
             self.assertEqual(view_point, resources.Diagnoses)
 
-    # ToDo def test_get_diagnoses(self) -- not implemented in database.py, extra
-    # ToDo def test_get_diagnoses_mimetype(self) -- not implemented in database.py, extra
+    # TODO def test_get_diagnoses(self) -- not implemented in database_connection.py, --extra
+    # TODO def test_get_diagnoses_mimetype(self) -- not implemented in database_connection.py, --extra
 
     def test_add_diagnosis(self):
         """
         Test adding diagnoses to the database.
         """
-        print("(" + self.test_add_diagnosis.__name__ + ")", self.test_add_diagnosis.__doc__)
+        print("(" + self.test_add_diagnosis.__name__ + ")",
+              self.test_add_diagnosis.__doc__)
 
-        resp = self.client.post(resources.api.url_for(resources.Diagnoses),
+        resp = self.client.post(resources.API.url_for(resources.Diagnoses),
                                 headers={"Content-Type": JSON},
-                                data=json.dumps(self.diagnosis_1_request)
-                                )
+                                data=json.dumps(self.diagnosis_by_doctor))
         self.assertTrue(resp.status_code == 201)
         url = resp.headers.get("Location")
         self.assertIsNotNone(url)
         resp = self.client.get(url)
         self.assertTrue(resp.status_code == 200)
 
-        # TODO For Non doctor?
+    def test_add_diagnosis_nondoctor(self):
+        """
+        Test adding diagnoses to the database by a non doctor
+        """
+        print("(" + self.test_add_diagnosis_nondoctor.__name__ + ")",
+              self.test_add_diagnosis_nondoctor.__doc__)
+
+        resp = self.client.post(resources.API.url_for(resources.Diagnoses),
+                                headers={"Content-Type": JSON},
+                                data=json.dumps(self.diagnosis_by_patient))
+        self.assertTrue(resp.status_code == 400)
 
     def test_add_diagnosis_wrong_media(self):
         """
         Test adding diagnoses with a media different than json
         """
-        print("(" + self.test_add_diagnosis_wrong_media.__name__ + ")", self.test_add_diagnosis_wrong_media.__doc__)
-        resp = self.client.post(resources.api.url_for(resources.Diagnoses),
+        print("(" + self.test_add_diagnosis_wrong_media.__name__ + ")",
+              self.test_add_diagnosis_wrong_media.__doc__)
+        resp = self.client.post(resources.API.url_for(resources.Diagnoses),
                                 headers={"Content-Type": "text"},
-                                data=self.diagnosis_3_wrong.__str__()
-                                )
+                                data=self.diagnosis_missing_disease.__str__())
         self.assertTrue(resp.status_code == 415)
 
-    def test_add_diagnosis_incorrect_format(self):
+    def test_add_diagnosis_bad_format(self):
         """
         Test that add diagnosis response correctly when sending erroneous diagnosis
         format.
         """
-        print("(" + self.test_add_diagnosis_incorrect_format.__name__ + ")",
-              self.test_add_diagnosis_incorrect_format.__doc__)
-        resp = self.client.post(resources.api.url_for(resources.Diagnoses),
+        print("(" + self.test_add_diagnosis_bad_format.__name__ + ")",
+              self.test_add_diagnosis_bad_format.__doc__)
+        resp = self.client.post(resources.API.url_for(resources.Diagnoses),
                                 headers={"Content-Type": JSON},
-                                data=json.dumps(self.diagnosis_4_wrong)
-                                )
+                                data=json.dumps(self.diagnosis_missing_diagnosis))
         self.assertTrue(resp.status_code == 400)
 
 
 class DiagnosisTestCase(ResourcesAPITestCase):
+    """Diagnosis resources API tests"""
     diagnosis_req_1 = {
         "disease": "Soreness in the throat",
-        "diagnosis": "Hi, I have this soreness in my throat. It started just yesterday and its getting worse by",
+        "diagnosis": "Hi, I have this soreness in my throat. It started just "
+        "yesterday and its getting worse by",
         "user_id": "1",
         "message_id": "1"
     }
@@ -186,10 +197,10 @@ class DiagnosisTestCase(ResourcesAPITestCase):
     # Modified from def setUp(self):
     def setUp(self):
         super(DiagnosisTestCase, self).setUp()
-        self.url = resources.api.url_for(resources.Diagnosis,
+        self.url = resources.API.url_for(resources.Diagnosis,
                                          diagnosis_id="dgs-1",
                                          _external=False)
-        self.url_wrong = resources.api.url_for(resources.Diagnosis,
+        self.url_wrong = resources.API.url_for(resources.Diagnosis,
                                                diagnosis_id="dgs-290",
                                                _external=False)
 
@@ -200,9 +211,9 @@ class DiagnosisTestCase(ResourcesAPITestCase):
         """
         _url = "/medical_forum/api/diagnoses/dgs-1/"
         print("(" + self.test_url.__name__ + ")", self.test_url.__doc__)
-        with resources.app.test_request_context(_url):
+        with resources.APP.test_request_context(_url):
             rule = flask.request.url_rule
-            view_point = resources.app.view_functions[rule.endpoint].view_class
+            view_point = resources.APP.view_functions[rule.endpoint].view_class
             self.assertEqual(view_point, resources.Diagnosis)
 
     def test_wrong_url(self):
@@ -217,8 +228,9 @@ class DiagnosisTestCase(ResourcesAPITestCase):
         """
         Checks that GET Message return correct status code and data format
         """
-        print("(" + self.test_get_diagnosis.__name__ + ")", self.test_get_diagnosis.__doc__)
-        with resources.app.test_client() as client:
+        print("(" + self.test_get_diagnosis.__name__ + ")",
+              self.test_get_diagnosis.__doc__)
+        with resources.APP.test_client() as client:
             resp = client.get(self.url)
             self.assertEqual(resp.status_code, 200)
             data = json.loads(resp.data.decode("utf-8"))
@@ -244,7 +256,8 @@ class DiagnosisTestCase(ResourcesAPITestCase):
             self.assertEqual(controls["self"]["href"], self.url)
 
             self.assertIn("href", controls["profile"])
-            self.assertEqual(controls["profile"]["href"], FORUM_DIAGNOSIS_PROFILE)
+            self.assertEqual(controls["profile"]
+                             ["href"], FORUM_DIAGNOSIS_PROFILE)
             # ToDo self.assertEqual(controls["user_id"])
             # self.assertIn("href", controls["user_id"])
             # self.assertEqual(controls["user_id"]["href"], resources.api.url_for(
@@ -252,7 +265,7 @@ class DiagnosisTestCase(ResourcesAPITestCase):
             # ))
 
             self.assertIn("href", controls["collection"])
-            self.assertEqual(controls["collection"]["href"], resources.api.url_for(
+            self.assertEqual(controls["collection"]["href"], resources.API.url_for(
                 resources.Diagnoses, _external=False
             ))
 
@@ -270,7 +283,8 @@ class DiagnosisTestCase(ResourcesAPITestCase):
         """
         Checks that GET Diagnoses return correct status code and data format
         """
-        print("(" + self.test_get_diagnosis_mimetype.__name__ + ")", self.test_get_diagnosis_mimetype.__doc__)
+        print("(" + self.test_get_diagnosis_mimetype.__name__ + ")",
+              self.test_get_diagnosis_mimetype.__doc__)
 
         # Check that I receive status code 200
         resp = self.client.get(self.url)

@@ -1,7 +1,7 @@
 """
 Created on 13.02.2013
 
-Modified on 25.02.2018
+Modified on 14.04.2018
 
 Provides the database API to access the forum persistent data.
 
@@ -12,282 +12,18 @@ Provides the database API to access the forum persistent data.
 """
 
 from datetime import datetime
-import time, sqlite3, re, os
-# Default paths for .db and .sql files to create and populate the database.
+import time
+import sqlite3
+import re
+
 DEFAULT_DB_PATH = 'db/medical_forum_data.db'
 DEFAULT_SCHEMA = "db/medical_forum_data_schema.sql"
 DEFAULT_DATA_DUMP = "db/medical_forum_data_dump.sql"
+DOCTOR = 1
+PATIENT = 0
 
 # Copied Class from Exercise 1
 # We state if a method is copied, modified or written from scratch before it
-
-
-class Engine(object):
-    """
-    Abstraction of the database.
-
-    It includes tools to create, configure,
-    populate and connect to the sqlite file. You can access the Connection
-    instance, and hence, to the database interface itself using the method
-    :py:meth:`connection`.
-
-    :Example:
-
-    >>> engine = Engine()
-    >>> con = engine.connect()
-
-    :param db_path: The path of the database file (always with respect to the
-        calling script. If not specified, the Engine will use the file located
-        at *db/forum.db*
-
-    """
-    def __init__(self, db_path=None):
-        """
-        """
-
-        super(Engine, self).__init__()
-        if db_path is not None:
-            self.db_path = db_path
-        else:
-            self.db_path = DEFAULT_DB_PATH
-
-    def connect(self):
-        """
-        Creates a connection to the database.
-
-        :return: A Connection instance
-        :rtype: Connection
-
-        """
-        return Connection(self.db_path)
-
-    def remove_database(self):
-        """
-        Removes the database file from the filesystem.
-
-        """
-        if os.path.exists(self.db_path):
-            # THIS REMOVES THE DATABASE STRUCTURE
-            os.remove(self.db_path)
-
-    def clear(self):
-        """
-        Purge the database removing all records from the tables. However,
-        it keeps the database schema (meaning the table structure)
-
-        """
-        keys_on = 'PRAGMA foreign_keys = ON'
-        # THIS KEEPS THE SCHEMA AND REMOVE VALUES
-        con = sqlite3.connect(self.db_path)
-        # Activate foreing keys support
-        cur = con.cursor()
-        cur.execute(keys_on)
-        with con:
-            cur = con.cursor()
-            # cur.execute("DELETE FROM diagnoses")
-            cur.execute("DELETE FROM messages")
-            cur.execute("DELETE FROM users_profile")
-            cur.execute("DELETE FROM users")
-            # NOTE since we have ON DELETE CASCADE BOTH IN users_profile AND
-            # friends, WE DO NOT HAVE TO WORRY TO CLEAR THOSE TABLES.
-
-    # METHODS TO CREATE AND POPULATE A DATABASE USING DIFFERENT SCRIPTS
-    def create_tables(self, schema=None):
-        """
-        Create programmatically the tables from a schema file.
-
-        :param schema: path to the .sql schema file. If this parmeter is
-            None, then *db/forum_schema_dump.sql* is utilized.
-
-        """
-        con = sqlite3.connect(self.db_path)
-        if schema is None:
-            schema = DEFAULT_SCHEMA
-        try:
-            with open(schema, encoding="utf-8") as f:
-                sql = f.read()
-                cur = con.cursor()
-                cur.executescript(sql)
-        finally:
-            con.close()
-
-    def populate_tables(self, dump=None):
-        """
-        Populate programmatically the tables from a dump file.
-
-        :param dump:  path to the .sql dump file. If this parmeter is
-            None, then *db/forum_data_dump.sql* is utilized.
-
-        """
-        keys_on = 'PRAGMA foreign_keys = ON'
-        con = sqlite3.connect(self.db_path)
-        # Activate foreing keys support
-        cur = con.cursor()
-        cur.execute(keys_on)
-        # Populate database from dump
-        if dump is None:
-            dump = DEFAULT_DATA_DUMP
-        try:
-            with open (dump, encoding="utf-8") as f:
-                sql = f.read()
-                cur = con.cursor()
-                cur.executescript(sql)
-        finally:
-            con.close()
-
-    # METHODS TO CREATE THE TABLES PROGRAMMATICALLY WITHOUT USING SQL SCRIPT
-
-    # Modified from create_messages_table
-    def create_messages_table(self):
-        """
-        Create the table ``messages`` programmatically, without using .sql file.
-
-        Print an error message in the console if it could not be created.
-
-        :return: ``True`` if the table was successfully created or ``False``
-            otherwise.
-
-        """
-        keys_on = 'PRAGMA foreign_keys = ON'
-        stmnt = 'CREATE TABLE messages(message_id INTEGER PRIMARY KEY, \
-                    user_id INTEGER, \
-                    username TEXT, \
-                    reply_to INTEGER, \
-                    title TEXT, \
-                    body TEXT, \
-                    views INTEGER, \
-                    timestamp INTEGER, \
-                    FOREIGN KEY(reply_to) \
-                    REFERENCES messages(message_id) ON DELETE CASCADE, \
-                    FOREIGN KEY(user_id,username) \
-                    REFERENCES users(user_id, username) ON DELETE SET NULL)'
-        con = sqlite3.connect(self.db_path)
-        with con:
-            # Get the cursor object.
-            # It allows to execute SQL code and traverse the result set
-            cur = con.cursor()
-            try:
-                cur.execute(keys_on)
-                # execute the statement
-                cur.execute(stmnt)
-            except sqlite3.Error as excp:
-                print("Error %s:" % excp.args[0])
-                return False
-        return True
-
-    # Modified from create_users_table
-    def create_users_table(self):
-        """
-        Create the table ``users`` programmatically, without using .sql file.
-
-        Print an error message in the console if it could not be created.
-
-        :return: ``True`` if the table was successfully created or ``False``
-            otherwise.
-
-        """
-        keys_on = 'PRAGMA foreign_keys = ON'
-        stmnt = 'CREATE TABLE users(user_id INTEGER PRIMARY KEY,\
-                                    username TEXT UNIQUE, \
-                                    pass_hash INTEGER,\
-                                    reg_date INTEGER,\
-                                    last_login INTEGER, \
-                                    msg_count INTEGER,\
-                                    UNIQUE(user_id, username))'
-        # Connects to the database. Gets a connection object
-        con = sqlite3.connect(self.db_path)
-        with con:
-            # Get the cursor object.
-            # It allows to execute SQL code and traverse the result set
-            cur = con.cursor()
-            try:
-                cur.execute(keys_on)
-                # execute the statement
-                cur.execute(stmnt)
-            except sqlite3.Error as excp:
-                print("Error %s:" % excp.args[0])
-                return False
-        return True
-
-    # Modified from create_users_profile_table
-    def create_users_profile_table(self):
-        """
-        Create the table ``users_profile`` programmatically, without using
-        .sql file.
-
-        Print an error message in the console if it could not be created.
-
-        :return: ``True`` if the table was successfully created or ``False``
-            otherwise.
-
-        """
-        keys_on = 'PRAGMA foreign_keys = ON'
-
-        stmnt = 'CREATE TABLE users_profile(user_id INTEGER PRIMARY KEY, \
-                    user_type INTEGER, \
-                    firstname TEXT, \
-                    lastname TEXT, \
-                    work_address TEXT, \
-                    gender TEXT, \
-                    age TEXT, \
-                    email TEXT, \
-                    picture TEXT, \
-                    phone TEXT, \
-                    diagnosis_id INTEGER, \
-                    height INTEGER, \
-                    weight INTEGER, \
-                    speciality TEXT, \
-                    FOREIGN KEY(diagnosis_id) \
-                    REFERENCES users(diagnosis_id) ON DELETE CASCADE)'
-        # Connects to the database. Gets a connection object
-        con = sqlite3.connect(self.db_path)
-        with con:
-            # Get the cursor object.
-            # It allows to execute SQL code and traverse the result set
-            cur = con.cursor()
-            try:
-                cur.execute(keys_on)
-                # execute the statement
-                cur.execute(stmnt)
-            except sqlite3.Error as excp:
-                print("Error %s:" % excp.args[0])
-                return False
-        return True
-
-    # Modified from create_users_profile_table
-    def create_diagnoses_table(self):
-        """
-        Create the table ``diagnoses`` programmatically, without using .sql file.
-
-        Print an error message in the console if it could not be created.
-
-        :return: ``True`` if the table was successfully created or ``False``
-            otherwise.
-        """
-        keys_on = 'PRAGMA foreign_keys = ON'
-        stmnt = 'CREATE TABLE users_profile(diagnosis_id INTEGER PRIMARY KEY, \
-                    user_id INTEGER, \
-                    message_id INTEGER, \
-                    disease TEXT, \
-                    diagnosis_description TEXT, \
-                    FOREIGN KEY(user_id) \
-                    REFERENCES users(user_id) ON DELETE CASCADE) \
-                    FOREIGN KEY(message_id) \
-                    REFERENCES users(message_id) ON DELETE CASCADE)'
-        # Connects to the database. Gets a connection object
-        con = sqlite3.connect(self.db_path)
-        with con:
-            # Get the cursor object.
-            # It allows to execute SQL code and traverse the result set
-            cur = con.cursor()
-            try:
-                cur.execute(keys_on)
-                # execute the statement
-                cur.execute(stmnt)
-            except sqlite3.Error as excp:
-                print("Error %s:" % excp.args[0])
-                return False
-        return True
 
 
 class Connection(object):
@@ -308,6 +44,7 @@ class Connection(object):
     :type dbpath: str
 
     """
+
     def __init__(self, db_path):
         super(Connection, self).__init__()
         self.con = sqlite3.connect(db_path)
@@ -329,7 +66,6 @@ class Connection(object):
             self.con.close()
             self._isclosed = True
 
-    # FOREIGN KEY STATUS
     def check_foreign_keys_status(self):
         """
         Check if the foreign keys has been activated.
@@ -337,15 +73,11 @@ class Connection(object):
         :return: ``True`` if  foreign_keys is activated and ``False`` otherwise.
         :raises sqlite3.Error: when a sqlite3 error happen. In this case the
             connection is closed.
-
         """
         try:
-            # Create a cursor to receive the database values
-            cur = self.con.cursor()
-            # Execute the pragma command
-            cur.execute('PRAGMA foreign_keys')
-            # We know we retrieve just one record: use fetchone()
-            data = cur.fetchone()
+            cursor = self.con.cursor()
+            cursor.execute('PRAGMA foreign_keys')
+            data = cursor.fetchone()
             is_activated = data == (1,)
             print("Foreign Keys status: %s" % 'ON' if is_activated else 'OFF')
         except sqlite3.Error as excp:
@@ -359,15 +91,11 @@ class Connection(object):
         Activate the support for foreign keys.
 
         :return: ``True`` if operation succeed and ``False`` otherwise.
-
         """
         keys_on = 'PRAGMA foreign_keys = ON'
         try:
-            # Get the cursor object.
-            # It allows to execute SQL code and traverse the result set
-            cur = self.con.cursor()
-            # execute the pragma command, ON
-            cur.execute(keys_on)
+            cursor = self.con.cursor()
+            cursor.execute(keys_on)
             return True
         except sqlite3.Error as excp:
             print("Error %s:" % excp.args[0])
@@ -378,23 +106,15 @@ class Connection(object):
         Deactivate the support for foreign keys.
 
         :return: ``True`` if operation succeed and ``False`` otherwise.
-
         """
         keys_on = 'PRAGMA foreign_keys = OFF'
         try:
-            # Get the cursor object.
-            # It allows to execute SQL code and traverse the result set
-            cur = self.con.cursor()
-            # execute the pragma command, OFF
-            cur.execute(keys_on)
+            cursor = self.con.cursor()
+            cursor.execute(keys_on)
             return True
         except sqlite3.Error as excp:
             print("Error %s:" % excp.args[0])
             return False
-
-    # HELPERS
-    # Here the helpers that transform database rows into dictionary. They work
-    # similarly to ORM
 
     # Helpers for messages
     # Modified from _create_message_object
@@ -417,7 +137,6 @@ class Connection(object):
 
             Note that all values in the returned dictionary are string unless
             otherwise stated.
-
         """
         message_id = 'msg-' + str(row['message_id'])
         message_reply_to = 'msg-' + str(row['reply_to']) \
@@ -441,7 +160,6 @@ class Connection(object):
         :type row: sqlite3.Row
         :return: a dictionary with the keys ``message_id``, ``title``,
             ``timestamp`` and ``sender``.
-
         """
         message_id = 'msg-' + str(row['message_id'])
         message_sender = row['username']
@@ -487,7 +205,6 @@ class Connection(object):
             * ``email``: User's email.
 
             Note that all values are string if they are not otherwise indicated.
-
         """
         reg_date = row['reg_date']
         return {'public_profile': {'reg_date': reg_date,
@@ -500,8 +217,7 @@ class Connection(object):
                                        'gender': row['gender'],
                                        'picture': row['picture'],
                                        'age': row['age'],
-                                       'email': row['email']}
-                }
+                                       'email': row['email']}}
 
     # Modified from _create_user_list_object
     def _create_user_list_object(self, row):
@@ -513,7 +229,6 @@ class Connection(object):
         :type row: sqlite3.Row
         :return: a dictionary with the keys ``reg_date`` and
             ``username``
-
         """
         return {'reg_date': row['reg_date'], 'username': row['username']}
 
@@ -536,7 +251,6 @@ class Connection(object):
             Note that all values in the returned dictionary are string unless
             otherwise stated.
         """
-        diagnosis_id = 'dgs-' + str(row['diagnosis_id'])
         user_id = row['user_id']
         message_id = 'msg-' + str(row['message_id'])
         disease = row['disease']
@@ -559,39 +273,30 @@ class Connection(object):
             :py:meth:`_create_diagnosis_object` or None if the diagnosis with target
             id does not exist.
         :raises ValueError: when ``diagnosis_id`` is not well formed
-
         """
-        # Extracts the int which is the id for a diagnosis in the database
-        match = re.match(r'dgs-(\d{1,3})', diagnosis_id)
-        if match is None:
+        diagnosis_id_int = re.match(r'dgs-(\d{1,3})', diagnosis_id)
+        if diagnosis_id_int is None:
             raise ValueError("The diagnosis is malformed")
-        diagnosis_id = int(match.group(1))
-        # Activate foreign key support
+        diagnosis_id = int(diagnosis_id_int.group(1))
         self.set_foreign_keys_support()
-        # Create the SQL Query
         query = 'SELECT * FROM diagnosis WHERE diagnosis_id = ?'
-        # Cursor and row initialization
         self.con.row_factory = sqlite3.Row
-        cur = self.con.cursor()
-        # Execute main SQL Statement
+        cursor = self.con.cursor()
         pvalue = (diagnosis_id,)
-        cur.execute(query, pvalue)
-        # Process the response.
-        # Just one row is expected
-        row = cur.fetchone()
+        cursor.execute(query, pvalue)
+
+        row = cursor.fetchone()
         if row is None:
             return None
-        # Build the return object
         return self._create_diagnosis_object(row)
 
     # TODO get_diagnoses --Extra
-    # Return a list of all the diagnoses in the database filtered by the
-    # conditions provided in the parameters.
+    # Return a list of all the diagnoses in the database
 
     # Written from scratch
     def create_diagnosis(self, diagnosis):
         """
-        Create a new message with the data provided as arguments.
+        Create a new diagnosis with the data provided as arguments.
 
         :param diagnosis : the diagnosis object
 
@@ -599,61 +304,48 @@ class Connection(object):
             found. Note that the returned value is a string with the format msg-\d{1,3}.
 
         :raises ForumDatabaseError: if the database could not be modified.
-
         """
-        # Create the SQL statement
-        # SQL Statement for getting the user id given a username
-        query_u = 'SELECT user_id, user_type from users_profile WHERE user_id = ?'
-        # SQL Statement for getting the user id and his type
-        query_m = 'SELECT message_id from messages WHERE message_id = ?'
-        # SQL Statement for inserting the data
-        stmnt = 'INSERT INTO diagnosis(disease, diagnosis_description, message_id, user_id) \
-                 VALUES(?,?,?,?)'
-        # Variables for the statement.
-        # user_id is obtained from first statement.
-        # Activate foreign key support
-        self.set_foreign_keys_support()
-        # Cursor and row initialization
-        self.con.row_factory = sqlite3.Row
-        cur = self.con.cursor()
+        query_user = 'SELECT user_id, user_type from users_profile WHERE user_id = ?'
+        query_msg = 'SELECT message_id from messages WHERE message_id = ?'
+        insert_data_query = 'INSERT INTO diagnosis(disease, diagnosis_description, message_id, \
+                            user_id) VALUES(?,?,?,?)'
 
-        # Execute SQL Statement to get user of given user_id
+        self.set_foreign_keys_support()
+        self.con.row_factory = sqlite3.Row
+        cursor = self.con.cursor()
+
         user_id = diagnosis['user_id']
-        pvalue = (user_id,)
-        cur.execute(query_u, pvalue)
-        # Extract user id
-        row = cur.fetchone()
+        cursor.execute(query_user, (user_id,))
+
+        row = cursor.fetchone()
         if row is None:
             return None
-        if row['user_type'] != 1:
+        if row['user_type'] != DOCTOR:
             raise ValueError("the user is not a doctor")
-        # Execute SQL Statement to get message_id
-        match = re.match(r'msg-(\d{1,3})', diagnosis['message_id'])
-        if match is None:
+
+        message_id_int = re.match(r'msg-(\d{1,3})', diagnosis['message_id'])
+        if message_id_int is None:
             raise ValueError("The message_id is malformed")
-        message_id = int(match.group(1))
-        pvalue = (message_id,)
-        cur.execute(query_m, pvalue)
-        row = cur.fetchone()
+        message_id = int(message_id_int.group(1))
+        cursor.execute(query_msg, (message_id,))
+        row = cursor.fetchone()
         if row is None:
             return None
-        # Generate the values for SQL statement
+
         disease = diagnosis['disease']
         diagnosis_description = diagnosis['diagnosis_description']
         pvalue = (disease, diagnosis_description, message_id, user_id)
-        # Execute the statement
-        cur.execute(stmnt, pvalue)
+        cursor.execute(insert_data_query, pvalue)
         self.con.commit()
-        # Extract the id of the added message
-        lid = cur.lastrowid
-        # Return the id in
-        return 'dgs-' + str(lid) if lid is not None else None
+
+        last_id = cursor.lastrowid
+        return 'dgs-' + str(last_id) if last_id is not None else None
 
     # TODO def delete_diagnosis(self, diagnosis_id) --Extra
     # TODO def modify_diagnosis(self, diagnosis_id, disease, diagnosis_description) --Extra
     # TODO def append_diagnosis(self, reply_to, disease, diagnosis_description, sender) --Needed?
 
-    # Message Table API.
+    # Message Table API
     # Modified from get_message
     def get_message(self, message_id):
         """
@@ -665,29 +357,20 @@ class Connection(object):
             :py:meth:`_create_message_object` or None if the message with target
             id does not exist.
         :raises ValueError: when ``message_id`` is not well formed
-
         """
-        # Extracts the int which is the id for a message in the database
-        match = re.match(r'msg-(\d{1,3})', message_id)
-        if match is None:
+        message_id_int = re.match(r'msg-(\d{1,3})', message_id)
+        if message_id_int is None:
             raise ValueError("The message_id is malformed")
-        message_id = int(match.group(1))
-        # Activate foreign key support
+        message_id = int(message_id_int.group(1))
         self.set_foreign_keys_support()
-        # Create the SQL Query
         query = 'SELECT * FROM messages WHERE message_id = ?'
-        # Cursor and row initialization
         self.con.row_factory = sqlite3.Row
         cur = self.con.cursor()
-        # Execute main SQL Statement
-        pvalue = (message_id,)
-        cur.execute(query, pvalue)
-        # Process the response.
-        # Just one row is expected
+        cur.execute(query, (message_id,))
         row = cur.fetchone()
         if row is None:
             return None
-        # Build the return object
+
         return self._create_message_object(row)
 
     # Modified from get_messages
@@ -726,43 +409,35 @@ class Connection(object):
 
         :raises ValueError: if ``before`` or ``after`` are not valid UNIX
             timestamps
-
         """
-        # Create the SQL Statement build the string depending on the existence
-        # of username, numbero_of_messages, before and after arguments.
-        query = 'SELECT * FROM messages'
-        # username restriction
+        select_all_msg_query = 'SELECT * FROM messages'
         if username is not None or before != -1 or after != -1:
-            query += ' WHERE'
+            select_all_msg_query += ' WHERE'
         if username is not None:
-            query += " username = '%s'" % username
-        # Before restriction
+            select_all_msg_query += " username = '%s'" % username
+
         if before != -1:
             if username is not None:
-                query += ' AND'
-            query += " timestamp < %s" % str(before)
-        # After restriction
+                select_all_msg_query += ' AND'
+            select_all_msg_query += " timestamp < %s" % str(before)
+
         if after != -1:
             if username is not None or before != -1:
-                query += ' AND'
-            query += " timestamp > %s" % str(after)
-        # Order of results
-        query += ' ORDER BY timestamp DESC'
-        # Limit the number of results return
+                select_all_msg_query += ' AND'
+            select_all_msg_query += " timestamp > %s" % str(after)
+
+        select_all_msg_query += ' ORDER BY timestamp DESC'
         if number_of_messages > -1:
-            query += ' LIMIT ' + str(number_of_messages)
-        # Activate foreign key support
+            select_all_msg_query += ' LIMIT ' + str(number_of_messages)
         self.set_foreign_keys_support()
-        # Cursor and row initialization
         self.con.row_factory = sqlite3.Row
-        cur = self.con.cursor()
-        # Execute main SQL Statement
-        cur.execute(query)
-        # Get results
-        rows = cur.fetchall()
+        cursor = self.con.cursor()
+        cursor.execute(select_all_msg_query)
+
+        rows = cursor.fetchall()
         if rows is None:
             return None
-        # Build the return object
+
         messages = []
         for row in rows:
             message = self._create_message_list_object(row)
@@ -778,32 +453,25 @@ class Connection(object):
             is a string with format ``msg-\d{1,3}``
         :return: True if the message has been deleted, False otherwise
         :raises ValueError: if the message_id has a wrong format.
-
         """
-        # Extracts the int which is the id for a message in the database
-        match = re.match(r'msg-(\d{1,3})', message_id)
-        if match is None:
+        message_id_int = re.match(r'msg-(\d{1,3})', message_id)
+        if message_id_int is None:
             raise ValueError("The message_id is malformed")
-        message_id = int(match.group(1))
+        message_id = int(message_id_int.group(1))
 
-        # Create the SQL statement
-        stmnt_dg = 'DELETE FROM diagnosis WHERE message_id = ?'
-        stmnt = 'DELETE FROM messages WHERE message_id = ?'
-        # Activate foreign key support
+        delete_diagnosis_query = 'DELETE FROM diagnosis WHERE message_id = ?'
+        delete_message_query = 'DELETE FROM messages WHERE message_id = ?'
         self.set_foreign_keys_support()
-        # Cursor and row initialization
         self.con.row_factory = sqlite3.Row
-        cur = self.con.cursor()
-        pvalue = (message_id,)
+        cursor = self.con.cursor()
         try:
-            cur.execute(stmnt_dg, pvalue)
-            cur.execute(stmnt, pvalue)
-            # Commit the message
+            cursor.execute(delete_diagnosis_query, (message_id,))
+            cursor.execute(delete_message_query, (message_id,))
             self.con.commit()
-        except sqlite3.Error as e:
-            print("Error %s:" % (e.args[0]))
+        except sqlite3.Error as exception:
+            print("Error %s:" % (exception.args[0]))
 
-        if cur.rowcount >= 1:
+        if cursor.rowcount >= 1:
             return True
         return False
 
@@ -821,31 +489,27 @@ class Connection(object):
               not found. The id of the message has the format ``msg-\d{1,3}``,
               where \d{1,3} is the id of the message in the database.
         :raises ValueError: if the message_id has a wrong format.
-
         """
-        # Extracts the int which is the id for a message in the database
-        match = re.match(r'msg-(\d{1,3})', message_id)
-        if match is None:
+        message_id_int = re.match(r'msg-(\d{1,3})', message_id)
+        if message_id_int is None:
             raise ValueError("The message_id is malformed")
-        message_id = int(match.group(1))
-        # Create the SQL statement
-        stmnt = 'UPDATE messages SET title=:title , body=:body WHERE message_id =:msg_id'
-        # Activate foreign key support
+        message_id = int(message_id_int.group(1))
+
+        update_message_query = ('UPDATE messages SET title=:title , '
+                                'body=:body WHERE message_id =:msg_id')
         self.set_foreign_keys_support()
-        # Cursor and row initialization
         self.con.row_factory = sqlite3.Row
-        cur = self.con.cursor()
-        # Execute main SQL Statement
+        cursor = self.con.cursor()
         pvalue = {"msg_id": message_id,
                   "title": title,
                   "body": body}
         try:
-            cur.execute(stmnt, pvalue)
+            cursor.execute(update_message_query, pvalue)
             self.con.commit()
-        except sqlite3.Error as e:
-            print("Error %s:" % (e.args[0]))
+        except sqlite3.Error as exception:
+            print("Error %s:" % (exception.args[0]))
         else:
-            if cur.rowcount < 1:
+            if cursor.rowcount < 1:
                 return None
         return 'msg-%s' % message_id
 
@@ -881,7 +545,8 @@ class Connection(object):
         # SQL Statement for getting the user id given a username
         query2 = 'SELECT user_id from users WHERE username = ?'
         # SQL Statement for inserting the data
-        stmnt = 'INSERT INTO messages(title, body, timestamp, views, reply_to, username, user_id) VALUES(?,?,?,?,?,?,?)'
+        stmnt = 'INSERT INTO messages(title, body, timestamp, views, \
+                reply_to, username, user_id) VALUES(?,?,?,?,?,?,?)'
         # Variables for the statement.
         # user_id is obtained from first statement.
         user_id = None
@@ -1000,9 +665,8 @@ class Connection(object):
         # SQL Statement for retrieving the user given a username
         query1 = 'SELECT user_id from users WHERE username = ?'
         # SQL Statement for retrieving the user information
-        query2 = 'SELECT users.*, users_profile.* FROM users, users_profile \
-                  WHERE users.user_id = ? \
-                  AND users_profile.user_id = users.user_id'
+        query2 = ('SELECT users.*, users_profile.* FROM users, users_profile '
+                  'WHERE users.user_id = ? AND users_profile.user_id = users.user_id')
         # Variable to be used in the second query.
         user_id = None
         # Activate foreign key support
@@ -1117,15 +781,17 @@ class Connection(object):
         query1 = 'SELECT user_id from users WHERE username = ?'
         # SQL Statement to update the user_profile table
         query2 = 'UPDATE users_profile SET firstname = ?,lastname = ?, speciality = ?, \
-                                                   picture = ?, \
-                                                   work_address = ?, \
-                                                   gender = ? , age = ?, email = ? WHERE user_id = ?'
+                    picture = ?, work_address = ?, gender = ? , age = ?, email = ? \
+                    WHERE user_id = ?'
         # temporal variables
         user_id = None
-        _firstname = None if not r_profile else r_profile.get('firstname', None)
+        _firstname = None if not r_profile else r_profile.get(
+            'firstname', None)
         _lastname = None if not r_profile else r_profile.get('lastname', None)
-        _speciality = None if not p_profile else p_profile.get('speciality', None)
-        _work_address = None if not r_profile else r_profile.get('work_address', None)
+        _speciality = None if not p_profile else p_profile.get(
+            'speciality', None)
+        _work_address = None if not r_profile else r_profile.get(
+            'work_address', None)
         _gender = None if not r_profile else r_profile.get('gender', None)
         _age = None if not r_profile else r_profile.get('age', None)
         _picture = None if not r_profile else r_profile.get('picture', None)
@@ -1201,19 +867,14 @@ class Connection(object):
         # SQL Statement for extracting the userid given a username
         query1 = 'SELECT user_id FROM users WHERE username = ?'
         # SQL Statement to create the row in  users table
-        query2 = 'INSERT INTO users(username,reg_date,last_login, pass_hash)\
-                  VALUES(?,?,?,?)'
+        query2 = 'INSERT INTO users(username,reg_date,last_login, pass_hash) VALUES(?,?,?,?)'
         # SQL Statement to create the row in user_profile table
-        query3 = 'INSERT INTO users_profile (user_id, firstname,lastname, \
-                                             speciality, \
-                                             picture,age, \
-                                             work_address, \
-                                             gender, email, user_type)\
-                  VALUES (?,?,?,?,?,?,?,?,?,?)'
+        query3 = 'INSERT INTO users_profile (user_id, firstname,lastname, speciality, picture, \
+                age, work_address, gender, email, user_type) VALUES (?,?,?,?,?,?,?,?,?,?)'
         # temporal variables for user table
         # timestamp will be used for last login and reg_date.
         timestamp = time.mktime(datetime.now().timetuple())
-        # ToDo pass_hash = user['pass_hash']
+        # TODO pass_hash = user['pass_hash']
         pass_hash = 'pass_hash'
         # temporal variables for user profiles
         p_profile = user['public_profile']
@@ -1249,7 +910,8 @@ class Connection(object):
             # Add the row in users_profile table
             # Execute the statement
             pvalue = (
-            lid, _firstname, _lastname, _speciality, _picture, _age, _work_address, _gender, _email, _user_type)
+                lid, _firstname, _lastname, _speciality, _picture, _age,
+                _work_address, _gender, _email, _user_type)
 
             cur.execute(query3, pvalue)
             self.con.commit()
