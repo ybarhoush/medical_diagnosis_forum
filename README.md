@@ -62,3 +62,11 @@ python -m test.database_api_tables_tests
 
 In the unittests, some methods are being used a lot, like executing queries, so a *utils.py* file is used to make the code better.
 The *utils.py* is in *test* folder.
+
+To run the server functional tests; there is one file for testing each resource and its collection
+```bash
+python -m test_api_diagnosis_and_diagnoses.py
+python -m test_api_message_and_messages.py
+python -m test_api_user_and_users.py
+
+```
