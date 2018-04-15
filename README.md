@@ -3,6 +3,7 @@ This is a medical diagnosis forum RESTFUL API. It can be used by patients to ask
 
 At this step, we have designed the database and implemented the basic calls to the database.
 These are methods to create, get, modify and delete users (patients or doctors). As well as messages, profiles and diagnosis status.
+ The documentation of the API can be found on this apiary.io link: https://medicalforumapp.docs.apiary.io/#
 
 # Framework
 Python 3.6 is used for this whole project. We use Flask framework for all the API impelementation. We use the vnd.mason+json as a hypermedia type for the different requests and responses. The server by default will run on localhost on port 5000. In the server can be started with the *main.py* file in the root folder. It only starts the server of this medical forum using the line of code:
