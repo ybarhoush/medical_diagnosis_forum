@@ -110,11 +110,16 @@ class Messages(Resource):
             # the template.data array does not exist.
             return create_error_response(400, "Wrong request format",
                                          "Be sure you include message title and body")
-        # Create the new message and build the response code"
-        new_message_id = g.con.create_message(title, body, sender)
-        if not new_message_id:
-            return create_error_response(500, "Problem with the database",
-                                         "Cannot access the database")
+        try:
+            # Create the new message and build the response code"
+            new_message_id = g.con.create_message(title, body, sender)
+
+            if not new_message_id:
+                return create_error_response(500, "Problem with the database",
+                                             "Cannot access the database")
+        except KeyError:
+            return create_error_response(400, "Wrong request format",
+                                         "Be sure to have the right request values or user_id")
 
         # Create the Location header with the id of the message created
         url = API.url_for(Message, message_id=new_message_id)

@@ -89,6 +89,14 @@ class DiagnosesTestCase(ResourcesAPITestCase):
         "message_id": "1"
     }
 
+    diagnosis_by_nonexisting_user = {
+        "disease": "Soreness in the throat",
+        "diagnosis_description": ("Hi, I have this soreness in my throat. "
+                                  "It started just yesterday and its getting worse by"),
+        "user_id": "154",
+        "message_id": "1"
+    }
+
     diagnosis_by_patient = {
         "disease": "Soreness in the throat",
         "diagnosis_description": ("Hi, I have this soreness in my throat. "
@@ -150,6 +158,16 @@ class DiagnosesTestCase(ResourcesAPITestCase):
         resp = self.client.post(resources.API.url_for(resources.Diagnoses),
                                 headers={"Content-Type": JSON},
                                 data=json.dumps(self.diagnosis_by_patient))
+        self.assertTrue(resp.status_code == 400)
+
+    def test_add_diagnosis_nonexisting_user(self):
+        """Test adding a message with non existing user"""
+        print("(" + self.test_add_diagnosis_nonexisting_user.__name__ + ")",
+              self.test_add_diagnosis_nonexisting_user.__doc__)
+
+        resp = self.client.post(resources.API.url_for(resources.Messages),
+                                headers={"Content-Type": JSON},
+                                data=json.dumps(self.diagnosis_by_nonexisting_user))
         self.assertTrue(resp.status_code == 400)
 
     def test_add_diagnosis_wrong_media(self):

@@ -220,17 +220,15 @@ class MessagesTestCase(ResourcesAPITestCase):
         # resp = self.client.get(url)
         # self.assertTrue(resp.status_code == 200)
 
-    # def test_add_message_wrong_media(self):
-    #     """
-    #     Test adding messages with a media different than json
-    #     """
-    #     print("(" + self.test_add_message_wrong_media.__name__ + ")",
-    #               self.test_add_message_wrong_media.__doc__)
-    #     resp = self.client.post(resources.api.url_for(resources.Messages),
-    #                             headers={"Content-Type": "text"},
-    #                             data=self.message_1_request.__str__()
-    #                             )
-    #     self.assertTrue(resp.status_code == 415)
+    def test_add_message_nonexisting_user(self):
+        """Test adding a message with non existing user"""
+        print("(" + self.test_add_message_nonexisting_user.__name__ + ")",
+              self.test_add_message_nonexisting_user.__doc__)
+
+        resp = self.client.post(resources.API.url_for(resources.Messages),
+                                headers={"Content-Type": JSON},
+                                data=json.dumps(self.non_existing_user_request))
+        self.assertTrue(resp.status_code == 400)
 
     # Modified from test_add_message_wrong_media(self):
     def test_add_message_wrong_media(self):
