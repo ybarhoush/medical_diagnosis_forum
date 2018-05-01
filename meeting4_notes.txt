@@ -1,0 +1,13 @@
+[done] check add_message_nonexisting_user
+[done] check add_diagnosis_nonexisting_user
+- in the return status, return the status codes and the description as stated in
+the documentation in a bit of details
+
+- he'll evaluate this implementation ~next week so we can fix them and it
+wouldn't be a problem
+
+- if extra work is making something similar, like disagnosis list cannot be
+extra work since it's the same as messages list
+- an example of extra work is a tagging resource
+- external api use is extra
+- different than web client worth more points

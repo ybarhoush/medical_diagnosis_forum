@@ -15,6 +15,7 @@ from datetime import datetime
 import time
 import sqlite3
 import re
+from .utils import execute_query
 
 DEFAULT_DB_PATH = 'db/medical_forum_data.db'
 DEFAULT_SCHEMA = "db/medical_forum_data_schema.sql"
@@ -307,14 +308,17 @@ class Connection(object):
         """
         query_user = 'SELECT user_id, user_type from users_profile WHERE user_id = ?'
         query_msg = 'SELECT message_id from messages WHERE message_id = ?'
-        insert_data_query = 'INSERT INTO diagnosis(disease, diagnosis_description, message_id, \
-                            user_id) VALUES(?,?,?,?)'
+        insert_data_query = ('INSERT INTO diagnosis(disease, diagnosis_description, message_id, '
+                             'user_id) VALUES(?,?,?,?)')
 
         self.set_foreign_keys_support()
         self.con.row_factory = sqlite3.Row
         cursor = self.con.cursor()
 
         user_id = diagnosis['user_id']
+        if user_id is None:
+            raise ValueError("User is not valid")
+
         cursor.execute(query_user, (user_id,))
 
         row = cursor.fetchone()
@@ -545,41 +549,26 @@ class Connection(object):
         # SQL Statement for getting the user id given a username
         query2 = 'SELECT user_id from users WHERE username = ?'
         # SQL Statement for inserting the data
-        stmnt = 'INSERT INTO messages(title, body, timestamp, views, \
-                reply_to, username, user_id) VALUES(?,?,?,?,?,?,?)'
+        stmnt = ('INSERT INTO messages(title, body, timestamp, views,'
+                 'reply_to, username, user_id) VALUES(?,?,?,?,?,?,?)')
         # Variables for the statement.
-        # user_id is obtained from first statement.
-        user_id = None
         timestamp = time.mktime(datetime.now().timetuple())
-        # Activate foreign key support
-        self.set_foreign_keys_support()
-        # Cursor and row initialization
-        self.con.row_factory = sqlite3.Row
-        cur = self.con.cursor()
         # If exists the reply_to argument, check that the message exists in
         # the database table
         if reply_to is not None:
-            pvalue = (reply_to,)
-            cur.execute(query1, pvalue)
-            messages = cur.fetchall()
+            messages = execute_query(self.con, query1, (reply_to,))
             if len(messages) < 1:
                 return None
-        # Execute SQL Statement to get user_id given username
-        pvalue = (sender,)
-        cur.execute(query2, pvalue)
-        # Extract user id
-        row = cur.fetchone()
+
+        row = execute_query(self.con, query2, (sender, ), 'one')
         if row is not None:
             user_id = row["user_id"]
-        # Generate the values for SQL statement
+        else:
+            raise KeyError("User is not valid")
+
         pvalue = (title, body, timestamp, 0, reply_to, sender, user_id)
-        # Execute the statement
-        cur.execute(stmnt, pvalue)
-        self.con.commit()
-        # Extract the id of the added message
-        lid = cur.lastrowid
-        # Return the id in
-        return 'msg-' + str(lid) if lid is not None else None
+        last_id = execute_query(self.con, stmnt, pvalue, 'lastid')
+        return 'msg-' + str(last_id) if last_id is not None else None
 
     # Modified from append_answer
     def append_answer(self, reply_to, title, body, sender):
@@ -863,14 +852,11 @@ class Connection(object):
         :raise ValueError: if the user argument is not well formed.
 
         '''
-        # Create the SQL Statements
-        # SQL Statement for extracting the userid given a username
-        query1 = 'SELECT user_id FROM users WHERE username = ?'
-        # SQL Statement to create the row in  users table
-        query2 = 'INSERT INTO users(username,reg_date,last_login, pass_hash) VALUES(?,?,?,?)'
-        # SQL Statement to create the row in user_profile table
-        query3 = 'INSERT INTO users_profile (user_id, firstname,lastname, speciality, picture, \
-                age, work_address, gender, email, user_type) VALUES (?,?,?,?,?,?,?,?,?,?)'
+        select_user_query = 'SELECT user_id FROM users WHERE username = ?'
+        insert_user_query = 'INSERT INTO users(username,reg_date,last_login, pass_hash) VALUES(?,?,?,?)'
+        insert_user_profile_query = (
+            'INSERT INTO users_profile (user_id, firstname,lastname, speciality, picture, '
+            'age, work_address, gender, email, user_type) VALUES (?,?,?,?,?,?,?,?,?,?)')
         # temporal variables for user table
         # timestamp will be used for last login and reg_date.
         timestamp = time.mktime(datetime.now().timetuple())
@@ -889,36 +875,20 @@ class Connection(object):
         _email = r_profile.get('email', None)
         _user_type = p_profile.get('user_type', None)
 
-        # Activate foreign key support
-        self.set_foreign_keys_support()
-        # Cursor and row initialization
-        self.con.row_factory = sqlite3.Row
-        cur = self.con.cursor()
-        # Execute the main SQL statement to extract the id associated to a username
-        pvalue = (username,)
-        cur.execute(query1, pvalue)
-        # No value expected (no other user with that username expected)
-        row = cur.fetchone()
+        row = execute_query(self.con, select_user_query, (username, ), 'one')
         # If there is no user add rows in user and user profile
         if row is None:
-            # Add the row in users table
-            # Execute the statement
             pvalue = (username, timestamp, timestamp, pass_hash)
-            cur.execute(query2, pvalue)
-            # Extrat the rowid => user-id
-            lid = cur.lastrowid
-            # Add the row in users_profile table
-            # Execute the statement
+            lid = execute_query(self.con, insert_user_query, pvalue, 'lastid')
             pvalue = (
                 lid, _firstname, _lastname, _speciality, _picture, _age,
                 _work_address, _gender, _email, _user_type)
 
-            cur.execute(query3, pvalue)
-            self.con.commit()
-            # We do not do any comprobation and return the username
+            execute_query(self.con, insert_user_profile_query,
+                          pvalue, 'commit')
             return username
-        else:
-            return None
+
+        return None
 
     # UTILS
     # Modified from get_user_id
@@ -935,22 +905,10 @@ class Connection(object):
         '''
 
         query = 'SELECT user_id FROM users WHERE username = ?'
-        # Activate foreign key support
-        self.set_foreign_keys_support()
-        # Cursor and row initialization
-        self.con.row_factory = sqlite3.Row
-        cur = self.con.cursor()
-        # Execute the  main SQL statement
-        pvalue = (username,)
-        cur.execute(query, pvalue)
-        # Process the response.
-        # Just one row is expected
-        row = cur.fetchone()
+        row = execute_query(self.con, query, (username, ), 'one')
         if row is None:
             return None
-        # Build the return object
-        else:
-            return row[0]
+        return row[0]
 
     # Modified from contains_user
     def contains_user(self, username):

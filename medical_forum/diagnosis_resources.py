@@ -36,7 +36,6 @@ class Diagnoses(Resource):
          * The attribute user_id is obtained from the column diagnoses.user_id
         """
 
-        # Extract diagnoses from database
         diagnoses_db = g.con.get_diagnoses()
 
         envelope = forum_obj.ForumObject()
@@ -45,7 +44,6 @@ class Diagnoses(Resource):
         envelope.add_control("self", href=API.url_for(Diagnoses))
         envelope.add_control_users_all()
         envelope.add_control_add_diagnosis()
-
         items = envelope["items"] = []
 
         for dgs in diagnoses_db:
@@ -57,7 +55,6 @@ class Diagnoses(Resource):
                 "profile", href=hyper_const.FORUM_DIAGNOSIS_PROFILE)
             items.append(item)
 
-        # RENDER
         return Response(json.dumps(envelope), 200, mimetype=hyper_const.MASON + ";" +
                         hyper_const.FORUM_DIAGNOSIS_PROFILE)
 
@@ -108,19 +105,16 @@ class Diagnoses(Resource):
             user_id = request_body.get("user_id")
 
         except KeyError:
-            # This is launched if either title or body does not exist or if
-            # the template.data array does not exist.
             return create_error_response(
-                400, "Wrong request format", "Be sure you include diagnosis and disease")
+                400, "Wrong request format",
+                "Be sure you include diagnosis and disease and a valid user_id")
 
-        # Create the new diagnosis and build the response code"
         user_id = int(user_id)
         message_id = 'msg-' + message_id
-
         diagnosis = {'user_id': user_id,
                      'message_id': message_id,
-                     'disease': disease, 'diagnosis_description': diagnosis_description}
-
+                     'disease': disease,
+                     'diagnosis_description': diagnosis_description}
         try:
             new_diagnosis_id = g.con.create_diagnosis(diagnosis)
         except ValueError:
@@ -131,11 +125,7 @@ class Diagnoses(Resource):
             return create_error_response(
                 500, "Problem with the database", "Cannot access the database")
 
-        # Create the Location header with the id of the diagnosis created
         url = API.url_for(Diagnosis, diagnosis_id=new_diagnosis_id)
-
-        # RENDER
-        # Return the response
         return Response(status=201, headers={"Location": url})
 
 
@@ -177,8 +167,6 @@ class Diagnosis(Resource):
          * The attribute user_id is obtained from the column diagnoses.user_id
         """
 
-        # PEFORM OPERATIONS INITIAL CHECKS
-        # Get the diagnosis from db
         diagnosis_db = g.con.get_diagnosis(diagnosis_id)
         if not diagnosis_db:
             abort(404, diagnosis="There is no a diagnosis with id %s" % diagnosis_id,
@@ -188,10 +176,7 @@ class Diagnosis(Resource):
 
         user_id = diagnosis_db.get("user_id")
         message_id = diagnosis_db.get("message_id")
-        # parent = diagnosis_db.get("reply_to", None)
 
-        # FILTER AND GENERATE RESPONSE
-        # Create the envelope:
         envelope = forum_obj.ForumObject(
             disease=diagnosis_db["disease"],
             diagnosis_description=diagnosis_db["diagnosis_description"],
@@ -211,13 +196,7 @@ class Diagnosis(Resource):
         envelope.add_control(
             "user_id", href=API.url_for(user_res.User, username=user_id))
 
-        # if parent:
-        #     envelope.add_control("atom-thread:in-reply-to",
-        #                           href=api.url_for(Diagnosis, diagnosis_id=parent))
-        # else:
-        #     envelope.add_control("atom-thread:in-reply-to", href=None)
         envelope.add_control("atom-thread:in-reply-to", href=None)
-        # RENDER
         return Response(json.dumps(envelope), 200, mimetype=hyper_const.MASON + ";" +
                         hyper_const.FORUM_DIAGNOSIS_PROFILE)
 
@@ -253,8 +232,6 @@ class Diagnosis(Resource):
          * The attribute user_id is obtained from the column diagnoses.user_id
         """
 
-        # CHECK THAT MESSAGE EXISTS
-        # If the diagnosis with diagnosis_id does not exist return status code 404
         if not g.con.contains_diagnosis(diagnosis_id):
             return create_error_response(
                 404, "Diagnosis not found", "There is no a diagnosis with id %s" % diagnosis_id)
@@ -263,8 +240,7 @@ class Diagnosis(Resource):
             return create_error_response(
                 415, "UnsupportedMediaType", "Use a JSON compatible format")
         request_body = request.get_json(force=True)
-        # It throws a BadRequest exception, and hence a 400 code if the JSON is
-        # not well-formed
+
         try:
             disease = request_body["disease"]
             diagnosis = request_body["diagnosis_description"]
@@ -272,20 +248,15 @@ class Diagnosis(Resource):
             message_id = request_body.get("message_id")
 
         except KeyError:
-            # This is launched if either title or body does not exist or if
-            # the template.data array does not exist.
             return create_error_response(
-                400, "Wrong request format", "Be sure you include diagnosis title and body")
+                400, "Wrong request format",
+                "Be sure you include diagnosis title and body and valid user_id")
 
-        # Create the new diagnosis and build the response code"
         new_diagnosis_id = g.con.append_answer(
             user_id, message_id, disease, diagnosis)
         if not new_diagnosis_id:
-            abort(500)
+            return create_error_response(
+                500, "Problem with the database", "Cannot access the database")
 
-        # Create the Location header with the id of the diagnosis created
         url = API.url_for(Diagnosis, diagnosis_id=new_diagnosis_id)
-
-        # RENDER
-        # Return the response
         return Response(status=201, headers={"Location": url})
