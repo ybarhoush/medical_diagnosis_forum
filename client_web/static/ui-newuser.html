@@ -1,0 +1,235 @@
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <link rel="stylesheet" type="text/css" href="css/bootstrap.min.css">
+    <!-- <link rel="stylesheet" type="text/css" href="css/open-iconic-bootstrap.min.css"> -->
+    <link rel="stylesheet" type="text/css" href="css/forum_client.css">
+    <title>Forum</title>
+</head>
+
+<body>
+    <div class="jumbotron bg-light" id="intro">
+        <h1 class="display-3">Forum administration panel</h1>
+        <p class="lead">Click on a username in the sidebar to edit/delete a user info. Press
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                stroke-linejoin="round" class="feather feather-circle">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="12" y1="8" x2="12" y2="16"></line>
+                <line x1="8" y1="12" x2="16" y2="12"></line>
+            </svg> button to add a new user.</p>
+    </div>
+    <div class="container-fluid" id="content">
+        <div class="row">
+            <nav class="col-md-3 sidebar bg-light">
+                <div id="sidebar" class="sidebar-sticky">
+                    <!-- Side bar area -->
+                    <h4 class="sidebar-heading d-flex justify-content-between text-muted">
+                        <span>Users' list</span>
+                        <a id="addUserButton" class="d-flex  text-muted" href="#" title="Add new user">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round" class="feather feather-circle">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <line x1="12" y1="8" x2="12" y2="16"></line>
+                                <line x1="8" y1="12" x2="16" y2="12"></line>
+                            </svg>
+                        </a>
+                    </h4>
+                    <ul class="nav d-flex flex-column" id="user_list">
+                        <li class="nav-item">
+                            <a class="user_link nav-link " href="/medical_forum/api/users/Mystery/">
+                                <span class="oi oi-person"></span>Mystery</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="user_link nav-link " href="/medical_forum/api/users/AxelW/">
+                                <span class="oi oi-person"></span>AxelW</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="user_link nav-link " href="/medical_forum/api/users/LinuxPenguin/">
+                                <span class="oi oi-person"></span>LinuxPenguin</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="user_link nav-link " href="/medical_forum/api/users/Koodari/">
+                                <span class="oi oi-person"></span>Koodari</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="user_link nav-link " href="/medical_forum/api/users/HockeyFan/">
+                                <span class="oi oi-person"></span>HockeyFan</a>
+                        </li>
+                    </ul>
+                </div>
+            </nav>
+            <div class="col-md-9" id="mainContent" style="">
+                <!-- Main content area -->
+                <div id="userData" style="display: none;">
+                    <p class="lead">You can access and modify the user information</p>
+                    <div class="section" id="userHeader">
+                        <form action="/medical_forum/api/users/AxelW/" id="user_form" class="container">
+                            <div class="row">
+                                <div class="form_content col-md-7">
+                                    <input class="form-control-plaintext font-weight-bold" name="username" id="username"
+                                        placeholder="username" type="text" readonly="readonly">
+                                    <div class="form-group row">
+                                        <label for="regisstrationdate" class="col-form-label col-md-3">Registered on</label>
+                                        <div class="col-md-9">
+                                            <input class="form-control-plaintext" type="text" name="registrationdate" id="registrationdate"
+                                                readonly="readonly">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="commands col-md-2">
+                                    <button id="deleteUser" class="deleteButton btn" title="Remove user">
+                                        <span class="oi oi-trash"></span>
+                                    </button>
+                                </div>
+                                <div class="col-md-3">
+                                    <a class="btn btn-primary align-middle" title="Click to access the messages" id="messagesButton"
+                                        role="button" href="#messages">
+                                        Messages
+                                        <span id="messagesNumber" class="badge badge-light">1</span>
+                                    </a>
+                                    <!--<input type="text" class="noeditable" id="messagesNumber" name="messagesNumber" readonly="readonly" size="2" value="??"/> <a href="#messages">messages</a>-->
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="section" id="userProfile">
+                        <!-- User info area -->
+                        <h3 class="text-muted">User information</h3>
+
+                        <form action="/medical_forum/api/users/AxelW/restricted_profile/" id="user_restricted_form"
+                            class="container">
+                            <div class="row">
+                                <div class="form_content col-md-8">
+                                    <div class="subform form-group" id="address">
+                                        <label for="workaddress">Country</label>
+                                        <input type="text" class="form-control editable" name="workaddress" id="workaddress">
+                                    </div>
+                                    <label for="birthDate">Birth date*</label>
+                                    <input type="text" class="form-control editable" name="birthDate" id="birthDate"
+                                        placeholder="User's birth date as YYYY-MM-DD  (from http://schema.org/Person)"
+                                        required="" value="200-11-11">
+                                    <label for="email">Email address*</label>
+                                    <input type="text" class="form-control editable" name="email" id="email" placeholder="User's email address (from http://schema.org/Person)"
+                                        required="" value="aw@hotmail.com">
+                                    <label for="familyName">Family name*</label>
+                                    <input type="text" class="form-control editable" name="familyName" id="familyName"
+                                        placeholder="User's family name (from http://schema.org/Person)"
+                                        required="" value="Watts">
+                                    <label for="gender">Gender*</label>
+                                    <input type="text" class="form-control editable" name="gender" id="gender" placeholder="User's gender (from http://schema.org/Person)"
+                                        required="" value="Male">
+                                    <label for="givenName">Given name*</label>
+                                    <input type="text" class="form-control editable" name="givenName" id="givenName"
+                                        placeholder="User's given name (from http://schema.org/Person)"
+                                        required="" value="Axel">
+                                    <label for="image">Image</label>
+                                    <input type="text" class="form-control editable" name="image" id="image" placeholder="URL to user's image (from http://schema.org/Person)"
+                                        value="photo3.png">
+                                    <label for="skype">Skype username</label>
+                                    <input type="text" class="form-control editable" name="skype" id="skype" placeholder="User's Skype account">
+                                    <label for="telephone">Phone number</label>
+                                    <input type="text" class="form-control editable" name="telephone" id="telephone"
+                                        placeholder="User's telephone number (from http://schema.org/Person)">
+                                    <label for="website">Website</label>
+                                    <input type="text" class="form-control editable" name="website" id="website" placeholder="User's website">
+                                </div>
+                                <div class="commands col-md-4">
+                                    <button id="editUserRestricted" title="Edit user information" class="editButton btn">
+                                        <span class="oi oi-pencil"></span>
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="section" id="messages">
+                        <!-- Message list area -->
+                        <h3 class="text-muted">Message List</h3>
+                        <div id="messages_list">
+                            <div class="message">
+                                <form action="/medical_forum/api/messages/msg-1/" class="container">
+                                    <div class="row">
+                                        <div class="form_content col-md-8">
+                                            <input type="text" class="headline form-control-plaintext font-weight-bold" value="CSS: Margin problems with IE"
+                                                readonly="readonly">
+                                            <div class="articlebody form-control-plaintext" readonly="readonly">I am using a float layout on my website
+                                                but I've run into some problems with
+                                                Internet Explorer. I have set the
+                                                left margin of a float to 100 pixels,
+                                                but IE uses a margin of 200px instead.
+                                                Why is that? Is this one of the many
+                                                bugs in IE?</div>
+                                        </div>
+                                        <div class="commands col-md-4">
+                                            <button class="deleteButton deleteMessage btn" title="Remove message">
+                                                <span class="oi oi-trash"></span>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div id="newUser" style="">
+                    <p class="lead">Please, fill the following fields to create a new user</p>
+                    <form action="/medical_forum/api/users/" id="new_user_form">
+                        <div class="form_content">
+                            <label for="username">username*</label>
+                            <input type="text" class="form-control editable" name="username" id="username" placeholder="User's username (unique identifier)"
+                                required="">
+                            <div class="subform form-group" id="address">
+                                <label for="workaddress">Country</label>
+                                <input type="text" class="form-control editable" name="workaddress" id="workaddress">
+                            </div>
+                            <label for="avatar">Avatar*</label>
+                            <input type="text" class="form-control editable" name="avatar" id="avatar" placeholder="URL to user's avatar"
+                                required="">
+                            <label for="birthDate">Birth date**</label>
+                            <input type="text" class="form-control editable" name="birthDate" id="birthDate"
+                                placeholder="User's birth date as YYYY-MM-DD  (from http://schema.org/Person)"
+                                required="">
+                            <label for="email">Email address**</label>
+                            <input type="text" class="form-control editable" name="email" id="email" placeholder="User's email address (from http://schema.org/Person)"
+                                required="">
+                            <label for="familyName">Family name**</label>
+                            <input type="text" class="form-control editable" name="familyName" id="familyName"
+                                placeholder="User's family name (from http://schema.org/Person)"
+                                required="">
+                            <label for="gender">Gender**</label>
+                            <input type="text" class="form-control editable" name="gender" id="gender" placeholder="User's gender (from http://schema.org/Person)"
+                                required="">
+                            <label for="givenName">Given name**</label>
+                            <input type="text" class="form-control editable" name="givenName" id="givenName"
+                                placeholder="User's given name (from http://schema.org/Person)"
+                                required="">
+                            <label for="image">Image</label>
+                            <input type="text" class="form-control editable" name="image" id="image" placeholder="URL to user's image (from http://schema.org/Person)">
+                            <label for="signature">Signature*</label>
+                            <input type="text" class="form-control editable" name="signature" id="signature"
+                                placeholder="User's signature" required="">
+                            <label for="skype">Skype username</label>
+                            <input type="text" class="form-control editable" name="skype" id="skype" placeholder="User's Skype account">
+                            <label for="telephone">Phone number</label>
+                            <input type="text" class="form-control editable" name="telephone" id="telephone"
+                                placeholder="User's telephone number (from http://schema.org/Person)">
+                            <label for="website">Website</label>
+                            <input type="text" class="form-control editable" name="website" id="website" placeholder="User's website">
+                        </div>
+                        <div class="commands">
+                            <input id="createUser" type="button" class="createButton btn btn-primary" value="Create"
+                                style="">
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <!--end row-->
+    </div>
+
+
+</body>
+
+</html>

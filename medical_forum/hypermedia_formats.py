@@ -17,7 +17,7 @@ ERROR_PROFILE = "/profiles/error-profile"
 
 ATOM_THREAD_PROFILE = "https://tools.ietf.org/html/rfc4685"
 
-STUDENT_APIARY_PROJECT = "https://pwpforumompletedversion.docs.apiary.io"
+STUDENT_APIARY_PROJECT = "https://medicalforumapp.docs.apiary.io/"
 APIARY_PROFILES_URL = STUDENT_APIARY_PROJECT + "/#reference/profiles/"
 APIARY_RELS_URL = STUDENT_APIARY_PROJECT + "/#reference/link-relations/"
 

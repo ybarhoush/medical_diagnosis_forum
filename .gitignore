@@ -3,3 +3,7 @@
 .cache/
 .vscode/
 venv/
+.eslintrc.json
+package-lock.json
+package.json
+node_modules/

@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" type="text/css" href="css/bootstrap.min.css">
+    <!-- <link rel="stylesheet" type="text/css" href="css/open-iconic-bootstrap.min.css"> -->
+    <link rel="stylesheet" type="text/css" href="css/forum_client.css">
+    <title>Forum</title>
+    <script type="text/javascript" src="js/jquery.js"></script>
+    <script type="text/javascript" src="js/bootstrap.bundle.min.js"></script>
+    <script type="text/javascript" src="js/forum_client.js"></script>
+</head>
+
+<body>
+    <div class="jumbotron bg-light" id="intro">
+        <h1 class="display-3">Forum administration panel</h1>
+        <p class="lead">Click on a username in the sidebar to edit/delete a user info. Press
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                stroke-linejoin="round" class="feather feather-circle">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="12" y1="8" x2="12" y2="16"></line>
+                <line x1="8" y1="12" x2="16" y2="12"></line>
+            </svg> button to add a new user.</p>
+    </div>
+    <div class="container-fluid" id="content">
+        <div class="row">
+            <nav class="col-md-3 sidebar bg-light">
+                <div id="sidebar" class="sidebar-sticky">
+                    <!-- Side bar area -->
+                    <h4 class="sidebar-heading d-flex justify-content-between text-muted">
+                        <span>Users' list</span>
+                        <a id="addUserButton" class="d-flex  text-muted" href="#" title="Add new user">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round" class="feather feather-circle">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <line x1="12" y1="8" x2="12" y2="16"></line>
+                                <line x1="8" y1="12" x2="16" y2="12"></line>
+                            </svg>
+                        </a>
+                    </h4>
+                    <ul class="nav d-flex flex-column" id="user_list">
+
+                    </ul>
+                </div>
+            </nav>
+            <div class="col-md-9" id="mainContent">
+                <!-- Main content area -->
+                <div id="userData">
+                    <p class="lead">You can access and modify the user information</p>
+                    <div class="section" id="userHeader">
+                        <form action="#" id="user_form" class="container">
+                            <div class="row">
+                                <div class="form_content col-md-7">
+                                    <input class="form-control-plaintext font-weight-bold" name="username" id="username"
+                                        placeholder="username" type="text" readonly="readonly"
+                                    />
+                                    <div class="form-group row">
+                                        <label for="registrationDate" class="col-form-label col-md-3">Registered on</label>
+                                        <div class="col-md-9">
+                                            <input class="form-control-plaintext" type="text" name="registrationDate" id="registrationDate"
+                                                readonly="readonly" />
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="commands col-md-2">
+                                    <button id="deleteUser" class="deleteButton btn" title="Remove user">
+                                        <span class='oi oi-trash'></span>
+                                    </button>
+                                </div>
+                                <div class="col-md-3">
+                                    <a class="btn btn-primary align-middle" title="Click to access the messages" id="messagesButton"
+                                        role="button" href="#messages">
+                                        Messages
+                                        <span id="messagesNumber" class="badge badge-light">??</span>
+                                    </a>
+                                    <!--<input type="text" class="noeditable" id="messagesNumber" name="messagesNumber" readonly="readonly" size="2" value="??"/> <a href="#messages">messages</a>-->
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="section" id="userProfile">
+                        <!-- User info area -->
+                        <h3 class="text-muted">User information</h3>
+
+                        <form action="#" id="user_restricted_form" class="container">
+                            <div class="row">
+                                <div class="form_content col-md-8">
+
+                                </div>
+                                <div class="commands col-md-4">
+                                    <button id="editUserRestricted" title="Edit user information" class="editButton btn">
+                                        <span class="oi oi-pencil"></span>
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="section" id="messages">
+                        <!-- Message list area -->
+                        <h3 class="text-muted">Message List</h3>
+                        <div id="messages_list">
+                            <div class="message">
+                                <form action="#">
+                                    <div class="commands">
+                                        <input type="button" class="deleteButton deleteMessage btn" title="Remove message"
+                                            value="Delete" />
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div id="newUser">
+                    <p class="lead">Please, fill the following fields to create a new user</p>
+                    <form action="#" id="new_user_form">
+                        <div class="form_content">
+
+                        </div>
+                        <div class="commands">
+                            <input id="createUser" type="button" class="createButton btn btn-primary" value="Create"
+                            />
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <!--end row-->
+    </div>
+</body>
+
+</html>

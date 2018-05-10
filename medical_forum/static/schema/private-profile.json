@@ -1,0 +1,66 @@
+{
+    "type": "object",
+    "properties": {
+        "workaddress": {
+            "title": "Address",
+            "description": "User's address (from http://schema.org/PostalAddress)",
+            "type": "string"
+        },
+        "email": {
+            "title": "Email address",
+            "description": "User's email address (from http://schema.org/Person)",
+            "type": "string"
+        },
+        "gender": {
+            "title": "Gender",
+            "description": "User's gender (from http://schema.org/Person)",
+            "type": "string"
+        },
+        "picture": {
+            "title": "picture",
+            "description": "URL to user's picture",
+            "type": "string"
+        },
+        "age": {
+            "title": "age of user",
+            "description": "User's birth date as YYYY-MM-DD  (from http://schema.org/Person)",
+            "type": "string"
+        },
+        "lastname": {
+            "title": "Family name",
+            "description": "User's family name (from http://schema.org/Person)",
+            "type": "string"
+        },
+        "firstname": {
+            "title": "Given name",
+            "description": "User's given name (from http://schema.org/Person)",
+            "type": "string"
+        },
+        "signature": {
+            "title": "Signature",
+            "description": "User's signature",
+            "type": "string"
+        },
+        "phone": {
+            "title": "Phone number",
+            "description": "User's telephone number (from http://schema.org/Person)",
+            "type": "string"
+        },
+        "height": {
+            "title": "height of user",
+            "description": "height of user in cemtimeters",
+            "type": "integer"
+        },
+        "weight": {
+            "title": "weight of user",
+            "description": "weight of user in kg",
+            "type": "integer"
+        },
+        "reg_date": {
+            "title": "user's registration date",
+            "description": "the timestamps of user registration",
+            "type": "integer"
+        }
+    },
+    "required": ["username", "picture", "email", "lastname", "firstname", "gender", "signature"]
+}
