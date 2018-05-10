@@ -860,7 +860,7 @@ class Connection(object):
         insert_user_query = 'INSERT INTO users(username,reg_date,last_login, pass_hash) VALUES(?,?,?,?)'
         insert_user_profile_query = (
             'INSERT INTO users_profile (user_id, firstname,lastname, speciality, picture, '
-            'age, work_address, gender, email, user_type) VALUES (?,?,?,?,?,?,?,?,?,?)')
+            'age, work_address, gender, email, user_type, phone, weight, height) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)')
         # temporal variables for user table
         # timestamp will be used for last login and reg_date.
         timestamp = time.mktime(datetime.now().timetuple())
@@ -878,6 +878,9 @@ class Connection(object):
         _gender = r_profile.get('gender', None)
         _email = r_profile.get('email', None)
         _user_type = p_profile.get('user_type', None)
+        _phone = r_profile.get('phone', None)
+        _weight = r_profile.get('weight', None)
+        _height = r_profile.get('height', None)
 
         row = execute_query(self.con, select_user_query, (username, ), 'one')
         # If there is no user add rows in user and user profile
@@ -886,7 +889,7 @@ class Connection(object):
             lid = execute_query(self.con, insert_user_query, pvalue, 'lastid')
             pvalue = (
                 lid, _firstname, _lastname, _speciality, _picture, _age,
-                _work_address, _gender, _email, _user_type)
+                _work_address, _gender, _email, _user_type, _phone, _weight, _height)
 
             execute_query(self.con, insert_user_profile_query,
                           pvalue, 'commit')

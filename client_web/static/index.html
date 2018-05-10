@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>Medical Forum</title>
+
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+    <link rel="stylesheet" type="text/css" href="css/forum_client.css">
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="js/forum_client.js"></script>
+</head>
+
+<body>
+    <div class="jumbotron bg-light" id="intro">
+        <h1 class="text-center">Forum administration panel</h1>
+        <p class="text-center">Click on a username in the sidebar to edit/delete a user's info. Press
+            <span class="glyphicon glyphicon-plus-sign"></span> button to add a new user.</p>
+    </div>
+
+    <div class="container-fluid" id="content">
+        <!-- Side bar area -->
+        <div id="sidebar" class="sidebar-sticky">
+            <h4 class="sidebar-heading d-flex text-center text-muted">
+                <span>Users' list</span>
+                <a id="addUserButton" class="d-flex text-muted" href="#" title="Add new user">
+                    <span class="glyphicon glyphicon-plus-sign"></span>
+                </a>
+            </h4>
+            <ul class="nav d-flex text-center flex-column" id="user_list">
+            </ul>
+        </div>
+
+        <!-- Main content area -->
+        <div class="col-md-9" id="mainContent" style="display: none;">
+            <div id="userData">
+                <p class="lead">You can access and modify the user information</p>
+
+                <!-- User main info header section -->
+                <div class="section" id="userHeader">
+                    <form action="#" id="user_form">
+                        <div class="form_content col-md-7">
+                            <input class="form-control-plaintext font-weight-bold" name="username" id="username"
+                                placeholder="username" type="text" readonly="readonly">
+                            <div class="form-group row">
+                                <label for="registrationDate" class="col-form-label col-md-3">Registered on</label>
+                                <div class="col-md-9">
+                                    <input class="form-control-plaintext" type="text" name="registrationDate" id="registrationDate"
+                                        readonly="readonly">
+                                </div>
+                            </div>
+                        </div>
+                        <button class="glyphicon
+ glyphicon-envelope btn btn-primary align-middle CustomButton" title="Click to access
+the
+                        messages" id="messagesButton" href="#messages">
+                            <span id="messagesNumber" class="badge badge-light">??</span>
+                        </button>
+
+                        <button id="editUserRestricted" class="glyphicon
+ glyphicon-pencil btn CustomButton" title="Edit user information">
+                        </button>
+
+                        <button id="deleteUser" class="glyphicon glyphicon-trash
+ btn CustomButton" title="Remove user">
+                        </button>
+                    </form>
+                </div>
+
+                <!-- User info area -->
+                <div class="section" id="userProfile">
+                    <h3 class="text-muted">User information</h3>
+                    <form action="#" id="user_restricted_form">
+                        <div class="row">
+                            <div class="form_content col-md-8">
+                            </div>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Message list area -->
+                <div class="section" id="messages">
+                    <h3 class="text-muted">Message List</h3>
+                    <div id="messages_list">
+                        <div class="message">
+                            <form action="#">
+                                <div class="commands">
+                                    <input type="button" class="deleteButton deleteMessage btn" title="Remove message"
+                                        value="Delete">
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- New user -->
+            <div id="newUser">
+                <p class="lead">Please, fill the following fields to create a new user</p>
+                <form action="/medical_forum/api/users/" id="new_user_form">
+                    <div class="form_content">
+                    </div>
+                    <div class="commands">
+                        <input id="createUser" type="button" class="createButton btn btn-primary" value="Create"
+                            style="display: none;">
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

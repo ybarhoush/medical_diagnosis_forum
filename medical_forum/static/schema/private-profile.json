@@ -1,9 +1,14 @@
 {
     "type": "object",
     "properties": {
-        "workaddress": {
-            "title": "Address",
-            "description": "User's address (from http://schema.org/PostalAddress)",
+        "lastname": {
+            "title": "Family name",
+            "description": "User's family name (from http://schema.org/Person)",
+            "type": "string"
+        },
+        "firstname": {
+            "title": "Given name",
+            "description": "User's given name (from http://schema.org/Person)",
             "type": "string"
         },
         "email": {
@@ -16,29 +21,14 @@
             "description": "User's gender (from http://schema.org/Person)",
             "type": "string"
         },
-        "picture": {
-            "title": "picture",
-            "description": "URL to user's picture",
+        "work_address": {
+            "title": "Address",
+            "description": "User's address (from http://schema.org/PostalAddress)",
             "type": "string"
         },
         "age": {
             "title": "age of user",
             "description": "User's birth date as YYYY-MM-DD  (from http://schema.org/Person)",
-            "type": "string"
-        },
-        "lastname": {
-            "title": "Family name",
-            "description": "User's family name (from http://schema.org/Person)",
-            "type": "string"
-        },
-        "firstname": {
-            "title": "Given name",
-            "description": "User's given name (from http://schema.org/Person)",
-            "type": "string"
-        },
-        "signature": {
-            "title": "Signature",
-            "description": "User's signature",
             "type": "string"
         },
         "phone": {
@@ -56,11 +46,21 @@
             "description": "weight of user in kg",
             "type": "integer"
         },
-        "reg_date": {
-            "title": "user's registration date",
-            "description": "the timestamps of user registration",
+        "picture": {
+            "title": "picture",
+            "description": "URL to user's picture",
+            "type": "string"
+        },
+        "user_type": {
+            "title": "user profile type",
+            "description": "whether the user is a doctor or a patient",
             "type": "integer"
+        },
+        "speciality": {
+            "title": "speciality of doctor",
+            "description": "Speciality of doctor",
+            "type": "string"
         }
     },
-    "required": ["username", "picture", "email", "lastname", "firstname", "gender", "signature"]
+    "required": ["username", "email", "lastname", "firstname", "user_type", "gender"]
 }

@@ -39,8 +39,7 @@ class UserPublic(Resource):
 
         envelope = forum_obj.ForumObject(
             username=username,
-            reg_date=pub_profile["reg_date"],
-            signature=pub_profile["picture"]
+            reg_date=pub_profile["reg_date"]
         )
 
         envelope.add_namespace("forum", hyper_const.LINK_RELATIONS_URL)
@@ -112,6 +111,7 @@ class UserRestricted(Resource):
                                          % username)
 
         priv_profile = user_db["restricted_profile"]
+        public_profile = user_db["public_profile"]
 
         envelope = forum_obj.ForumObject(
             username=username,
@@ -126,7 +126,9 @@ class UserRestricted(Resource):
             diagnosis_id=priv_profile["diagnosis_id"],
             height=priv_profile["height"],
             weight=priv_profile["weight"],
-            speciality=priv_profile["speciality"]
+            speciality=priv_profile["speciality"],
+            picture=public_profile["picture"],
+            reg_date=public_profile['reg_date']
         )
 
         envelope.add_namespace("forum", hyper_const.LINK_RELATIONS_URL)

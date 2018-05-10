@@ -73,7 +73,7 @@ class Users(Resource):
 
     def post(self):
         """
-        Adds a new user in the database.
+        Adds a new user to the database.
 
         REQUEST ENTITY BODY:
          * Media type: JSON
@@ -132,10 +132,10 @@ class Users(Resource):
         try:
             speciality = request_body["speciality"]
             user_type = request_body["user_type"]
-            reg_date = request_body["reg_date"]
             firstname = request_body["firstname"]
             lastname = request_body["lastname"]
             work_address = request_body["work_address"]
+
         except KeyError:
             return create_error_response(400, "Wrong request format",
                                          "Be sure to include all mandatory properties")
@@ -145,13 +145,18 @@ class Users(Resource):
         gender = request_body.get("gender", "")
         age = request_body.get("age", "")
         email = request_body.get("email", "")
+        weight = request_body.get("weight", "")
+        height = request_body.get("height", "")
+        phone = request_body.get("phone", "")
+        print(phone + " " + height + " " + weight)
 
-        user = {'public_profile': {'reg_date': reg_date, 'username': username,
+        user = {'public_profile': {'username': username,
                                    'speciality': speciality, 'user_type': user_type},
 
                 'restricted_profile': {'firstname': firstname, 'lastname': lastname,
                                        'work_address': work_address, 'gender': gender,
-                                       'picture': picture, 'age': age, 'email': email}}
+                                       'picture': picture, 'age': age, 'email': email,
+                                       'phone': phone, 'weight': weight, 'height': height}}
         try:
             username = g.con.append_user(username, user)
         except ValueError:
