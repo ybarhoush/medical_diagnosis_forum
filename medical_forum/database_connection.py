@@ -210,15 +210,19 @@ class Connection(object):
         reg_date = row['reg_date']
         return {'public_profile': {'reg_date': reg_date,
                                    'username': row['username'],
-                                   'speciality': row['speciality'],
-                                   'user_type': row['user_type']},
+                                   'picture': row['picture']},
                 'restricted_profile': {'firstname': row['firstname'],
                                        'lastname': row['lastname'],
                                        'work_address': row['work_address'],
+                                       'phone': row['phone'],
                                        'gender': row['gender'],
-                                       'picture': row['picture'],
                                        'age': row['age'],
-                                       'email': row['email']}}
+                                       'email': row['email'],
+                                       'speciality': row['speciality'],
+                                       'user_type': row['user_type'],
+                                       'diagnosis_id': row['diagnosis_id'],
+                                       'height': row['height'],
+                                       'weight': row['weight']}}
 
     # Modified from _create_user_list_object
     def _create_user_list_object(self, row):

@@ -230,8 +230,8 @@ class ForumObject(MasonObject):
         """
         Creates a schema dictionary for messages.
 
-        This schema can also be accessed from the urls /forum/schema/edit-msg/ and
-        /forum/schema/add-msg/.
+        This schema can also be accessed from the urls /medical_forum/schema/edit-msg/ and
+        /medical_forum/schema/add-msg/.
 
         : param bool edit: is this schema for an edit form
         : rtype:: dict
@@ -267,8 +267,8 @@ class ForumObject(MasonObject):
         """
         Creates a schema dictionary for diagnoses.
 
-        This schema can also be accessed from the urls /forum/schema/edit-dgs/ and
-        /forum/schema/add-dgs/.
+        This schema can also be accessed from the urls /medical_forum/schema/edit-dgs/ and
+        /medical_forum/schema/add-dgs/.
 
         : param bool edit: is this schema for an edit form
         : rtype:: dict

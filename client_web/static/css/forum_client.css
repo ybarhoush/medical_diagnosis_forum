@@ -1,0 +1,79 @@
+/* Makeshift CSS Reset */
+
+html {
+    font-size: 115%;
+}
+
+body {
+    padding-bottom: 5rem;
+}
+
+#intro {
+    margin-bottom: 0.2rem;
+}
+
+.sidebar {
+    border-right-color: #9ec3e6;
+    border-right-width: .1rem;
+    border-right-style: solid;
+}
+
+.sidebar-sticky {
+    position: sticky;
+    padding-top: .5rem;
+    height: 100vh;
+    overflow-x: hidden;
+    overflow-y: auto;
+}
+
+#sidebar ul li.active {
+    background-color: #9ec3e6;
+}
+
+#sidebar .oi {
+    padding-right: 1rem;
+}
+
+#mainContent {
+    margin-top: 2rem;
+    font-size: 80%;
+}
+
+#user_restricted_form .commands .btn {
+    position: relative;
+    top: -2.2rem;
+}
+
+#new_user_form .commands .btn {
+    position: relative;
+    top: 1rem;
+    width: 8rem;
+}
+
+.section {
+    padding-bottom: 2rem;
+}
+
+.message .form_content {
+    padding: 0.5em;
+    padding-bottom: 2.2em;
+    margin-bottom: 1.5em;
+    border: 2px solid black;
+}
+
+#nickname {
+    font-size: 3.2em;
+}
+
+#deleteUser {
+    width: 3.3em;
+    height: 3.3em;
+    top: 2rem;
+    position: relative;
+}
+
+#messagesButton {
+    height: 3.3em;
+    top: 2rem;
+    position: relative;
+}

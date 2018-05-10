@@ -2,8 +2,15 @@
 Main medical forum server
 """
 
-from medical_forum.resources import APP
+from werkzeug.serving import run_simple
+from werkzeug.wsgi import DispatcherMiddleware
+from medical_forum.resources import APP as forum_server
+from client_web.client import APP as client_web
+
+CLIENT = DispatcherMiddleware(forum_server, {
+    '/medical_forum/client': client_web
+})
 
 if __name__ == '__main__':
-    # Debug true activates automatic code reloading and improved error messages
-    APP.run(debug=True)
+    run_simple('localhost', 5000, CLIENT,
+               use_reloader=True, use_debugger=True, use_evalex=True)
