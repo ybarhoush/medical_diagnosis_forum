@@ -6,21 +6,6 @@
             "description": "User's username (unique identifier)",
             "type": "string"
         },
-        "workaddress": {
-            "title": "Address",
-            "description": "User's address (from http://schema.org/PostalAddress)",
-            "type": "string"
-        },
-        "picture": {
-            "title": "picture",
-            "description": "URL to user's picture",
-            "type": "string"
-        },
-        "age": {
-            "title": "age of user",
-            "description": "User's birth date as YYYY-MM-DD  (from http://schema.org/Person)",
-            "type": "string"
-        },
         "email": {
             "title": "Email address",
             "description": "User's email address (from http://schema.org/Person)",
@@ -31,25 +16,35 @@
             "description": "User's family name (from http://schema.org/Person)",
             "type": "string"
         },
-        "gender": {
-            "title": "Gender",
-            "description": "User's gender (from http://schema.org/Person)",
-            "type": "string"
-        },
         "firstname": {
             "title": "Given name",
             "description": "User's given name (from http://schema.org/Person)",
             "type": "string"
         },
-        "signature": {
-            "title": "Signature",
-            "description": "User's signature",
+        "age": {
+            "title": "age of user",
+            "description": "User's birth date as YYYY-MM-DD  (from http://schema.org/Person)",
+            "type": "string"
+        },
+        "gender": {
+            "title": "Gender",
+            "description": "User's gender (from http://schema.org/Person)",
+            "type": "string"
+        },
+        "work_address": {
+            "title": "Address",
+            "description": "User's address (from http://schema.org/PostalAddress)",
             "type": "string"
         },
         "phone": {
             "title": "Phone number",
             "description": "User's telephone number (from http://schema.org/Person)",
             "type": "string"
+        },
+        "user_type": {
+            "title": "user profile type",
+            "description": "whether the user is a doctor or a patient",
+            "type": "integer"
         },
         "speciality": {
             "title": "speciality of doctor",
@@ -66,21 +61,11 @@
             "description": "weight of user in kg",
             "type": "integer"
         },
-        "user_type": {
-            "title": "user profile type",
-            "description": "whether the user is a doctor or a patient",
-            "type": "integer"
-        },
-        "last_login": {
-            "title": "user's last login",
-            "description": "the timestamps of last login",
-            "type": "integer"
-        },
-        "reg_date": {
-            "title": "user's registration date",
-            "description": "the timestamps of user registration",
-            "type": "integer"
+        "picture": {
+            "title": "picture",
+            "description": "URL to user's picture",
+            "type": "string"
         }
     },
-    "required": ["username", "picture", "email", "lastname", "firstname", "user_type", "gender", "signature"]
+    "required": ["username", "email", "lastname", "firstname", "user_type", "gender"]
 }

@@ -316,11 +316,6 @@ class ForumObject(MasonObject):
         }
 
         props = schema["properties"]
-        props["signature"] = {
-            "description": "User's signature",
-            "title": "Signature",
-            "type": "string"
-        }
 
         props["picture"] = {
             "description": "image file location",
