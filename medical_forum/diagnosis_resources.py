@@ -16,7 +16,7 @@ class Diagnoses(Resource):
     Resource Diagnoses implementation
     """
 
-    def get(self):
+    def get(self, user_id=None):
         """
         Get all diagnoses.
 
@@ -36,7 +36,8 @@ class Diagnoses(Resource):
          * The attribute user_id is obtained from the column diagnoses.user_id
         """
 
-        diagnoses_db = g.con.get_diagnoses()
+        diagnoses_db = g.con.get_diagnoses(user_id)
+        print("serving for user_id: " + str(user_id))
 
         envelope = forum_obj.ForumObject()
         envelope.add_namespace("medical_forum", hyper_const.LINK_RELATIONS_URL)
@@ -168,6 +169,7 @@ class Diagnosis(Resource):
         """
 
         diagnosis_db = g.con.get_diagnosis(diagnosis_id)
+        print("diagnosis_id: " + str(diagnosis_id))
         if not diagnosis_db:
             abort(404, diagnosis="There is no a diagnosis with id %s" % diagnosis_id,
                   resource_type="Diagnosis",
@@ -200,63 +202,63 @@ class Diagnosis(Resource):
         return Response(json.dumps(envelope), 200, mimetype=hyper_const.MASON + ";" +
                         hyper_const.FORUM_DIAGNOSIS_PROFILE)
 
-    def post(self, diagnosis_id):
-        """
-        Adds a response to a diagnosis with id <diagnosis_id>.
+    # def post(self, diagnosis_id):
+    #     """
+    #     Adds a response to a diagnosis with id <diagnosis_id>.
 
-        INPUT PARAMETERS:
-       : param str diagnosis_id: The id of the diagnosis to be posted
+    #     INPUT PARAMETERS:
+    #    : param str diagnosis_id: The id of the diagnosis to be posted
 
-        REQUEST ENTITY BODY:
-        * Media type: JSON
-         * Profile: Forum_Diagnosis
-          /profiles/diagnosis-profile
+    #     REQUEST ENTITY BODY:
+    #     * Media type: JSON
+    #      * Profile: Forum_Diagnosis
+    #       /profiles/diagnosis-profile
 
-        The body should be a JSON document that matches the schema for new diagnoses
+    #     The body should be a JSON document that matches the schema for new diagnoses
 
-        RESPONSE HEADERS:
-         * Location: Contains the URL of the new diagnosis
+    #     RESPONSE HEADERS:
+    #      * Location: Contains the URL of the new diagnosis
 
-        RESPONSE STATUS CODE:
-         * Returns 201 if the diagnosis has been added correctly.
-           The Location header contains the path of the new diagnosis
-         * Returns 400 if the diagnosis is not well formed or empty diagnosis
-         * Returns 404 if there is no diagnosis with diagnosis_id
-         * Returns 415 if the format of the response is not json
-         * Returns 500 if the diagnosis could not be added to database.
+    #     RESPONSE STATUS CODE:
+    #      * Returns 201 if the diagnosis has been added correctly.
+    #        The Location header contains the path of the new diagnosis
+    #      * Returns 400 if the diagnosis is not well formed or empty diagnosis
+    #      * Returns 404 if there is no diagnosis with diagnosis_id
+    #      * Returns 415 if the format of the response is not json
+    #      * Returns 500 if the diagnosis could not be added to database.
 
-        NOTE:
-         * The attribute disease is obtained from the column diagnoses.disease
-         * The attribute diagnosis is obtained from the column diagnoses.diagnosis_description
-         * The attribute message_id is obtained from the column diagnoses.message_id
-         * The attribute user_id is obtained from the column diagnoses.user_id
-        """
+    #     NOTE:
+    #      * The attribute disease is obtained from the column diagnoses.disease
+    #      * The attribute diagnosis is obtained from the column diagnoses.diagnosis_description
+    #      * The attribute message_id is obtained from the column diagnoses.message_id
+    #      * The attribute user_id is obtained from the column diagnoses.user_id
+    #     """
 
-        if not g.con.contains_diagnosis(diagnosis_id):
-            return create_error_response(
-                404, "Diagnosis not found", "There is no a diagnosis with id %s" % diagnosis_id)
+    #     if not g.con.contains_diagnosis(diagnosis_id):
+    #         return create_error_response(
+    #             404, "Diagnosis not found", "There is no a diagnosis with id %s" % diagnosis_id)
 
-        if hyper_const.JSON != request.headers.get("Content-Type", ""):
-            return create_error_response(
-                415, "UnsupportedMediaType", "Use a JSON compatible format")
-        request_body = request.get_json(force=True)
+    #     if hyper_const.JSON != request.headers.get("Content-Type", ""):
+    #         return create_error_response(
+    #             415, "UnsupportedMediaType", "Use a JSON compatible format")
+    #     request_body = request.get_json(force=True)
 
-        try:
-            disease = request_body["disease"]
-            diagnosis = request_body["diagnosis_description"]
-            user_id = request_body.get("user_id")
-            message_id = request_body.get("message_id")
+    #     try:
+    #         disease = request_body["disease"]
+    #         diagnosis = request_body["diagnosis_description"]
+    #         user_id = request_body.get("user_id")
+    #         message_id = request_body.get("message_id")
 
-        except KeyError:
-            return create_error_response(
-                400, "Wrong request format",
-                "Be sure you include diagnosis title and body and valid user_id")
+    #     except KeyError:
+    #         return create_error_response(
+    #             400, "Wrong request format",
+    #             "Be sure you include diagnosis title and body and valid user_id")
 
-        new_diagnosis_id = g.con.append_answer(
-            user_id, message_id, disease, diagnosis)
-        if not new_diagnosis_id:
-            return create_error_response(
-                500, "Problem with the database", "Cannot access the database")
+    #     new_diagnosis_id = g.con.append_answer(
+    #         user_id, message_id, disease, diagnosis)
+    #     if not new_diagnosis_id:
+    #         return create_error_response(
+    #             500, "Problem with the database", "Cannot access the database")
 
-        url = API.url_for(Diagnosis, diagnosis_id=new_diagnosis_id)
-        return Response(status=201, headers={"Location": url})
+    #     url = API.url_for(Diagnosis, diagnosis_id=new_diagnosis_id)
+    #     return Response(status=201, headers={"Location": url})

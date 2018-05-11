@@ -37,6 +37,8 @@ def add_resources_routes():
                      endpoint="diagnoses")
     API.add_resource(Diagnosis, "/medical_forum/api/diagnoses/<regex('dgs-\d+'):diagnosis_id>/",
                      endpoint="diagnosis")
+    # API.add_resource(Diagnosis, "/medical_forum/api/diagnoses/<regex('^\d{1,3}'):user_id>/",
+    #                  endpoint="diagnosis_user")
 
 
 add_resources_routes()

@@ -15,73 +15,102 @@
 
 <body>
     <div class="jumbotron bg-light" id="intro">
-        <h1 class="text-center">Forum administration panel</h1>
-        <p class="text-center">Click on a username in the sidebar to edit/delete a user's info. Press
-            <span class="glyphicon glyphicon-plus-sign"></span> button to add a new user.</p>
+        <h1 class="text-center">Medical forum panel</h1>
+        <p class="text-center">Choose a user from sidebar. Press
+            <span class="glyphicon glyphicon-plus-sign"></span> button to register new patient or doctor.</p>
     </div>
 
     <div class="container-fluid" id="content">
         <!-- Side bar area -->
         <div id="sidebar" class="sidebar-sticky">
             <h4 class="sidebar-heading d-flex text-center text-muted">
-                <span>Users' list</span>
+                <span>Users list</span>
                 <a id="addUserButton" class="d-flex text-muted" href="#" title="Add new user">
                     <span class="glyphicon glyphicon-plus-sign"></span>
                 </a>
             </h4>
             <ul class="nav d-flex text-center flex-column" id="user_list">
+                <span>Patients list</span>
+                <ul class="nav d-flex text-center flex-column" id="patients_list">
+                </ul>
+                <span>Doctors list</span>
+                <ul class="nav d-flex text-center flex-column" id="doctors_list">
+                </ul>
             </ul>
         </div>
 
         <!-- Main content area -->
         <div class="col-md-9" id="mainContent" style="display: none;">
             <div id="userData">
-                <p class="lead">You can access and modify the user information</p>
+                <p class="lead">Static public user information</p>
 
                 <!-- User main info header section -->
                 <div class="section" id="userHeader">
                     <form action="#" id="user_form">
-                        <div class="form_content col-md-7">
-                            <input class="form-control-plaintext font-weight-bold" name="username" id="username"
-                                placeholder="username" type="text" readonly="readonly">
-                            <div class="form-group row">
-                                <label for="registrationDate" class="col-form-label col-md-3">Registered on</label>
-                                <div class="col-md-9">
-                                    <input class="form-control-plaintext" type="text" name="registrationDate" id="registrationDate"
-                                        readonly="readonly">
-                                </div>
+                        <div class="form_content">
+                            <div class="row">
+                                <label for="username" class="col-form-label col-md-4">Username: </label>
+                                <input class="form-control-plaintext
+                                font-weight-bold no-border" name="username" id="username"
+                                    placeholder="username" type="text" readonly="readonly">
+                            </div>
+                            <div class="row">
+                                <label for="registrationDate" class="col-form-label col-md-4">Registered on:
+                                </label>
+                                <input class="form-control-plaintext no-border" type="text" name="registrationDate"
+                                    id="registrationDate" readonly="readonly">
+                            </div>
+                            <div class="row">
+                                <label for="userType" class="col-form-label
+                                col-md-4">User type: </label>
+                                <input class="form-control-plaintext no-border" type="text" name="userType" id="userType"
+                                    readonly="readonly">
+                            </div>
+                            <div class="row">
+                                <label for="DoctorSpeciality" class="col-form-label col-md-4">Doctor speciality: </label>
+                                <input class="form-control-plaintext no-border" type="text" name="DoctorSpeciality"
+                                    id="DoctorSpeciality" readonly="readonly">
                             </div>
                         </div>
-                        <button class="glyphicon
- glyphicon-envelope btn btn-primary align-middle CustomButton" title="Click to access
-the
-                        messages" id="messagesButton" href="#messages">
-                            <span id="messagesNumber" class="badge badge-light">??</span>
-                        </button>
-
-                        <button id="editUserRestricted" class="glyphicon
- glyphicon-pencil btn CustomButton" title="Edit user information">
-                        </button>
-
-                        <button id="deleteUser" class="glyphicon glyphicon-trash
- btn CustomButton" title="Remove user">
-                        </button>
                     </form>
                 </div>
 
                 <!-- User info area -->
-                <div class="section" id="userProfile">
+                <div class="section row" id="userProfile">
                     <h3 class="text-muted">User information</h3>
-                    <form action="#" id="user_restricted_form">
-                        <div class="row">
-                            <div class="form_content col-md-8">
-                            </div>
+
+                    <div class="section ControlButtons">
+                        <a class="glyphicon
+                        glyphicon-envelope btn btn-primary align-middle
+                        CustomButton" title="Click to access the messages" id="messagesButton"
+                            href="#messages">
+                            <span id="messagesNumber" class="badge badge-light">??</span>
+                        </a>
+
+                        <a class="glyphicon glyphicon-tags btn btn-primary align-middle
+                        CustomButton" title="Click to access the diagnoses" id="diagnosesButton"
+                            href="#diagnoses">
+                            <span id="diagnosesNumber" class="badge badge-light">??</span>
+                        </a>
+
+                        <button id="editUserRestricted" class="glyphicon
+                        glyphicon-pencil btn CustomButton" title="Edit user
+                        information">
+                        </button>
+
+                        <button id="deleteUser" class="glyphicon glyphicon-trash
+                        btn CustomButton" title="Remove user">
+                        </button>
+                    </div>
+
+                    <form action="#" class="section" id="user_restricted_form">
+                        <div class="form_content row col-md-8">
                         </div>
                     </form>
                 </div>
 
                 <!-- Message list area -->
-                <div class="section" id="messages">
+                <div class="section row" id="messages">
                     <h3 class="text-muted">Message List</h3>
                     <div id="messages_list">
                         <div class="message">
@@ -94,6 +123,20 @@ the
                         </div>
                     </div>
                 </div>
+
+                <!-- Diagnoses list area -->
+                <div class="section row" id="diagnoses">
+                    <h3 class="text-muted">Diagnoses List</h3>
+                    <div id="diagnoses_list">
+                        <div class="diagnosis">
+                            <form action="#">
+                                <div class="commands">
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
             </div>
 
             <!-- New user -->

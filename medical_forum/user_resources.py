@@ -60,7 +60,10 @@ class Users(Resource):
         for user in users_db:
             item = forum_obj.ForumObject(
                 username=user["username"],
-                reg_date=user["reg_date"]
+                reg_date=user["reg_date"],
+                user_id=user["user_id"],
+                user_type=user["user_type"],
+                speciality=user["speciality"]
             )
             item.add_control("self", href=API.url_for(
                 User, username=user["username"]))
@@ -216,7 +219,10 @@ class User(Resource):
         # Create the envelope:
         envelope = forum_obj.ForumObject(
             username=username,
-            reg_date=user_db["public_profile"]["reg_date"]
+            reg_date=user_db["public_profile"]["reg_date"],
+            user_id=user_db["restricted_profile"]["user_id"],
+            user_type=user_db["public_profile"]["user_type"],
+            speciality=user_db["public_profile"]["speciality"]
         )
 
         envelope.add_namespace("forum", hyper_const.LINK_RELATIONS_URL)
@@ -227,6 +233,8 @@ class User(Resource):
         envelope.add_control("medical_forum:public-data",
                              href=API.url_for(profile_res.UserPublic, username=username))
         envelope.add_control_messages_all()
+        envelope.add_control_diagnoses_history(
+            user_db["restricted_profile"]["user_id"])
         envelope.add_control("collection", href=API.url_for(Users))
         envelope.add_control_delete_user(username)
 

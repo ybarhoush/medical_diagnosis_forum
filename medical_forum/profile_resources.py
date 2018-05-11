@@ -39,7 +39,9 @@ class UserPublic(Resource):
 
         envelope = forum_obj.ForumObject(
             username=username,
-            reg_date=pub_profile["reg_date"]
+            reg_date=pub_profile["reg_date"],
+            user_type=pub_profile["user_type"],
+            speciality=pub_profile["speciality"]
         )
 
         envelope.add_namespace("forum", hyper_const.LINK_RELATIONS_URL)
@@ -115,7 +117,7 @@ class UserRestricted(Resource):
 
         envelope = forum_obj.ForumObject(
             username=username,
-            user_type=priv_profile["user_type"],
+            user_type=public_profile["user_type"],
             firstname=priv_profile["firstname"],
             lastname=priv_profile["lastname"],
             work_address=priv_profile["work_address"],
@@ -126,7 +128,7 @@ class UserRestricted(Resource):
             diagnosis_id=priv_profile["diagnosis_id"],
             height=priv_profile["height"],
             weight=priv_profile["weight"],
-            speciality=priv_profile["speciality"],
+            speciality=public_profile["speciality"],
             picture=public_profile["picture"],
             reg_date=public_profile['reg_date']
         )
@@ -161,15 +163,14 @@ class UserRestricted(Resource):
 
         try:
             priv_profile = dict(
-                user_id=request_body["user_id"],
                 user_type=request_body["user_type"],
                 work_address=request_body["work_address"],
                 email=request_body["email"],
                 firstname=request_body["firstname"],
+                lastname=request_body["lastname"],
                 gender=request_body["gender"],
                 age=request_body["age"],
                 phone=request_body["phone"],
-                diagnosis_id=request_body.get("diagnosis_id", ""),
                 height=request_body.get("height", ""),
                 weight=request_body.get("weight", ""),
                 speciality=request_body.get("speciality", ""))

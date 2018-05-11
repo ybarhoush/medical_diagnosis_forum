@@ -170,6 +170,26 @@ class Connection(object):
                    'timestamp': message_timestamp, 'sender': message_sender}
         return message
 
+    def _create_diagnoses_list_object(self, row):
+        """
+        Same as :py:meth:`_create_message_object`. However, the resulting
+        dictionary is targeted to build messages in a list.
+
+        :param row: The row obtained from the database.
+        :type row: sqlite3.Row
+        :return: a dictionary with the keys ``message_id``, ``title``,
+            ``timestamp`` and ``sender``.
+        """
+        diagnosis_id = 'dgs-' + str(row['diagnosis_id'])
+        user_id = row['user_id']
+        message_id = row['message_id']
+        disease = row['disease']
+        diagnosis_description = row['diagnosis_description']
+        diagnoses = {'diagnosis_id': diagnosis_id, 'message_id': message_id,
+                     'disease': disease, 'user_id': user_id,
+                     'diagnosis_description': diagnosis_description}
+        return diagnoses
+
     # Helpers for users
     # Modified from _create_user_object
     def _create_user_object(self, row):
@@ -210,16 +230,16 @@ class Connection(object):
         reg_date = row['reg_date']
         return {'public_profile': {'reg_date': reg_date,
                                    'username': row['username'],
-                                   'picture': row['picture']},
-                'restricted_profile': {'firstname': row['firstname'],
+                                   'picture': row['picture'],
+                                   'user_type': row['user_type'],
+                                   'speciality': row['speciality']},
+                'restricted_profile': {'user_id': row['user_id'], 'firstname': row['firstname'],
                                        'lastname': row['lastname'],
                                        'work_address': row['work_address'],
                                        'phone': row['phone'],
                                        'gender': row['gender'],
                                        'age': row['age'],
                                        'email': row['email'],
-                                       'speciality': row['speciality'],
-                                       'user_type': row['user_type'],
                                        'diagnosis_id': row['diagnosis_id'],
                                        'height': row['height'],
                                        'weight': row['weight']}}
@@ -235,7 +255,9 @@ class Connection(object):
         :return: a dictionary with the keys ``reg_date`` and
             ``username``
         """
-        return {'reg_date': row['reg_date'], 'username': row['username']}
+        return {'user_id': row['user_id'], 'reg_date': row['reg_date'], 'username': row['username'],
+                'user_type': row['user_type'], 'speciality': row['speciality'],
+                'picture': row['picture']}
 
     # Helpers for diagnosis
     # Written from scratch
@@ -297,6 +319,63 @@ class Connection(object):
 
     # TODO get_diagnoses --Extra
     # Return a list of all the diagnoses in the database
+    # Modified from get_messages
+    def get_diagnoses(self, user_id=None, number_of_diagnoses=-1):
+        """
+        Return a list of all the messages in the database filtered by the
+        conditions provided in the parameters.
+
+        :param username: default None. Search messages of a user with the given
+            username. If this parameter is None, it returns the messages of
+            any user in the system.
+        :type username: str
+        :param number_of_messages: default -1. Sets the maximum number of
+            messages returning in the list. If set to -1, there is no limit.
+        :type number_of_messages: int
+        :param before: All timestamps > ``before`` (UNIX timestamp) are removed.
+            If set to -1, this condition is not applied.
+        :type before: long
+        :param after: All timestamps < ``after`` (UNIX timestamp) are removed.
+            If set to -1, this condition is not applied.
+        :type after: long
+
+        :return: A list of messages. Each message is a dictionary containing
+            the following keys:
+
+            * ``user_id``: string with the format msg-\d{1,3}.Id of the
+                message.
+            * ``sender``: username of the message's author.
+            * ``title``: string containing the title of the message.
+            * ``timestamp``: UNIX timestamp (long int) that specifies when the
+                message was created.
+
+            Note that all values in the returned dictionary are string unless
+            otherwise stated.
+
+        :raises ValueError: if ``before`` or ``after`` are not valid UNIX
+            timestamps
+        """
+        select_all_dgs_query = 'SELECT * FROM diagnosis'
+        if user_id is not None:
+            select_all_dgs_query += " WHERE user_id = '%s'" % user_id
+
+        select_all_dgs_query += ' ORDER BY diagnosis_id ASC'
+        if number_of_diagnoses > -1:
+            select_all_dgs_query += ' LIMIT ' + str(number_of_diagnoses)
+        self.set_foreign_keys_support()
+        self.con.row_factory = sqlite3.Row
+        cursor = self.con.cursor()
+        cursor.execute(select_all_dgs_query)
+
+        rows = cursor.fetchall()
+        if rows is None:
+            return None
+
+        diagnoses = []
+        for row in rows:
+            diagnosis = self._create_diagnoses_list_object(row)
+            diagnoses.append(diagnosis)
+        return diagnoses
 
     # Written from scratch
     def create_diagnosis(self, diagnosis):
@@ -618,7 +697,7 @@ class Connection(object):
         Extracts all users in the database.
 
         :return: list of Users of the database. Each user is a dictionary
-            that contains two keys: ``username``(str) and ``reg_date``
+            that contains tswo keys: ``username``(str) and ``reg_date``
             (long representing UNIX timestamp). None is returned if the database
             has no users.
 

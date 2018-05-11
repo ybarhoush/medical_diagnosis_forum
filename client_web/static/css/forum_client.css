@@ -42,7 +42,7 @@ body {
 }
 
 .section {
-    padding-bottom: 2rem;
+    padding: 1%;
 }
 
 .message .form_content {
@@ -52,12 +52,26 @@ body {
     border: 2px solid black;
 }
 
-#nickname {
-    font-size: 3.2em;
+.diagnosis .form_content {
+    padding: 0.5em;
+    padding-bottom: 2.2em;
+    margin-bottom: 1.5em;
+    border: 2px solid black;
+    border-radius: 15px;
+}
+
+.no-border {
+    border: 0;
+    box-shadow: none;
 }
 
 .CustomButton {
     height: 3.3em;
     top: 2rem;
     position: relative;
+}
+
+.ControlButtons {
+    padding-bottom: 8%;
+    text-align: right;
 }
