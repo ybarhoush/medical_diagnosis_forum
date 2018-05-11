@@ -10,6 +10,7 @@ from .error_handlers import create_error_response
 
 from . import forum_object as forum_obj
 from . import profile_resources as profile_res
+from . import diagnosis_resources as diagnosis_res
 
 
 class Users(Resource):
@@ -53,6 +54,7 @@ class Users(Resource):
 
         envelope.add_control_add_user()
         envelope.add_control_messages_all()
+        envelope.add_control_diagnoses_all()
         envelope.add_control("self", href=API.url_for(Users))
 
         items = envelope["items"] = []
@@ -210,13 +212,11 @@ class User(Resource):
                 }
         """
 
-        # PERFORM OPERATIONS
         user_db = g.con.get_user(username)
         if not user_db:
             return create_error_response(
                 404, "Unknown user", "There is no user with username %s" % username)
-        # FILTER AND GENERATE RESPONSE
-        # Create the envelope:
+
         envelope = forum_obj.ForumObject(
             username=username,
             reg_date=user_db["public_profile"]["reg_date"],
@@ -233,8 +233,10 @@ class User(Resource):
         envelope.add_control("medical_forum:public-data",
                              href=API.url_for(profile_res.UserPublic, username=username))
         envelope.add_control_messages_all()
-        envelope.add_control_diagnoses_history(
-            user_db["restricted_profile"]["user_id"])
+        envelope.add_control_diagnoses_all()
+        envelope.add_control("medical_forum:diagnoses-history",
+                             href=API.url_for(diagnosis_res.DiagnosesHistory,
+                                              user_id=user_db["restricted_profile"]["user_id"]))
         envelope.add_control("collection", href=API.url_for(Users))
         envelope.add_control_delete_user(username)
 
