@@ -65,6 +65,17 @@ class ForumObject(MasonObject):
             "title": "All diagnoses"
         }
 
+    def add_control_diagnoses_history(self, user_id):
+        """
+        Adds the diagnosis-all link to an object. Intended for the document object.
+        """
+
+        self["@controls"]["medical_forum:diagnoses-history"] = {
+            "href": API.url_for(diagnosis_res.Diagnoses, user_id=user_id).rstrip("/") + "{?user_id}",
+            # "isHrefTemplate": True,
+            "title": "Diagnoses history for user"
+        }
+
     def add_control_add_message(self):
         """
         This adds the add-message control to an object. Intended for the
