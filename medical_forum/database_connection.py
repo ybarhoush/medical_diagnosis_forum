@@ -429,7 +429,14 @@ class Connection(object):
         return 'dgs-' + str(last_id) if last_id is not None else None
 
     # TODO def delete_diagnosis(self, diagnosis_id) --Extra
-    # TODO def modify_diagnosis(self, diagnosis_id, disease, diagnosis_description) --Extra
+    
+    def modify_diagnosis(self, diagnosis_id, disease, diagnosis_description):
+        """"
+        Modifies the disease and description of a diagnosis
+        """
+        # TODO def modify_diagnosis(self, diagnosis_id, disease,
+        # diagnosis_description) --Extra
+        
     # TODO def append_diagnosis(self, reply_to, disease, diagnosis_description, sender) --Needed?
 
     # Message Table API
@@ -730,8 +737,7 @@ class Connection(object):
 
         :param str username: The username of the user to search for.
         :return: dictionary with the format provided in the method:
-            :py:meth:`_create_user_object`
-
+            :py:meth:`_create_user_object
         '''
         # Create the SQL Statements
         # SQL Statement for retrieving the user given a username
@@ -1002,3 +1008,9 @@ class Connection(object):
         :return: True if the user is in the database. False otherwise
         '''
         return self.get_user_id(username) is not None
+
+    def contains_diagnosis(self, diagnosis_id):
+        '''
+        :return: True if the user is in the database. False otherwise
+        '''
+        return self.get_diagnosis(diagnosis_id) is not None

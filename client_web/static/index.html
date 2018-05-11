@@ -14,7 +14,7 @@
 </head>
 
 <body>
-    <div class="jumbotron bg-light" id="intro">
+    <div class="jumbotron jumbotron-fluid bg-light" id="intro">
         <h1 class="text-center">Medical forum panel</h1>
         <p class="text-center">Choose a user from sidebar. Press
             <span class="glyphicon glyphicon-plus-sign"></span> button to register new patient or doctor.</p>
@@ -29,12 +29,20 @@
                     <span class="glyphicon glyphicon-plus-sign"></span>
                 </a>
             </h4>
-            <ul class="nav d-flex text-center flex-column" id="user_list">
-                <span>Patients list</span>
-                <ul class="nav d-flex text-center flex-column" id="patients_list">
+            <ul class="nav d-flex flex-column" id="user_list">
+                <a data-toggle="collapse" href="#patients_list" style="text-align: center;">
+                    <h4>Patients list
+                        <span class="glyphicon glyphicon-chevron-down"></span>
+                    </h4>
+                </a>
+                <ul class="nav d-flex flex-column" id="patients_list">
                 </ul>
-                <span>Doctors list</span>
-                <ul class="nav d-flex text-center flex-column" id="doctors_list">
+                <a data-toggle="collapse" href="#doctors_list" style="text-align: center;">
+                    <h4>Doctors list
+                        <span class="glyphicon glyphicon-chevron-down"></span>
+                    </h4>
+                </a>
+                <ul class="nav d-flex flex-column list-group" id="doctors_list">
                 </ul>
             </ul>
         </div>
@@ -79,7 +87,7 @@
                 <div class="section row" id="userProfile">
                     <h3 class="text-muted">User information</h3>
 
-                    <div class="section ControlButtons">
+                    <div class="ControlButtons">
                         <a class="glyphicon
                         glyphicon-envelope btn btn-primary align-middle
                         CustomButton" title="Click to access the messages" id="messagesButton"
@@ -103,7 +111,7 @@
                         </button>
                     </div>
 
-                    <form action="#" class="section" id="user_restricted_form">
+                    <form action="#" class="" id="user_restricted_form">
                         <div class="form_content row col-md-8">
                         </div>
                     </form>

@@ -41,7 +41,7 @@ the functions does not do anything. Hence, those link relations are ignored
  * Sends an AJAX GET request to retrive the list of all the diagnoses of the
  *application
  *
- * ONSUCCESS=> Show users in the #user_list.
+ * ONSUCCESS=> Show users in the #patients_list and #doctors_list.
  *             After processing the response it utilizes the method {@link
  *#appendUserToList} to append the user to the list. Each user is an anchor
  *pointing to the respective user url. ONERROR => Show an alert to the user.
@@ -49,57 +49,57 @@ the functions does not do anything. Hence, those link relations are ignored
  * @param {string} [apiurl = ENTRYPOINT] - The url of the Diagnoses instance.
  **/
 function getDiagnoses(apiurl) {
-    apiurl = apiurl || ENTRYPOINT_DIAGNOSES;
-    return $.ajax({
-            url: apiurl,
+  apiurl = apiurl || ENTRYPOINT_DIAGNOSES;
+  return $.ajax({
+      url: apiurl,
+      dataType: DEFAULT_DATATYPE
+    })
+    .always(function () {
+      $('#diagnoses_list').empty();
+    })
+    .done(function (data, textStatus, jqXHR) {
+      if (DEBUG_ENABLE) {
+        console.log(
+          'RECEIVED RESPONSE: data:', data, '; textStatus:', textStatus);
+      }
+
+      diagnoses = data.items;
+      for (var i = 0; i < diagnoses.length; i++) {
+        var diagnosis = diagnoses[i];
+        appendUserToList(diagnosis['@controls'].self.href, diagnosis)
+      }
+
+      var create_ctrl = data['@controls']['medical_forum:add-user']
+
+      if (create_ctrl.schema) {
+        createFormFromSchema(
+          create_ctrl.href, create_ctrl.schema, 'new_user_form');
+      } else if (create_ctrl.schemaUrl) {
+        $.ajax({
+            url: create_ctrl.schemaUrl,
             dataType: DEFAULT_DATATYPE
-        })
-        .always(function () {
-            $('#diagnoses_list').empty();
-        })
-        .done(function (data, textStatus, jqXHR) {
+          })
+          .done(function (data, textStatus, jqXHR) {
+            createFormFromSchema(create_ctrl.href, data, 'new_user_form');
+          })
+          .fail(function (jqXHR, textStatus, errorThrown) {
             if (DEBUG_ENABLE) {
-                console.log(
-                    'RECEIVED RESPONSE: data:', data, '; textStatus:', textStatus);
+              console.log(
+                'RECEIVED ERROR: textStatus:', textStatus,
+                ';error:', errorThrown);
             }
-
-            diagnoses = data.items;
-            for (var i = 0; i < diagnoses.length; i++) {
-                var diagnosis = diagnoses[i];
-                appendUserToList(diagnosis['@controls'].self.href, diagnosis)
-            }
-
-            var create_ctrl = data['@controls']['medical_forum:add-user']
-
-            if (create_ctrl.schema) {
-                createFormFromSchema(
-                    create_ctrl.href, create_ctrl.schema, 'new_user_form');
-            } else if (create_ctrl.schemaUrl) {
-                $.ajax({
-                        url: create_ctrl.schemaUrl,
-                        dataType: DEFAULT_DATATYPE
-                    })
-                    .done(function (data, textStatus, jqXHR) {
-                        createFormFromSchema(create_ctrl.href, data, 'new_user_form');
-                    })
-                    .fail(function (jqXHR, textStatus, errorThrown) {
-                        if (DEBUG_ENABLE) {
-                            console.log(
-                                'RECEIVED ERROR: textStatus:', textStatus,
-                                ';error:', errorThrown);
-                        }
-                        alert('Could not fetch form schema.  Please, try again');
-                    });
-            }
-        })
-        .fail(function (jqXHR, textStatus, errorThrown) {
-            if (DEBUG_ENABLE) {
-                console.log(
-                    'RECEIVED ERROR: textStatus:', textStatus,
-                    ';error:', errorThrown);
-            }
-            alert('Could not fetch the list of users.  Please, try again');
-        });
+            alert('Could not fetch form schema.  Please, try again');
+          });
+      }
+    })
+    .fail(function (jqXHR, textStatus, errorThrown) {
+      if (DEBUG_ENABLE) {
+        console.log(
+          'RECEIVED ERROR: textStatus:', textStatus,
+          ';error:', errorThrown);
+      }
+      alert('Could not fetch the list of users.  Please, try again');
+    });
 }
 
 /**
@@ -110,7 +110,7 @@ function getDiagnoses(apiurl) {
  * Sends an AJAX GET request to retrive the list of all the users of the
  *application
  *
- * ONSUCCESS=> Show users in the #user_list.
+ * ONSUCCESS=> Show users in the #patients_list and #doctors_list.
  *             After processing the response it utilizes the method {@link
  *#appendUserToList} to append the user to the list. Each user is an anchor
  *pointing to the respective user url. ONERROR => Show an alert to the user.
@@ -118,61 +118,62 @@ function getDiagnoses(apiurl) {
  * @param {string} [apiurl = ENTRYPOINT] - The url of the Users instance.
  **/
 function getUsers(apiurl) {
-    apiurl = apiurl || ENTRYPOINT_USERS;
-    $('#mainContent').hide();
-    return $.ajax({
-            url: apiurl,
+  apiurl = apiurl || ENTRYPOINT_USERS;
+  $('#mainContent').hide();
+  return $.ajax({
+      url: apiurl,
+      dataType: DEFAULT_DATATYPE
+    })
+    .always(function () {
+      // Remove old list of users
+      // clear the form data hide the content information(no selected)
+      $('#patients_list').empty();
+      $('#doctors_list').empty();
+      $('#mainContent').hide();
+    })
+    .done(function (data, textStatus, jqXHR) {
+      if (DEBUG_ENABLE) {
+        console.log(
+          'RECEIVED RESPONSE: data:', data, '; textStatus:', textStatus);
+      }
+
+      users = data.items;
+      for (var i = 0; i < users.length; i++) {
+        var user = users[i];
+        appendUserToList(user['@controls'].self.href, user)
+      }
+
+      var create_ctrl = data['@controls']['medical_forum:add-user']
+
+      if (create_ctrl.schema) {
+        createFormFromSchema(
+          create_ctrl.href, create_ctrl.schema, 'new_user_form');
+      } else if (create_ctrl.schemaUrl) {
+        $.ajax({
+            url: create_ctrl.schemaUrl,
             dataType: DEFAULT_DATATYPE
-        })
-        .always(function () {
-            // Remove old list of users
-            // clear the form data hide the content information(no selected)
-            $('#user_list').empty();
-            $('#mainContent').hide();
-        })
-        .done(function (data, textStatus, jqXHR) {
+          })
+          .done(function (data, textStatus, jqXHR) {
+            createFormFromSchema(create_ctrl.href, data, 'new_user_form');
+          })
+          .fail(function (jqXHR, textStatus, errorThrown) {
             if (DEBUG_ENABLE) {
-                console.log(
-                    'RECEIVED RESPONSE: data:', data, '; textStatus:', textStatus);
+              console.log(
+                'RECEIVED ERROR: textStatus:', textStatus,
+                ';error:', errorThrown);
             }
-
-            users = data.items;
-            for (var i = 0; i < users.length; i++) {
-                var user = users[i];
-                appendUserToList(user['@controls'].self.href, user)
-            }
-
-            var create_ctrl = data['@controls']['medical_forum:add-user']
-
-            if (create_ctrl.schema) {
-                createFormFromSchema(
-                    create_ctrl.href, create_ctrl.schema, 'new_user_form');
-            } else if (create_ctrl.schemaUrl) {
-                $.ajax({
-                        url: create_ctrl.schemaUrl,
-                        dataType: DEFAULT_DATATYPE
-                    })
-                    .done(function (data, textStatus, jqXHR) {
-                        createFormFromSchema(create_ctrl.href, data, 'new_user_form');
-                    })
-                    .fail(function (jqXHR, textStatus, errorThrown) {
-                        if (DEBUG_ENABLE) {
-                            console.log(
-                                'RECEIVED ERROR: textStatus:', textStatus,
-                                ';error:', errorThrown);
-                        }
-                        alert('Could not fetch form schema.  Please, try again');
-                    });
-            }
-        })
-        .fail(function (jqXHR, textStatus, errorThrown) {
-            if (DEBUG_ENABLE) {
-                console.log(
-                    'RECEIVED ERROR: textStatus:', textStatus,
-                    ';error:', errorThrown);
-            }
-            alert('Could not fetch the list of users.  Please, try again');
-        });
+            alert('Could not fetch form schema.  Please, try again');
+          });
+      }
+    })
+    .fail(function (jqXHR, textStatus, errorThrown) {
+      if (DEBUG_ENABLE) {
+        console.log(
+          'RECEIVED ERROR: textStatus:', textStatus,
+          ';error:', errorThrown);
+      }
+      alert('Could not fetch the list of users.  Please, try again');
+    });
 }
 
 /*** RELATIONS USED IN MESSAGES AND USERS PROFILES ***/
@@ -186,7 +187,7 @@ function getUsers(apiurl) {
  * // TODO: THE CLIENT DOES NOT KNOW HOW TO HANDLE LIST OF MESSAGES
  **/
 function messages_all(apiurl) {
-    return;
+  return;
 }
 
 /*** FUNCTIONS FOR MESSAGE PROFILE ***/
@@ -205,7 +206,7 @@ messages ***/
  *
  **/
 function reply(apiurl, body) {
-    return; // THE CLIENT DOES NOT KNOW HOW TO ADD A NEW MESSAGE
+  return; // THE CLIENT DOES NOT KNOW HOW TO ADD A NEW MESSAGE
 }
 
 /**
@@ -225,26 +226,26 @@ function reply(apiurl, body) {
  **/
 
 function delete_message(apiurl) {
-    if (DEBUG_ENABLE) {
-        console.log('Triggered delete_message');
-    }
+  if (DEBUG_ENABLE) {
+    console.log('Triggered delete_message');
+  }
 
-    return $
-        .ajax({
-            url: apiurl,
-            type: 'DELETE',
+  return $
+    .ajax({
+      url: apiurl,
+      type: 'DELETE',
 
-        })
-        .done(function (data, textStatus, jqXHR) {
-            alert('Message deleted successfully');
-            reloadUserData();
-        })
-        .fail(function (jqXHR, textStatus, errorThrown) {
-            var error = jqXHR.responseJSON['@error'];
-            alert(
-                'ERROR DELETING MESSAGE: ' + error['@messages'][0],
-                error['@message']);
-        });
+    })
+    .done(function (data, textStatus, jqXHR) {
+      alert('Message deleted successfully');
+      reloadUserData();
+    })
+    .fail(function (jqXHR, textStatus, errorThrown) {
+      var error = jqXHR.responseJSON['@error'];
+      alert(
+        'ERROR DELETING MESSAGE: ' + error['@messages'][0],
+        error['@message']);
+    });
 }
 
 /**
@@ -256,7 +257,7 @@ function delete_message(apiurl) {
  * // TODO: THE CLIENT DOES NOT KNOW HOW TO HANDLE COLLECTION OF MESSAGES
  **/
 function add_message(apiurl, template) {
-    return;
+  return;
 }
 
 /**
@@ -267,7 +268,7 @@ function add_message(apiurl, template) {
  * @param {string} apiurl - The url of the User instance.
  **/
 function author(apiurl) {
-    return; // THE CLIEND DOES NOT KNOW TO HANDLE THIS RELATION.
+  return; // THE CLIEND DOES NOT KNOW TO HANDLE THIS RELATION.
 }
 
 /**
@@ -278,7 +279,7 @@ function author(apiurl) {
  * @param {string} apiurl - The url of the Messages list.
  **/
 function collection_messages(apiurl) {
-    return; // THE CLIENT DOES NOT KNOW HOW TO HANDLE A LIST OF MESSAGES
+  return; // THE CLIENT DOES NOT KNOW HOW TO HANDLE A LIST OF MESSAGES
 }
 
 /**
@@ -292,7 +293,7 @@ function collection_messages(apiurl) {
  *
  **/
 function edit_message(apiurl, template) {
-    return; // THE CLIENT DOES NOT KNOW HOW TO HANDLE COLLECTION OF MESSAGES
+  return; // THE CLIENT DOES NOT KNOW HOW TO HANDLE COLLECTION OF MESSAGES
 }
 
 /**
@@ -303,7 +304,7 @@ function edit_message(apiurl, template) {
  * @param {string} apiurl - The url of the Message
  **/
 function in_reply_to(apiurl) {
-    return; // THE CLIENT DOES NOT KNOW HOW TO REPRESENT A HIERARHCY OF MESSAGEs
+  return; // THE CLIENT DOES NOT KNOW HOW TO REPRESENT A HIERARHCY OF MESSAGEs
 }
 
 /**
@@ -325,51 +326,51 @@ function in_reply_to(apiurl) {
  **/
 
 function get_message(apiurl) {
-    $.ajax({
-            url: apiurl,
-            dataType: DEFAULT_DATATYPE
-        })
-        .done(function (data, textStatus, jqXHR) {
-            if (DEBUG_ENABLE) {
-                console.log(
-                    'RECEIVED RESPONSE: data:', data, '; textStatus:', textStatus);
-            }
-            var message_url = data['@controls'].self.href;
-            var headline = data.headline;
-            var articleBody = data.articleBody;
-            appendMessageToList(message_url, headline, articleBody);
-        })
-        .fail(function (jqXHR, textStatus, errorThrown) {
-            if (DEBUG_ENABLE) {
-                console.log(
-                    'RECEIVED ERROR: textStatus:', textStatus,
-                    ';error:', errorThrown);
-            }
-            alert('Cannot get information from message: ' + apiurl);
-        });
+  $.ajax({
+      url: apiurl,
+      dataType: DEFAULT_DATATYPE
+    })
+    .done(function (data, textStatus, jqXHR) {
+      if (DEBUG_ENABLE) {
+        console.log(
+          'RECEIVED RESPONSE: data:', data, '; textStatus:', textStatus);
+      }
+      var message_url = data['@controls'].self.href;
+      var headline = data.headline;
+      var articleBody = data.articleBody;
+      appendMessageToList(message_url, headline, articleBody);
+    })
+    .fail(function (jqXHR, textStatus, errorThrown) {
+      if (DEBUG_ENABLE) {
+        console.log(
+          'RECEIVED ERROR: textStatus:', textStatus,
+          ';error:', errorThrown);
+      }
+      alert('Cannot get information from message: ' + apiurl);
+    });
 }
 
 
 function get_diagnosis(apiurl) {
-    $.ajax({
-            url: apiurl,
-            dataType: DEFAULT_DATATYPE
-        })
-        .done(function (data, textStatus, jqXHR) {
-            if (DEBUG_ENABLE) {
-                console.log(
-                    'RECEIVED RESPONSE: data:', data, '; textStatus:', textStatus);
-            }
-            appendDiagnosisToList(data);
-        })
-        .fail(function (jqXHR, textStatus, errorThrown) {
-            if (DEBUG_ENABLE) {
-                console.log(
-                    'RECEIVED ERROR: textStatus:', textStatus,
-                    ';error:', errorThrown);
-            }
-            alert('Cannot get information from message: ' + apiurl);
-        });
+  $.ajax({
+      url: apiurl,
+      dataType: DEFAULT_DATATYPE
+    })
+    .done(function (data, textStatus, jqXHR) {
+      if (DEBUG_ENABLE) {
+        console.log(
+          'RECEIVED RESPONSE: data:', data, '; textStatus:', textStatus);
+      }
+      appendDiagnosisToList(data);
+    })
+    .fail(function (jqXHR, textStatus, errorThrown) {
+      if (DEBUG_ENABLE) {
+        console.log(
+          'RECEIVED ERROR: textStatus:', textStatus,
+          ';error:', errorThrown);
+      }
+      alert('Cannot get information from message: ' + apiurl);
+    });
 }
 
 /*** FUNCTIONS FOR USER PROFILE ***/
@@ -391,73 +392,73 @@ function get_diagnosis(apiurl) {
  * @param {string} apiurl - The url of the History instance.
  **/
 function messages_history(apiurl) {
-    if (DEBUG_ENABLE) {
-        console.log('Retrieving the user history information');
-    }
+  if (DEBUG_ENABLE) {
+    console.log('Retrieving the user history information');
+  }
 
-    apiurl = apiurl || ENTRYPOINT_USERS;
-    return $.ajax({
-            url: apiurl,
-            dataType: DEFAULT_DATATYPE
-        })
-        .done(function (data, textStatus, jqXHR) {
-            if (DEBUG_ENABLE) {
-                console.log(
-                    'RECEIVED RESPONSE: data:', data, '; textStatus:', textStatus);
-            }
-            var messages = data.items;
-            $('#messagesNumber')[0].innerHTML = messages.length.toString();
-            for (var i = 0; i < messages.length; i++) {
-                var message = messages[i];
-                console.log(message);
-                // Extract message url, headline and articleBody
-                get_message(message['@controls'].self.href);
-            }
-        })
-        .fail(function (jqXHR, textStatus, errorThrown) {
-            if (DEBUG_ENABLE) {
-                console.log(
-                    'RECEIVED ERROR: textStatus:', textStatus,
-                    ';error:', errorThrown);
-            }
-            // Inform user about the error using an alert message.
-            $('#messagesNumber')[0].innerHTML = 0;
-            alert('Could not fetch the list of messages.');
-        });
+  apiurl = apiurl || ENTRYPOINT_USERS;
+  return $.ajax({
+      url: apiurl,
+      dataType: DEFAULT_DATATYPE
+    })
+    .done(function (data, textStatus, jqXHR) {
+      if (DEBUG_ENABLE) {
+        console.log(
+          'RECEIVED RESPONSE: data:', data, '; textStatus:', textStatus);
+      }
+      var messages = data.items;
+      $('#messagesNumber')[0].innerHTML = messages.length.toString();
+      for (var i = 0; i < messages.length; i++) {
+        var message = messages[i];
+        console.log(message);
+        // Extract message url, headline and articleBody
+        get_message(message['@controls'].self.href);
+      }
+    })
+    .fail(function (jqXHR, textStatus, errorThrown) {
+      if (DEBUG_ENABLE) {
+        console.log(
+          'RECEIVED ERROR: textStatus:', textStatus,
+          ';error:', errorThrown);
+      }
+      // Inform user about the error using an alert message.
+      $('#messagesNumber')[0].innerHTML = 0;
+      alert('Could not fetch the list of messages.');
+    });
 }
 
 function diagnoses_history(apiurl) {
-    if (DEBUG_ENABLE) {
-        console.log('Retrieving the user history information');
-    }
+  if (DEBUG_ENABLE) {
+    console.log('Retrieving the user history information');
+  }
 
-    apiurl = apiurl || ENTRYPOINT_USERS;
-    return $.ajax({
-            url: apiurl,
-            dataType: DEFAULT_DATATYPE
-        })
-        .done(function (data, textStatus, jqXHR) {
-            if (DEBUG_ENABLE) {
-                console.log(
-                    'RECEIVED RESPONSE: data:', data, '; textStatus:', textStatus);
-            }
-            var diagnoses = data.items;
-            $('#diagnosesNumber')[0].innerHTML = diagnoses.length.toString();
-            for (var i = 0; i < diagnoses.length; i++) {
-                var diagnosis = diagnoses[i];
-                get_diagnosis(diagnosis['@controls'].self.href);
-            }
-        })
-        .fail(function (jqXHR, textStatus, errorThrown) {
-            if (DEBUG_ENABLE) {
-                console.log(
-                    'RECEIVED ERROR: textStatus:', textStatus,
-                    ';error:', errorThrown);
-            }
-            // Inform user about the error using an alert message.
-            $('#messagesNumber')[0].innerHTML = 0;
-            alert('Could not fetch the list of messages.');
-        });
+  apiurl = apiurl || ENTRYPOINT_USERS;
+  return $.ajax({
+      url: apiurl,
+      dataType: DEFAULT_DATATYPE
+    })
+    .done(function (data, textStatus, jqXHR) {
+      if (DEBUG_ENABLE) {
+        console.log(
+          'RECEIVED RESPONSE: data:', data, '; textStatus:', textStatus);
+      }
+      var diagnoses = data.items;
+      $('#diagnosesNumber')[0].innerHTML = diagnoses.length.toString();
+      for (var i = 0; i < diagnoses.length; i++) {
+        var diagnosis = diagnoses[i];
+        get_diagnosis(diagnosis['@controls'].self.href);
+      }
+    })
+    .fail(function (jqXHR, textStatus, errorThrown) {
+      if (DEBUG_ENABLE) {
+        console.log(
+          'RECEIVED ERROR: textStatus:', textStatus,
+          ';error:', errorThrown);
+      }
+      // Inform user about the error using an alert message.
+      $('#messagesNumber')[0].innerHTML = 0;
+      alert('Could not fetch the list of messages.');
+    });
 }
 
 /**
@@ -477,27 +478,27 @@ function diagnoses_history(apiurl) {
  * @param {string} apiurl - The url of the intance to delete.
  **/
 function delete_user(apiurl) {
-    $.ajax({
-            url: apiurl,
-            type: 'DELETE',
-        })
-        .done(function (data, textStatus, jqXHR) {
-            if (DEBUG_ENABLE) {
-                console.log(
-                    'RECEIVED RESPONSE: data:', data, '; textStatus:', textStatus);
-            }
-            alert('The user information has been deleted from the database');
-            // Update the list of users from the server.
-            getUsers();
-        })
-        .fail(function (jqXHR, textStatus, errorThrown) {
-            if (DEBUG_ENABLE) {
-                console.log(
-                    'RECEIVED ERROR: textStatus:', textStatus,
-                    ';error:', errorThrown);
-            }
-            alert('The user information could not be deleted from the database');
-        });
+  $.ajax({
+      url: apiurl,
+      type: 'DELETE',
+    })
+    .done(function (data, textStatus, jqXHR) {
+      if (DEBUG_ENABLE) {
+        console.log(
+          'RECEIVED RESPONSE: data:', data, '; textStatus:', textStatus);
+      }
+      alert('The user information has been deleted from the database');
+      // Update the list of users from the server.
+      getUsers();
+    })
+    .fail(function (jqXHR, textStatus, errorThrown) {
+      if (DEBUG_ENABLE) {
+        console.log(
+          'RECEIVED ERROR: textStatus:', textStatus,
+          ';error:', errorThrown);
+      }
+      alert('The user information could not be deleted from the database');
+    });
 }
 
 /**
@@ -508,7 +509,7 @@ function delete_user(apiurl) {
  * @param {string} apiurl - The url of the Public profile instance.
  **/
 function public_data(apiurl) {
-    return; // THE CLIENT DOES NOT SHOW USER PUBLIC DATA SUCH AVATAR OR IMAGE
+  return; // THE CLIENT DOES NOT SHOW USER PUBLIC DATA SUCH AVATAR OR IMAGE
 }
 
 /**
@@ -539,61 +540,61 @@ function public_data(apiurl) {
  * @param {string} apiurl - The url of the Restricted Profile instance.
  **/
 function private_data(apiurl) {
-    return $
-        .ajax({
-            url: apiurl,
-            dataType: DEFAULT_DATATYPE,
-        })
-        .done(function (data, textStatus, jqXHR) {
-            if (DEBUG_ENABLE) {
+  return $
+    .ajax({
+      url: apiurl,
+      dataType: DEFAULT_DATATYPE,
+    })
+    .done(function (data, textStatus, jqXHR) {
+      if (DEBUG_ENABLE) {
+        console.log(
+          'RECEIVED RESPONSE: data:', data, '; textStatus:', textStatus);
+      }
+      var user_links = data['@controls'];
+      var schema, resource_url = null;
+      if ('edit' in user_links) {
+        resource_url = user_links['edit'].href;
+        schema = user_links['edit'].schema;
+        if (user_links['edit'].schema) {
+          $form = createFormFromSchema(
+            resource_url, schema, 'user_restricted_form');
+          $('#editUserRestricted').show();
+          fillFormWithMasonData($form, data);
+        } else if (user_links['edit'].schemaUrl) {
+          $.ajax({
+              url: user_links['edit'].schemaUrl,
+              dataType: DEFAULT_DATATYPE
+            })
+            .done(function (schema, textStatus, jqXHR) {
+              $form = createFormFromSchema(
+                resource_url, schema, 'user_restricted_form');
+              $('#editUserRestricted').show();
+              fillFormWithMasonData($form, data);
+            })
+            .fail(function (jqXHR, textStatus, errorThrown) {
+              if (DEBUG_ENABLE) {
                 console.log(
-                    'RECEIVED RESPONSE: data:', data, '; textStatus:', textStatus);
-            }
-            var user_links = data['@controls'];
-            var schema, resource_url = null;
-            if ('edit' in user_links) {
-                resource_url = user_links['edit'].href;
-                schema = user_links['edit'].schema;
-                if (user_links['edit'].schema) {
-                    $form = createFormFromSchema(
-                        resource_url, schema, 'user_restricted_form');
-                    $('#editUserRestricted').show();
-                    fillFormWithMasonData($form, data);
-                } else if (user_links['edit'].schemaUrl) {
-                    $.ajax({
-                            url: user_links['edit'].schemaUrl,
-                            dataType: DEFAULT_DATATYPE
-                        })
-                        .done(function (schema, textStatus, jqXHR) {
-                            $form = createFormFromSchema(
-                                resource_url, schema, 'user_restricted_form');
-                            $('#editUserRestricted').show();
-                            fillFormWithMasonData($form, data);
-                        })
-                        .fail(function (jqXHR, textStatus, errorThrown) {
-                            if (DEBUG_ENABLE) {
-                                console.log(
-                                    'RECEIVED ERROR: textStatus:', textStatus,
-                                    ';error:', errorThrown);
-                            }
-                            alert('Could not fetch form schema.  Please, try again');
-                        });
-                } else {
-                    alert('Form schema not found');
-                }
-            }
-        })
-        .fail(function (jqXHR, textStatus, errorThrown) {
-            if (DEBUG_ENABLE) {
-                console.log(
-                    'RECEIVED ERROR: textStatus:', textStatus,
-                    ';error:', errorThrown);
-            }
-            // Show an alert informing that I cannot get info from the user.
-            alert(
-                'Cannot extract all the information about this user from the server');
-            deselectUser();
-        });
+                  'RECEIVED ERROR: textStatus:', textStatus,
+                  ';error:', errorThrown);
+              }
+              alert('Could not fetch form schema.  Please, try again');
+            });
+        } else {
+          alert('Form schema not found');
+        }
+      }
+    })
+    .fail(function (jqXHR, textStatus, errorThrown) {
+      if (DEBUG_ENABLE) {
+        console.log(
+          'RECEIVED ERROR: textStatus:', textStatus,
+          ';error:', errorThrown);
+      }
+      // Show an alert informing that I cannot get info from the user.
+      alert(
+        'Cannot extract all the information about this user from the server');
+      deselectUser();
+    });
 }
 
 /**
@@ -620,33 +621,33 @@ function private_data(apiurl) {
  *
  **/
 function add_user(apiurl, user) {
-    var userData = JSON.stringify(user);
-    var username = user.username;
-    return $
-        .ajax({
-            url: apiurl,
-            type: 'POST',
-            data: userData,
-            processData: false,
-            contentType: PLAINJSON
-        })
-        .done(function (data, textStatus, jqXHR) {
-            if (DEBUG_ENABLE) {
-                console.log(
-                    'RECEIVED RESPONSE: data:', data, '; textStatus:', textStatus);
-            }
-            alert('User successfully added');
-            $user = appendUserToList(jqXHR.getResponseHeader('Location'), user);
-            $user.children('a').click();
-        })
-        .fail(function (jqXHR, textStatus, errorThrown) {
-            if (DEBUG_ENABLE) {
-                console.log(
-                    'RECEIVED ERROR: textStatus:', textStatus,
-                    ';error:', errorThrown);
-            }
-            alert('Could not create new user:' + jqXHR.responseJSON.message);
-        });
+  var userData = JSON.stringify(user);
+  var username = user.username;
+  return $
+    .ajax({
+      url: apiurl,
+      type: 'POST',
+      data: userData,
+      processData: false,
+      contentType: PLAINJSON
+    })
+    .done(function (data, textStatus, jqXHR) {
+      if (DEBUG_ENABLE) {
+        console.log(
+          'RECEIVED RESPONSE: data:', data, '; textStatus:', textStatus);
+      }
+      alert('User successfully added');
+      $user = appendUserToList(jqXHR.getResponseHeader('Location'), user);
+      $user.children('a').click();
+    })
+    .fail(function (jqXHR, textStatus, errorThrown) {
+      if (DEBUG_ENABLE) {
+        console.log(
+          'RECEIVED ERROR: textStatus:', textStatus,
+          ';error:', errorThrown);
+      }
+      alert('Could not create new user:' + jqXHR.responseJSON.message);
+    });
 }
 
 /**
@@ -657,7 +658,7 @@ function add_user(apiurl, user) {
  * @param {string} apiurl - The url of the User instamce
  **/
 function up(apiurl) {
-    return; // We do not process this information.
+  return; // We do not process this information.
 }
 
 /**
@@ -678,29 +679,29 @@ function up(apiurl) {
  *
  **/
 function edit_user(apiurl, body) {
-    $.ajax({
-            url: apiurl,
-            type: 'PUT',
-            data: JSON.stringify(body),
-            processData: false,
-            contentType: PLAINJSON
-        })
-        .done(function (data, textStatus, jqXHR) {
-            if (DEBUG_ENABLE) {
-                console.log(
-                    'RECEIVED RESPONSE: data:', data, '; textStatus:', textStatus);
-            }
-            alert('User information have been modified successfully');
-        })
-        .fail(function (jqXHR, textStatus, errorThrown) {
-            if (DEBUG_ENABLE) {
-                console.log(
-                    'RECEIVED ERROR: textStatus:', textStatus,
-                    ';error:', errorThrown);
-            }
-            var error_message = $.parseJSON(jqXHR.responseText).message;
-            alert('Could not modify user information;\r\n' + error_message);
-        });
+  $.ajax({
+      url: apiurl,
+      type: 'PUT',
+      data: JSON.stringify(body),
+      processData: false,
+      contentType: PLAINJSON
+    })
+    .done(function (data, textStatus, jqXHR) {
+      if (DEBUG_ENABLE) {
+        console.log(
+          'RECEIVED RESPONSE: data:', data, '; textStatus:', textStatus);
+      }
+      alert('User information have been modified successfully');
+    })
+    .fail(function (jqXHR, textStatus, errorThrown) {
+      if (DEBUG_ENABLE) {
+        console.log(
+          'RECEIVED ERROR: textStatus:', textStatus,
+          ';error:', errorThrown);
+      }
+      var error_message = $.parseJSON(jqXHR.responseText).message;
+      alert('Could not modify user information;\r\n' + error_message);
+    });
 }
 
 /**
@@ -728,90 +729,92 @@ function edit_user(apiurl, body) {
  * @param {string} apiurl - The url of the User instance.
  **/
 function get_user(apiurl) {
-    return $
-        .ajax({
-            url: apiurl,
-            dataType: DEFAULT_DATATYPE,
-            processData: false,
-        })
-        .done(function (data, textStatus, jqXHR) {
-            if (DEBUG_ENABLE) {
-                console.log(
-                    'RECEIVED RESPONSE: data:', data, '; textStatus:', textStatus);
-            }
-            // Set right url to the user form
-            $('#user_form').attr('action', apiurl);
-            // Fill basic information from the user_basic_form
-            $('#username').val(data.username || '??');
-            $('#registrationDate').val(getDate(data.reg_date || 0));
-            $('#messagesNumber').text('??');
-            $('#userType').val(data.user_type == 0 ? "Patient" : "Doctor");
+  return $
+    .ajax({
+      url: apiurl,
+      dataType: DEFAULT_DATATYPE,
+      processData: false,
+    })
+    .done(function (data, textStatus, jqXHR) {
+      if (DEBUG_ENABLE) {
+        console.log(
+          'RECEIVED RESPONSE: data:', data, '; textStatus:', textStatus);
+      }
+      // Set right url to the user form
+      $('#user_form').attr('action', apiurl);
+      // Fill basic information from the user_basic_form
+      $('#username').val(data.username || '??');
+      $('#registrationDate').val(getDate(data.reg_date || 0));
+      $('#messagesNumber').text('??');
+      $('#userType').val(data.user_type == 0 ? 'Patient' : 'Doctor');
 
-            if (data.user_type == 1) {
-                $('#DoctorSpeciality').parent().show();
-                $('#DoctorSpeciality').val(data.speciality || '??');
-            } else {
-                $('#DoctorSpeciality').parent().hide();
-            }
+      if (data.user_type == 1) {
+        $('#DoctorSpeciality').parent().show();
+        $('#DoctorSpeciality').val(data.speciality || '??');
+      } else {
+        $('#DoctorSpeciality').parent().hide();
+      }
 
-            // Extract user information
-            var user_links = data['@controls'];
-            if ('medical_forum:delete' in user_links) {
-                resource_url =
-                    user_links['medical_forum:delete'].href; // User delete link
-                $('#deleteUser').show();
-            }
-            // Extracts urls from links. I need to get if the different links in the
-            // response.
-            if ('medical_forum:private-data' in user_links) {
-                var private_profile_url =
-                    user_links['medical_forum:private-data'].href;
-            }
-            if ('medical_forum:messages-history' in user_links) {
-                var messages_url = user_links['medical_forum:messages-history'].href;
-                // cut out the optional query parameters. this solution is not pretty.
-                messages_url = messages_url.slice(0, messages_url.indexOf('{?'));
-            }
+      // Extract user information
+      var user_links = data['@controls'];
+      if ('medical_forum:delete' in user_links) {
+        resource_url =
+          user_links['medical_forum:delete'].href; // User delete link
+        $('#deleteUser').show();
+      }
+      // Extracts urls from links. I need to get if the different links in the
+      // response.
+      if ('medical_forum:private-data' in user_links) {
+        var private_profile_url =
+          user_links['medical_forum:private-data'].href;
+      }
+      if ('medical_forum:messages-history' in user_links) {
+        var messages_url = user_links['medical_forum:messages-history'].href;
+        // cut out the optional query parameters. this solution is not pretty.
+        messages_url = messages_url.slice(0, messages_url.indexOf('{?'));
+      }
 
-            if ('medical_forum:diagnoses-history' in user_links) {
-                var diagnoses_url = user_links['medical_forum:diagnoses-history'].href;
-                // cut out the optional query parameters. this solution is not pretty.
-                diagnoses_url = diagnoses_url.slice(0, diagnoses_url.indexOf('{?'));
-            }
+      if (data.user_type == 1 && 'medical_forum:diagnoses-all' in user_links) {
+        var diagnoses_url =
+          user_links['medical_forum:diagnoses-all'].href;
+      } else if (data.user_type == 0 && 'medical_forum:diagnoses-history' in user_links) {
+        var diagnoses_url =
+          user_links['medical_forum:diagnoses-history'].href;
+      }
 
-            // Fill the user profile with restricted user profile. This method
-            // Will call also to the list of messages.
-            if (private_profile_url) {
-                private_data(private_profile_url);
-            }
-            // Get the history link and ask for history.
-            if (messages_url) {
-                messages_history(messages_url);
-            }
+      // Fill the user profile with restricted user profile. This method
+      // Will call also to the list of messages.
+      if (private_profile_url) {
+        private_data(private_profile_url);
+      }
+      // Get the history link and ask for history.
+      if (messages_url) {
+        messages_history(messages_url);
+      }
 
-            $('#diagnoses_list').empty();
-            $('#diagnosesNumber').text('??');
-            if (diagnoses_url && data.user_type == 1) {
-                diagnoses_history(diagnoses_url);
-            }
+      $('#diagnoses_list').empty();
+      $('#diagnosesNumber').text('??');
+      if (diagnoses_url)
+        diagnoses_history(diagnoses_url);
 
-            delete(data.username);
-            delete(data.reg_date);
-            delete(data.user_type);
-            delete(data.speciality);
-        })
-        .fail(function (jqXHR, textStatus, errorThrown) {
-            if (DEBUG_ENABLE) {
-                console.log(
-                    'RECEIVED ERROR: textStatus:', textStatus,
-                    ';error:', errorThrown);
-            }
-            // Show an alert informing that I cannot get info from the user.
-            alert(
-                'Cannot extract information about this user from the forum service.');
-            // Deselect the user from the list.
-            deselectUser();
-        });
+
+      delete(data.username);
+      delete(data.reg_date);
+      delete(data.user_type);
+      delete(data.speciality);
+    })
+    .fail(function (jqXHR, textStatus, errorThrown) {
+      if (DEBUG_ENABLE) {
+        console.log(
+          'RECEIVED ERROR: textStatus:', textStatus,
+          ';error:', errorThrown);
+      }
+      // Show an alert informing that I cannot get info from the user.
+      alert(
+        'Cannot extract information about this user from the forum service.');
+      // Deselect the user from the list.
+      deselectUser();
+    });
 }
 
 /**** END RESTFUL CLIENT****/
@@ -822,23 +825,25 @@ function get_user(apiurl) {
       UI ****/
 
 /**
- * Append a new user to the #user_list. It appends a new <li> element in the
- *#user_list using the information received in the arguments.
+ * Append a new user to the #patients_list and #doctors_list. It appends a new
+ *<li> element in the #patients_list and #doctors_list using the information
+ *received in the arguments.
  *
  * @param {string} url - The url of the User to be added to the list
  * @param {string} user - the User to be added to the list
  * @returns {Object} The jQuery representation of the generated <li> elements.
  **/
 function appendUserToList(url, user) {
-    var user_icon = USER_ICON;
-    if (user.user_type == 1) user_icon = DOCTOR_ICON;
-    var $user = $('<li class="nav-item">')
-        .html(
-            '<a class= "user_link nav-link " href="' + url +
-            '"><span class="' + user_icon + '"></span>  ' +
-            user.username + '</a>');
-    $('#user_list').append($user);
-    return $user;
+  var user_icon = USER_ICON;
+  if (user.user_type == 1) user_icon = DOCTOR_ICON;
+  var $user = $('<li class="nav-item">')
+    .html(
+      '<a class= "user_link nav-link" href="' + url +
+      '"><span class="' + user_icon + '"></span>  ' +
+      user.username + '</a>');
+  user.user_type == 0 ? $('#patients_list').append($user) :
+    $('#doctors_list').append($user);
+  return $user;
 }
 
 /**
@@ -853,24 +858,24 @@ function appendUserToList(url, user) {
  * @param {string} id - The id of the form is gonna be populated
  **/
 function createFormFromSchema(url, schema, id) {
-    $form = $('#' + id);
-    $form.attr('action', url);
-    // Clean the forms
-    $form_content = $('.form_content', $form);
-    $form_content.empty();
-    $('input[type=\'button\']', $form).hide();
-    if (schema.properties) {
-        var props = schema.properties;
-        Object.keys(props).forEach(function (key, index) {
-            if (props[key].type == 'object') {
-                appendObjectFormFields($form_content, key, props[key]);
-            } else {
-                appendInputFormField(
-                    $form_content, key, props[key], schema.required.includes(key));
-            }
-        });
-    }
-    return $form;
+  $form = $('#' + id);
+  $form.attr('action', url);
+  // Clean the forms
+  $form_content = $('.form_content', $form);
+  $form_content.empty();
+  $('input[type=\'button\']', $form).hide();
+  if (schema.properties) {
+    var props = schema.properties;
+    Object.keys(props).forEach(function (key, index) {
+      if (props[key].type == 'object') {
+        appendObjectFormFields($form_content, key, props[key]);
+      } else {
+        appendInputFormField(
+          $form_content, key, props[key], schema.required.includes(key));
+      }
+    });
+  }
+  return $form;
 }
 
 /**
@@ -883,31 +888,33 @@ function createFormFromSchema(url, schema, id) {
  * @param {boolean} required- If it is a mandatory field or not.
  **/
 function appendInputFormField($container, name, object_schema, required) {
-    var input_id = name;
-    var prompt = object_schema.title;
-    var desc = object_schema.description;
+  var input_id = name;
+  var prompt = object_schema.title;
+  var desc = object_schema.description;
 
-    $input = $('<input type="text" class="form-control"></input>');
-    $input.addClass('editable');
-    $input.attr('name', name);
-    $input.attr('id', input_id);
-    $label_for = $('<label class="col-sm-4 col-form-label"></label>');
-    $label_for.attr('for', input_id);
-    $label_for.text(prompt);
+  $input = $('<input type="text" class="form-control"></input>');
+  $input.addClass('editable');
+  $input.attr('name', name);
+  $input.attr('id', input_id);
+  $label_for = $('<label class="col-sm-4 col-form-label"></label>');
+  $label_for.attr('for', input_id);
+  $label_for.text(prompt);
 
-    $container.append($label_for);
-    $container.append($input);
+  $container.append($label_for);
+  $container.append($input);
 
-    // $container.append($('<div class="form-group row"></div>').append($label_for, $('<div class="col-sm-8"></dive>').append($input)));
+  // $container.append($('<div class="form-group
+  // row"></div>').append($label_for, $('<div
+  // class="col-sm-8"></dive>').append($input)));
 
-    if (desc) {
-        $input.attr('placeholder', desc);
-    }
-    if (required) {
-        $input.prop('required', true);
-        $label = $('label[for=\'' + $input.attr('id') + '\']');
-        $label.append('*');
-    }
+  if (desc) {
+    $input.attr('placeholder', desc);
+  }
+  if (required) {
+    $input.prop('required', true);
+    $label = $('label[for=\'' + $input.attr('id') + '\']');
+    $label.append('*');
+  }
 }
 
 /**
@@ -921,16 +928,16 @@ function appendInputFormField($container, name, object_schema, required) {
  * @param {boolean} required- If it is a mandatory field or not.
  **/
 function appendObjectFormFields($container, name, object_schema) {
-    $div = $('<div class="subform form-group"></div>');
-    $div.attr('id', name);
-    Object.keys(object_schema.properties).forEach(function (key, index) {
-        if (object_schema.properties[key].type == 'object') {
-            // only one nested level allowed therefore do nothing
-        } else {
-            appendInputFormField($div, key, object_schema.properties[key], false);
-        }
-    });
-    $container.append($div);
+  $div = $('<div class="subform form-group"></div>');
+  $div.attr('id', name);
+  Object.keys(object_schema.properties).forEach(function (key, index) {
+    if (object_schema.properties[key].type == 'object') {
+      // only one nested level allowed therefore do nothing
+    } else {
+      appendInputFormField($div, key, object_schema.properties[key], false);
+    }
+  });
+  $container.append($div);
 }
 
 /**
@@ -947,22 +954,22 @@ function appendObjectFormFields($container, name, object_schema) {
  * @param {Object} data - An associative array formatted using Mason format ({@link https://tools.ietf.org/html/draft-kelly-json-hal-07})
  **/
 function fillFormWithMasonData($form, data) {
-    console.log('filling form with mason data');
-    $('.form_content', $form).children('input').each(function () {
-        if (data[this.id]) {
-            $(this).attr('value', data[this.id]);
-        }
-    });
+  console.log('filling form with mason data');
+  $('.form_content', $form).children('input').each(function () {
+    if (data[this.id]) {
+      $(this).attr('value', data[this.id]);
+    }
+  });
 
-    $('.form_content', $form)
-        .children('.subform')
-        .children('input')
-        .each(function () {
-            var parent = $(this).parent()[0];
-            if (data[parent.id][this.id]) {
-                $(this).attr('value', data[parent.id][this.id]);
-            }
-        });
+  $('.form_content', $form)
+    .children('.subform')
+    .children('input')
+    .each(function () {
+      var parent = $(this).parent()[0];
+      if (data[parent.id][this.id]) {
+        $(this).attr('value', data[parent.id][this.id]);
+      }
+    });
 }
 
 /**
@@ -974,31 +981,31 @@ function fillFormWithMasonData($form, data) {
  * into an element in the dictionary.
  **/
 function serializeFormTemplate($form) {
-    var envelope = {};
-    var $inputs = $form.find('.form_content input');
-    $inputs.each(function () {
-        envelope[this.id] = $(this).val();
-    });
+  var envelope = {};
+  var $inputs = $form.find('.form_content input');
+  $inputs.each(function () {
+    envelope[this.id] = $(this).val();
+  });
 
-    ClearSpecialityForNonDoctor(envelope);
+  ClearSpecialityForNonDoctor(envelope);
 
-    // var subforms = $form.find(".form_content .subform");
-    // subforms.each(function () {
+  // var subforms = $form.find(".form_content .subform");
+  // subforms.each(function () {
 
-    //     var data = {}
-    //     $(this).children("input").each(function () {
-    //         data[this.id] = $(this).val();
-    //     });
-    //     envelope[this.id] = data
-    // });
-    return envelope;
+  //     var data = {}
+  //     $(this).children("input").each(function () {
+  //         data[this.id] = $(this).val();
+  //     });
+  //     envelope[this.id] = data
+  // });
+  return envelope;
 }
 
 function ClearSpecialityForNonDoctor(envelope) {
-    if (envelope['user_type'] == 0) {
-        console.log("changing the speciality");
-        envelope['speciality'] = "";
-    }
+  if (envelope['user_type'] == 0) {
+    console.log('changing the speciality');
+    envelope['speciality'] = '';
+  }
 }
 /**
  * Add a new .message HTML element in the to the #messages_list <div> element.
@@ -1024,44 +1031,48 @@ function ClearSpecialityForNonDoctor(envelope) {
  * @param {string} articlebody - The body of the crated message.
  **/
 function appendMessageToList(url, headline, articlebody) {
-    var $message = $('<div>').addClass('message').html(
-        '' +
-        '<form action=\'' + url + '\' class=\'container\'>' +
-        '   <div class=\'row\'>' +
-        '       <div class=\'form_content col-md-8\'>' +
-        '           <input type=\'text\' class=\'headline form-control-plaintext font-weight-bold\' value=\'' +
-        headline + '\' readonly=\'readonly\'/>' +
-        '           <div class=\'articlebody form-control-plaintext\' readonly=\'readonly\'>' +
-        articlebody + '</div>' +
-        '       </div>' +
-        '       <div class=\'commands col-md-4\'>' +
-        '            <button  class=\'deleteButton deleteMessage btn\' title=\'Remove message\'><span class=\'oi oi-trash\' ></span></button>' +
-        '       </div>' +
-        '   </div>' +
-        '</form>');
-    // Append to list
-    $('#messages_list').append($message);
+  var $message = $('<div>').addClass('message').html(
+    '' +
+    '<form action=\'' + url + '\' class=\'container\'>' +
+    '   <div class=\'row\'>' +
+    '       <div class=\'form_content col-md-8\'>' +
+    '           <input type=\'text\' class=\'headline form-control-plaintext font-weight-bold\' value=\'' +
+    headline + '\' readonly=\'readonly\'/>' +
+    '           <div class=\'articlebody form-control-plaintext\' readonly=\'readonly\'>' +
+    articlebody + '</div>' +
+    '       </div>' +
+    '       <div class=\'commands col-md-4\'>' +
+    '            <button  class=\'deleteButton deleteMessage btn\' title=\'Remove message\'><span class=\'oi oi-trash\' ></span></button>' +
+    '       </div>' +
+    '   </div>' +
+    '</form>');
+  // Append to list
+  $('#messages_list').append($message);
 }
 
 function appendDiagnosisToList(data) {
-    var $diagnosis = $('<div>').addClass('diagnosis').html(
-        '' +
-        '<form action=\'' + data['@controls'].self.href + '>' +
-        '   <div class=\'row\'>' +
-        '       <div class=\'form_content col-md-8\'>' +
-        '           <label type=\'text\' class=\'headline form-control-plaintext font-weight-bold\'>' + 'User number: ' + data.user_id + '</label>' +
-        '       <div class=\'col-md-8\'>' +
-        '           <label type=\'text\' class=\'headline form-control-plaintext font-weight-bold\'>' +
-        data.disease + '</label>' +
-        '           <div class=\'articlebody form-control-plaintext\' readonly=\'readonly\'>' +
-        data.diagnosis_description + '</div>' +
-        '       </div>' +
-        '       <div class=\'commands col-md-4\'>' +
-        '       </div>' +
-        '   </div>' +
-        '</form>');
+  var $diagnosis =
+    $('<div>')
+    .addClass('diagnosis')
+    .html(
+      '' +
+      '<form action=\'' + data['@controls'].self.href + '>' +
+      '   <div class=\'row\'>' +
+      '       <div class=\'form_content col-md-8\'>' +
+      '           <label type=\'text\' class=\'headline form-control-plaintext font-weight-bold\'>' +
+      'User ID: ' + data.user_id + '</label>' +
+      '       <div class=\'col-md-8\'>' +
+      '           <label type=\'text\' class=\'headline form-control-plaintext font-weight-bold\'>' + "Disease: " +
+      data.disease + '</label>' +
+      '           <div class=\'articlebody form-control-plaintext\' readonly=\'readonly\'>' +
+      data.diagnosis_description + '</div>' +
+      '       </div>' +
+      '       <div class=\'commands col-md-4\'>' +
+      '       </div>' +
+      '   </div>' +
+      '</form>');
 
-    $('#diagnoses_list').append($diagnosis);
+  $('#diagnoses_list').append($diagnosis);
 }
 
 /**
@@ -1071,13 +1082,13 @@ function appendDiagnosisToList(data) {
  *
  **/
 function prepareUserDataVisualization() {
-    $('#userProfile .form_content').empty();
-    $('#userData .commands input[type=\'button\']').hide();
-    $('#userData input[type=\'text\']').val('??');
-    $('#messages_list').empty();
-    $('#newUser').hide();
-    $('#userData').show();
-    $('#mainContent').show();
+  $('#userProfile .form_content').empty();
+  $('#userData .commands input[type=\'button\']').hide();
+  $('#userData input[type=\'text\']').val('??');
+  $('#messages_list').empty();
+  $('#newUser').hide();
+  $('#userData').show();
+  $('#mainContent').show();
 }
 
 /**
@@ -1086,22 +1097,23 @@ function prepareUserDataVisualization() {
  * also shows the #createUser button.
  **/
 function showNewUserForm() {
-    deselectUser();
-    $('#userData').hide();
-    var form = $('#new_user_form')[0];
-    form.reset();
-    $('input[type=\'button\']', form).show();
-    $('#newUser').show();
-    $('#mainContent').show();
+  deselectUser();
+  $('#userData').hide();
+  var form = $('#new_user_form')[0];
+  form.reset();
+  $('input[type=\'button\']', form).show();
+  $('#newUser').show();
+  $('#mainContent').show();
 }
 
 /**
- * Helper method that unselects any user from the #user_list and go back to the
- * initial state by hiding the "#mainContent".
+ * Helper method that unselects any user from the #patients_list and
+ *#doctors_list and go back to the initial state by hiding the "#mainContent".
  **/
 function deselectUser() {
-    $('#user_list li.active').removeClass('active');
-    $('#mainContent').hide();
+  $('#patients_list li.active').removeClass('active');
+  $('#doctors_list li.active').removeClass('active');
+  $('#mainContent').hide();
 }
 
 /**
@@ -1109,8 +1121,8 @@ function deselectUser() {
  * Internally it makes click on the href of the active user.
  **/
 function reloadUserData() {
-    var active = $('#user_list li.active a');
-    active.click();
+  $('#patients_list li.active a').click();
+  $('#doctors_list li.active a').click();
 }
 
 /**
@@ -1121,16 +1133,16 @@ function reloadUserData() {
  * format: 'dd.mm.yyyy at hh:mm:ss'
  **/
 function getDate(timestamp) {
-    var date = new Date(timestamp * 1000);
-    var hours = date.getHours();
-    var minutes = date.getMinutes();
-    var seconds = date.getSeconds();
-    var day = date.getDate();
-    var month = date.getMonth() + 1;
-    var year = date.getFullYear();
+  var date = new Date(timestamp * 1000);
+  var hours = date.getHours();
+  var minutes = date.getMinutes();
+  var seconds = date.getSeconds();
+  var day = date.getDate();
+  var month = date.getMonth() + 1;
+  var year = date.getFullYear();
 
-    return day + '.' + month + '.' + year + ' at ' + hours + ':' + minutes + ':' +
-        seconds;
+  return day + '.' + month + '.' + year + ' at ' + hours + ':' + minutes + ':' +
+    seconds;
 }
 /**** END UI HELPERS ****/
 
@@ -1141,23 +1153,23 @@ function getDate(timestamp) {
  *#showNewUserForm}
  **/
 function handleShowUserForm(event) {
-    if (DEBUG_ENABLE) {
-        console.log('Triggered handleShowUserForm');
-    }
-    showNewUserForm();
-    return false;
+  if (DEBUG_ENABLE) {
+    console.log('Triggered handleShowUserForm');
+  }
+  showNewUserForm();
+  return false;
 }
 
 /**
  * Uses the API to delete the currently active user.
  **/
 function handleDeleteUser(event) {
-    if (DEBUG_ENABLE) {
-        console.log('Triggered handleDeleteUser');
-    }
-    var userUrl = $(this).closest('form').attr('action');
-    delete_user(userUrl);
-    return false;
+  if (DEBUG_ENABLE) {
+    console.log('Triggered handleDeleteUser');
+  }
+  var userUrl = $(this).closest('form').attr('action');
+  delete_user(userUrl);
+  return false;
 }
 
 /**
@@ -1165,15 +1177,15 @@ function handleDeleteUser(event) {
  *in the present form.
  **/
 function handleEditUserRestricted(event) {
-    if (DEBUG_ENABLE) {
-        console.log('Triggered handleDeleteUserRestricted');
-    }
-    var $form = $('#user_restricted_form');
-    var body = serializeFormTemplate($form);
-    console.log(body);
-    var user_restricted_url = $('#user_restricted_form').attr('action');
-    edit_user(user_restricted_url, body);
-    return false;
+  if (DEBUG_ENABLE) {
+    console.log('Triggered handleDeleteUserRestricted');
+  }
+  var $form = $('#user_restricted_form');
+  var body = serializeFormTemplate($form);
+  console.log(body);
+  var user_restricted_url = $('#user_restricted_form').attr('action');
+  edit_user(user_restricted_url, body);
+  return false;
 }
 
 /**
@@ -1181,62 +1193,65 @@ function handleEditUserRestricted(event) {
  *form.
  **/
 function handleCreateUser(event) {
-    if (event.click) {
-        console.log('Triggered handleCreateUser');
-    }
-    var $form = $(this).closest('form');
-    var template = serializeFormTemplate($form);
-    var url = $form.attr('action');
-    add_user(url, template);
-    return false; // Avoid executing the default submit
+  if (event.click) {
+    console.log('Triggered handleCreateUser');
+  }
+  var $form = $(this).closest('form');
+  var template = serializeFormTemplate($form);
+  var url = $form.attr('action');
+  add_user(url, template);
+  return false; // Avoid executing the default submit
 }
 
 /**
  * Uses the API to retrieve user's information from the clicked user. In
- *addition, this function modifies the active user in the #user_list (removes
- *the .active class from the old user and add it to the current user)
+ *addition, this function modifies the active user in the #patients_list and
+ *#doctors_list (removes the .active class from the old user and add it to the
+ *current user)
  **/
 function handleGetUser(event) {
-    if (DEBUG_ENABLE) {
-        console.log('Triggered handleGetUser');
-    }
-    event.preventDefault();
+  if (DEBUG_ENABLE) {
+    console.log('Triggered handleGetUser');
+  }
+  event.preventDefault();
 
-    $(this).parent().parent().find('li').removeClass('active');
-    $(this).parent().addClass('active');
+  $('#patients_list li.active').removeClass('active');
+  $('#doctors_list li.active').removeClass('active');
+  $(this).parent().addClass('active');
 
-    prepareUserDataVisualization();
-    var href = ($(this)).attr('href');
-    get_user(href);
+  prepareUserDataVisualization();
+  var href = ($(this)).attr('href');
+  get_user(href);
 
-    return false;
+  return false;
 }
 
 /**
  * Uses the API to delete the associated message
  **/
 function handleDeleteMessage(event) {
-    event.preventDefault();
-    if (DEBUG_ENABLE) {
-        console.log('Triggered handleDeleteMessage');
-    }
-    event.preventDefault();
-    var messageUrl = $(this).closest('form').attr('action');
-    delete_message(messageUrl);
+  event.preventDefault();
+  if (DEBUG_ENABLE) {
+    console.log('Triggered handleDeleteMessage');
+  }
+  event.preventDefault();
+  var messageUrl = $(this).closest('form').attr('action');
+  delete_message(messageUrl);
 }
 
 /**** END BUTTON HANDLERS ****/
 
 // This method is executed when the webpage is loaded.
 $(function () {
-    $('#addUserButton').click(handleShowUserForm);
-    $('#deleteUser').click(handleDeleteUser);
-    $('#editUserRestricted').click(handleEditUserRestricted);
-    $('#deleteUserRestricted').click(handleDeleteUser);
-    $('#createUser').click(handleCreateUser);
+  $('#addUserButton').click(handleShowUserForm);
+  $('#deleteUser').click(handleDeleteUser);
+  $('#editUserRestricted').click(handleEditUserRestricted);
+  $('#deleteUserRestricted').click(handleDeleteUser);
+  $('#createUser').click(handleCreateUser);
 
-    $('#messages_list').on('click', '.deleteMessage', handleDeleteMessage);
-    $('#user_list').on('click', 'li a', handleGetUser);
+  $('#messages_list').on('click', '.deleteMessage', handleDeleteMessage);
+  $('#patients_list').on('click', 'li a', handleGetUser);
+  $('#doctors_list').on('click', 'li a', handleGetUser);
 
-    getUsers(ENTRYPOINT_USERS);
+  getUsers(ENTRYPOINT_USERS);
 });
