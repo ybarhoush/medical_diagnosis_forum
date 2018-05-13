@@ -148,7 +148,7 @@ class Connection(object):
         message_timestamp = row['timestamp']
         message = {'message_id': message_id, 'title': message_title,
                    'timestamp': message_timestamp, 'reply_to': message_reply_to,
-                   'body': message_body, 'sender': message_sender}
+                   'body': message_body, 'sender': message_sender, 'user_id': row['user_id']}
         return message
 
     # Modified from _create_message_list_object
@@ -401,7 +401,6 @@ class Connection(object):
         user_id = diagnosis['user_id']
         if user_id is None:
             raise ValueError("User is not valid")
-
         cursor.execute(query_user, (user_id,))
 
         row = cursor.fetchone()
@@ -429,14 +428,14 @@ class Connection(object):
         return 'dgs-' + str(last_id) if last_id is not None else None
 
     # TODO def delete_diagnosis(self, diagnosis_id) --Extra
-    
+
     def modify_diagnosis(self, diagnosis_id, disease, diagnosis_description):
         """"
         Modifies the disease and description of a diagnosis
         """
         # TODO def modify_diagnosis(self, diagnosis_id, disease,
         # diagnosis_description) --Extra
-        
+
     # TODO def append_diagnosis(self, reply_to, disease, diagnosis_description, sender) --Needed?
 
     # Message Table API

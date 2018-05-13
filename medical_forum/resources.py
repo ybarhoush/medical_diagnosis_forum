@@ -13,7 +13,7 @@ from . import hypermedia_formats as hyper_const
 from .api import API, APP
 from .user_resources import User, Users
 from .profile_resources import UserPublic, UserRestricted
-from .message_resources import Message, Messages
+from .message_resources import Message, Messages, History
 from .diagnosis_resources import Diagnoses, Diagnosis, DiagnosesHistory
 
 
@@ -39,6 +39,8 @@ def add_resources_routes():
                      endpoint="diagnosis")
     API.add_resource(DiagnosesHistory, "/medical_forum/api/diagnoses/<user_id>/",
                      endpoint="diagnoses_user")
+    API.add_resource(History, "/medical_forum/api/messages/<username>/history/",
+                     endpoint="history")
 
 
 add_resources_routes()

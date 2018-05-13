@@ -50,7 +50,7 @@ class UserPublic(Resource):
         envelope.add_control("up", href=API.url_for(
             user_res.User, username=username))
         envelope.add_control(
-            "forum:private-data", href=API.url_for(UserRestricted, username=username))
+            "medical_forum:private-data", href=API.url_for(UserRestricted, username=username))
         envelope.add_control_edit_public_profile(username)
 
         return Response(json.dumps(envelope), 200, mimetype=hyper_const.MASON + ";" +
@@ -138,7 +138,7 @@ class UserRestricted(Resource):
             UserRestricted, username=username))
         envelope.add_control("up", href=API.url_for(
             user_res.User, username=username))
-        envelope.add_control("forum:public-data",
+        envelope.add_control("medical_forum:public-data",
                              href=API.url_for(UserPublic, username=username))
         envelope.add_control_edit_private_profile(username)
 
