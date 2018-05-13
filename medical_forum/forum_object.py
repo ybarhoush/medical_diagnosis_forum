@@ -109,6 +109,40 @@ class ForumObject(MasonObject):
             "schemaUrl": hyper_const.USER_SCHEMA_URL
         }
 
+    def add_control_messages_history(self, username):
+        """
+        This adds the messages history control to a user which
+         defines a href template for making queries. In Mason query
+         parameters are defined with  a schema just like forms.
+
+        : param str user: username of the user
+        """
+
+        self["@controls"]["medical_forum:messages-history"] = {
+            "href": API.url_for(message_res.History,
+                                username=username).rstrip("/") + "{?length,before,after}",
+            "title": "Message history",
+            "isHrefTemplate": True,
+            "schema": self._history_schema()
+        }
+
+    def add_control_add_diagnosis_with_user(self, user_id):
+        """
+        This adds the add-diagnosis control to an object. Intended for the
+        document object. Here you can see that adding the control is a bunch of
+        lines where all we're basically doing is nested dictionaries to
+        achieve the correctly formed JSON document representation.
+        """
+
+        self["@controls"]["medical_forum:add-diagnosis-with-user"] = {
+            "href": API.url_for(diagnosis_res.Diagnoses),
+            "title": "Create diagnosis",
+            "encoding": "json",
+            "method": "POST",
+            "user_id": user_id,
+            "schema": self._dgs_schema()
+        }
+
     def add_control_add_diagnosis(self):
         """
         This adds the add-diagnosis control to an object. Intended for the
@@ -125,16 +159,16 @@ class ForumObject(MasonObject):
             "schema": self._dgs_schema()
         }
 
-    def add_control_delete_message(self, msgid):
+    def add_control_delete_message(self, message_id):
         """
         Adds the delete control to an object. This is intended for any
         object that represents a message.
 
-        : param str msgid: message id in the msg-N form
+        : param str message_id: message id in the msg-N form
         """
 
         self["@controls"]["medical_forum:delete"] = {
-            "href": API.url_for(message_res.Message, message_id=msgid),
+            "href": API.url_for(message_res.Message, message_id=message_id),
             "title": "Delete this message",
             "method": "DELETE"
         }
@@ -148,7 +182,7 @@ class ForumObject(MasonObject):
         : param str username: The username of the user to remove
         """
 
-        self["@controls"]["forum:delete"] = {
+        self["@controls"]["medical_forum:delete"] = {
             "href": API.url_for(user_res.User, username=username),
             "title": "Delete this user",
             "method": "DELETE"
@@ -332,6 +366,37 @@ class ForumObject(MasonObject):
             "description": "image file location",
             "title": "picture",
             "type": "string"
+        }
+
+        return schema
+
+    def _history_schema(self):
+        """
+        Creates a schema dicionary for the messages history query parameters.
+
+        This schema can also be accessed from /forum/schema/history-query/
+
+        :rtype:: dict
+        """
+
+        schema = {
+            "type": "object",
+            "properties": {},
+            "required": []
+        }
+
+        props = schema["properties"]
+        props["length"] = {
+            "description": "Maximum number of messages returned",
+            "type": "integer"
+        }
+        props["before"] = {
+            "description": "Find messages before (timestamp as seconds)",
+            "type": "integer"
+        }
+        props["after"] = {
+            "description": "Find messages after (timestamp as seconds)",
+            "type": "integer"
         }
 
         return schema

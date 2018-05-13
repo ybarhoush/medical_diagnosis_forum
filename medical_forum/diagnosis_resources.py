@@ -155,8 +155,6 @@ class DiagnosesHistory(Resource):
         """
 
         diagnoses_db = g.con.get_diagnoses(user_id)
-        print("serving for user_id: " + str(user_id))
-
         envelope = forum_obj.ForumObject()
         envelope.add_namespace("medical_forum", hyper_const.LINK_RELATIONS_URL)
 
@@ -217,7 +215,6 @@ class Diagnosis(Resource):
         """
 
         diagnosis_db = g.con.get_diagnosis(diagnosis_id)
-        print("diagnosis_id: " + str(diagnosis_id))
         if not diagnosis_db:
             abort(404, diagnosis="There is no a diagnosis with id %s" % diagnosis_id,
                   resource_type="Diagnosis",

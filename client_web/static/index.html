@@ -57,6 +57,12 @@
                     <form action="#" id="user_form">
                         <div class="form_content">
                             <div class="row">
+                                <label for="userType" class="col-form-label
+                                col-md-4">User ID: </label>
+                                <input class="form-control-plaintext no-border" type="text" name="userID" id="userID"
+                                    readonly="readonly">
+                            </div>
+                            <div class="row">
                                 <label for="username" class="col-form-label col-md-4">Username: </label>
                                 <input class="form-control-plaintext
                                 font-weight-bold no-border" name="username" id="username"
@@ -85,7 +91,12 @@
 
                 <!-- User info area -->
                 <div class="section row" id="userProfile">
-                    <h3 class="text-muted">User information</h3>
+                    <h3 class="text-muted">User information&nbsp;
+                        <a data-toggle="collapse" class="glyphicon
+                        glyphicon-chevron-down btn btn-primary align-middle" title="Fold
+                        the user information section" href="#user_restricted_form">
+                        </a>
+                    </h3>
 
                     <div class="ControlButtons">
                         <a class="glyphicon
@@ -111,7 +122,7 @@
                         </button>
                     </div>
 
-                    <form action="#" class="" id="user_restricted_form">
+                    <form action="#" id="user_restricted_form">
                         <div class="form_content row col-md-8">
                         </div>
                     </form>
@@ -119,13 +130,57 @@
 
                 <!-- Message list area -->
                 <div class="section row" id="messages">
-                    <h3 class="text-muted">Message List</h3>
+                    <div class="section">
+                        <h3 class="text-muted">Message List&nbsp;
+                            <a data-toggle="collapse" class="glyphicon glyphicon-plus btn btn-primary
+                            align-middle" title="Click to add a messages" id="ToggleAddMessage"
+                                href="#NewMessage">
+                            </a>
+                            <a data-toggle="collapse" class="glyphicon
+                            glyphicon-chevron-down btn btn-primary align-middle"
+                                title="Fold the messages section" href="#messages_list">
+                            </a>
+                        </h3>
+                    </div>
+                    <div id="NewMessage" class="collapse">
+                        <form id="NewMessageForm" action="#">
+                            <div class="form-group row">
+                                <label for="newMessageAuthor" class="col-sm-2
+                                    col-form-label">Author </label>
+                                <div class="col-sm-10">
+                                    <input type="text" name="author" id="newMessageAuthor" class="form-control" readonly>
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <label for="newMessageTitle" class="col-sm-2
+                                    col-form-label">Title </label>
+                                <div class="col-sm-10">
+                                    <input type="text" id="newMessageTitle" name="headline" class="form-control editable"
+                                        placeholder="Title">
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <label for="newMessageBody" class="col-sm-2
+                                    col-form-label">Body </label>
+                                <div class="col-sm-10">
+                                    <textarea id="newMessageBody" name="articleBody" placeholder="Message body" class="form-control
+                                    editable" rows="3"></textarea>
+                                </div>
+                            </div>
+                            <div class="col-md-4 text-center">
+                                <button id="addMessage" class="glyphicon
+                                glyphicon-send btn btn-primary" title="Send
+                                message">
+                                    Send
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
                     <div id="messages_list">
                         <div class="message">
                             <form action="#">
                                 <div class="commands">
-                                    <input type="button" class="deleteButton deleteMessage btn" title="Remove message"
-                                        value="Delete">
                                 </div>
                             </form>
                         </div>

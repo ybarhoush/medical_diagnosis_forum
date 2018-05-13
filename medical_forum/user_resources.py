@@ -233,6 +233,7 @@ class User(Resource):
         envelope.add_control("medical_forum:public-data",
                              href=API.url_for(profile_res.UserPublic, username=username))
         envelope.add_control_messages_all()
+        envelope.add_control_messages_history(username=username)
         envelope.add_control_diagnoses_all()
         envelope.add_control("medical_forum:diagnoses-history",
                              href=API.url_for(diagnosis_res.DiagnosesHistory,

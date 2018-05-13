@@ -57,7 +57,6 @@ class Messages(Resource):
             item.add_control("profile", href=hyper_const.FORUM_MESSAGE_PROFILE)
             items.append(item)
 
-        # RENDER
         return Response(json.dumps(envelope), 200, mimetype=hyper_const.MASON + ";" +
                         hyper_const.FORUM_MESSAGE_PROFILE)
 
@@ -192,6 +191,9 @@ class Message(Resource):
         envelope.add_control_delete_message(message_id)
         envelope.add_control_edit_message(message_id)
         envelope.add_control_reply_to(message_id)
+        envelope.add_control_add_diagnosis_with_user(
+            user_id=message_db['user_id'])
+        envelope.add_control_delete_message(message_id=message_id)
         envelope.add_control("profile", href=hyper_const.FORUM_MESSAGE_PROFILE)
         envelope.add_control("collection", href=API.url_for(Messages))
         envelope.add_control("self", href=API.url_for(
@@ -358,3 +360,74 @@ class Message(Resource):
         # RENDER
         # Return the response
         return Response(status=201, headers={"Location": url})
+
+
+class History(Resource):
+    """
+    Resource for messages history of a specific user
+    """
+
+    def get(self, username):
+        """
+            This method returns a list of messages that has been sent by an user
+            and meet certain restrictions (result of an algorithm).
+            The restrictions are given in the URL as query parameters.
+
+            INPUT:
+            The query parameters are:
+             * length: the number of messages to return
+             * after: the messages returned must have been modified after
+                      the time provided in this parameter.
+                      Time is UNIX timestamp
+             * before: the messages returned must have been modified before the
+                       time provided in this parameter. Time is UNIX timestamp
+
+            RESPONSE STATUS CODE:
+             * Returns 200 if the list can be generated and it is not empty
+             * Returns 404 if no message meets the requirement
+
+            RESPONSE ENTITY BODY:
+            * Media type recommended: application/vnd.mason+json
+            * Profile recommended: Forum_Message
+                /profiles/message-profile
+
+            Link relations used in items: None
+
+            Semantic descriptions used in items: headline
+
+            Link relations used in links: messages-all, author
+
+            Semantic descriptors used in queries: after, before, length
+        """
+
+        parameters = request.args
+        length = int(parameters.get('length', -1))
+        before = int(parameters.get('before', -1))
+        after = int(parameters.get('after', -1))
+
+        messages_db = g.con.get_messages(username, length, before, after)
+        if messages_db is None or not messages_db:
+            return create_error_response(404, "Empty list",
+                                         "Cannot find any message with the"
+                                         " provided restrictions")
+        envelope = forum_obj.ForumObject()
+        envelope.add_namespace("forum", hyper_const.LINK_RELATIONS_URL)
+        envelope.add_control("self", href=API.url_for(
+            History, username=username))
+        envelope.add_control(
+            "author", href=API.url_for(user_res.User, username=username))
+        envelope.add_control_messages_all()
+        envelope.add_control_users_all()
+
+        items = envelope["items"] = []
+
+        for msg in messages_db:
+            item = forum_obj.ForumObject(
+                id=msg["message_id"], headline=msg["title"])
+            item.add_control("self", href=API.url_for(
+                Message, message_id=msg["message_id"]))
+            item.add_control("profile", href=hyper_const.FORUM_MESSAGE_PROFILE)
+            items.append(item)
+
+        return Response(json.dumps(envelope), 200, mimetype=hyper_const.MASON+";" +
+                        hyper_const.FORUM_MESSAGE_PROFILE)

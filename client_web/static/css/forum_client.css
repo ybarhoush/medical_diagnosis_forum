@@ -50,6 +50,7 @@ li.active {
     padding-bottom: 2.2em;
     margin-bottom: 1.5em;
     border: 2px solid black;
+    border-radius: 15px;
 }
 
 .diagnosis .form_content {
@@ -75,3 +76,5 @@ li.active {
     padding-bottom: 8%;
     text-align: right;
 }
+
+.message-section {}
