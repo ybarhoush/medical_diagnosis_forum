@@ -1050,7 +1050,7 @@ function appendMessageToList(data) {
         '                     <span class=\'' + EDIT_ICON + '\' ></span>' +
         '            </button>' +
         '            <button data-toggle=\'collapse\' href=\'#NewDiagnosis\' ' +
-        '                   class=\'btn\' title=\'Add diagnosis\'>' +
+        '                   class=\'showNewDaignosisForm btn\' title=\'Add diagnosis\'>' +
         '                     <span class=\'' + ADD_DIAG_ICON + '\' ></span>' +
         '            </button>' +
         '       </div>' +
@@ -1062,7 +1062,8 @@ function appendMessageToList(data) {
         '       </div>' +
         '</form>' +
 
-        '<div id=\'NewDiagnosis\' class=\'collapse\'>' +
+        // '<div id=\'NewDiagnosis\' class=\'collapse\'>' +
+        '<div id=\'NewDiagnosis\'>' +
         '   <form id=\'NewDiagnosisForm\' action=\'' + data['@controls']['medical_forum:add-diagnosis-with-user'].href + '\'>' +
         '       <div class=\'text-center row\'>' +
         '           <h4>Add new diagnosis</h4>' +
@@ -1387,6 +1388,10 @@ function addMessage(apiurl, body) {
         });
 }
 
+function handleshowNewDaignosisForm(event) {
+
+}
+
 /**** END BUTTON HANDLERS ****/
 
 // This method is executed when the webpage is loaded.
@@ -1403,6 +1408,7 @@ $(function () {
     $('#messages_list').on('click', '.addDiagnosis', handleAddDiagnosis);
     $('#patients_list').on('click', 'li a', handleGetUser);
     $('#doctors_list').on('click', 'li a', handleGetUser);
+    $('#messages_list').on('click', '.showNewDaignosisForm', handleshowNewDaignosisForm);
 
     getUsers(ENTRYPOINT_USERS);
 });

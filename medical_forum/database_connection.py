@@ -320,7 +320,7 @@ class Connection(object):
     # TODO get_diagnoses --Extra
     # Return a list of all the diagnoses in the database
     # Modified from get_messages
-    def get_diagnoses(self, user_id=None, number_of_diagnoses=-1):
+    def get_diagnoses(self, message_id=None, user_id=None, number_of_diagnoses=-1):
         """
         Return a list of all the messages in the database filtered by the
         conditions provided in the parameters.
@@ -358,6 +358,8 @@ class Connection(object):
         select_all_dgs_query = 'SELECT * FROM diagnosis'
         if user_id is not None:
             select_all_dgs_query += " WHERE user_id = '%s'" % user_id
+        if message_id is not None:
+            select_all_dgs_query += " WHERE message_id = '%s'" % message_id
 
         select_all_dgs_query += ' ORDER BY diagnosis_id ASC'
         if number_of_diagnoses > -1:
