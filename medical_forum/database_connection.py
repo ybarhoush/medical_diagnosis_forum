@@ -359,7 +359,11 @@ class Connection(object):
         if user_id is not None:
             select_all_dgs_query += " WHERE user_id = '%s'" % user_id
         if message_id is not None:
-            select_all_dgs_query += " WHERE message_id = '%s'" % message_id
+            message_id_int = re.match(r'msg-(\d{1,3})', message_id)
+            if message_id_int is None: 
+                raise ValueError("The message id is malformed") 
+            message_id_n = int(message_id_int.group(1))
+            select_all_dgs_query += " WHERE message_id = '%s'" % message_id_n
 
         select_all_dgs_query += ' ORDER BY diagnosis_id ASC'
         if number_of_diagnoses > -1:

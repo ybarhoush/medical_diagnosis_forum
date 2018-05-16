@@ -27,6 +27,7 @@ const DOCTOR_ICON = 'glyphicon glyphicon-grain';
 const DELETE_ICON = 'glyphicon glyphicon-trash';
 const EDIT_ICON = 'glyphicon glyphicon-pencil';
 const ADD_DIAG_ICON = 'glyphicon glyphicon-tags';
+var diagnosis_counter = 0;
 
 /**** START RESTFUL CLIENT****/
 
@@ -334,7 +335,21 @@ function get_message(apiurl) {
                 console.log(
                     'RECEIVED RESPONSE: data:', data, '; textStatus:', textStatus);
             }
-            appendMessageToList(data);
+            appendMessageToList('#messages_list', data);
+            if (data.reply_to != null) {
+                if (!$('#' + data.reply_to)) {
+                    console.log(
+                        'appending ', $('#' + data.message_id), 'to ',
+                        $('#' + data.reply_to));
+                    $('#' + data.message_id).detach().appendTo('#' + data.reply_to);
+                }
+            }
+
+            diagnoses_for_messages_url =
+                data['@controls']['medical_forum:diagnoses-history-message'].href;
+
+            if (diagnoses_for_messages_url)
+                diagnoses_history(diagnoses_for_messages_url);
         })
         .fail(function (jqXHR, textStatus, errorThrown) {
             if (DEBUG_ENABLE) {
@@ -343,6 +358,7 @@ function get_message(apiurl) {
                     ';error:', errorThrown);
             }
             alert('Cannot get information from message: ' + apiurl);
+            return -1;
         });
 }
 
@@ -404,10 +420,11 @@ function messages_history(apiurl) {
             }
             var messages = data.items;
             $('#messagesNumber')[0].innerHTML = messages.length.toString();
+            var messages_history_list = [];
+            diagnosis_counter = 0;
             for (var i = 0; i < messages.length; i++) {
                 var message = messages[i];
                 console.log(message);
-                // Extract message url, headline and articleBody
                 get_message(message['@controls'].self.href);
             }
         })
@@ -425,10 +442,9 @@ function messages_history(apiurl) {
 
 function diagnoses_history(apiurl) {
     if (DEBUG_ENABLE) {
-        console.log('Retrieving the user history information');
+        console.log('Retrieving the diagnosis history information');
     }
-
-    apiurl = apiurl || ENTRYPOINT_USERS;
+    apiurl = apiurl || ENTRYPOINT_DIAGNOSES;
     return $.ajax({
             url: apiurl,
             dataType: DEFAULT_DATATYPE
@@ -439,7 +455,9 @@ function diagnoses_history(apiurl) {
                     'RECEIVED RESPONSE: data:', data, '; textStatus:', textStatus);
             }
             var diagnoses = data.items;
-            $('#diagnosesNumber')[0].innerHTML = diagnoses.length.toString();
+
+            diagnosis_counter += diagnoses.length;
+            $('#diagnosesNumber')[0].innerHTML = diagnosis_counter.toString();
             for (var i = 0; i < diagnoses.length; i++) {
                 var diagnosis = diagnoses[i];
                 get_diagnosis(diagnosis['@controls'].self.href);
@@ -773,8 +791,9 @@ function get_user(apiurl) {
 
             // fill new message actions
             $('#newMessageAuthor').val(data.username);
-            console.log(data.username);
-            $('#NewMessageForm').attr('action', data['@controls']["medical_forum:messages-all"].href);
+            $('#NewMessageForm')
+                .attr(
+                    'action', data['@controls']['medical_forum:messages-all'].href);
 
             if (data.user_type == 1 &&
                 'medical_forum:diagnoses-all' in user_links) {
@@ -799,13 +818,8 @@ function get_user(apiurl) {
                     messages_history(user_links['medical_forum:messages-all'].href);
                 $('#diagnoses_list').empty();
                 $('#diagnosesNumber').text('??');
-                if (diagnoses_url) diagnoses_history(diagnoses_url);
+                //   if (diagnoses_url) diagnoses_history(diagnoses_url);
             }
-
-            // delete(data.username);
-            // delete(data.reg_date);
-            // delete(data.user_type);
-            // delete(data.speciality);
         })
         .fail(function (jqXHR, textStatus, errorThrown) {
             if (DEBUG_ENABLE) {
@@ -907,10 +921,6 @@ function appendInputFormField($container, name, object_schema, required) {
     $container.append($label_for);
     $container.append($input);
 
-    // $container.append($('<div class="form-group
-    // row"></div>').append($label_for, $('<div
-    // class="col-sm-8"></dive>').append($input)));
-
     if (desc) {
         $input.attr('placeholder', desc);
     }
@@ -958,7 +968,6 @@ function appendObjectFormFields($container, name, object_schema) {
  * @param {Object} data - An associative array formatted using Mason format ({@link https://tools.ietf.org/html/draft-kelly-json-hal-07})
  **/
 function fillFormWithMasonData($form, data) {
-    console.log('filling form with mason data');
     $('.form_content', $form).children('input').each(function () {
         if (data[this.id]) {
             $(this).attr('value', data[this.id]);
@@ -1010,7 +1019,6 @@ function serializeMessageForm($form) {
 
 function ClearSpecialityForNonDoctor(envelope) {
     if (envelope['user_type'] == 0) {
-        console.log('changing the speciality');
         envelope['speciality'] = '';
     }
 }
@@ -1038,7 +1046,7 @@ function ClearSpecialityForNonDoctor(envelope) {
  * @param {string} headline - The title of the new message
  * @param {string} articlebody - The body of the crated message.
  **/
-function appendMessageToList(data) {
+function appendMessageToList(append_dom_name, data) {
     var $message = $('<div>').addClass('message').html(
         '' +
         '<form action=\'' + data['@controls'].self.href + '\'>' +
@@ -1049,30 +1057,34 @@ function appendMessageToList(data) {
         '            <button  class=\'editButton editMessage btn\' title=\'Edit message\'>' +
         '                     <span class=\'' + EDIT_ICON + '\' ></span>' +
         '            </button>' +
-        '            <button data-toggle=\'collapse\' href=\'#NewDiagnosis\' ' +
+        '            <button data-toggle=\'collapse\'' +
         '                   class=\'showNewDaignosisForm btn\' title=\'Add diagnosis\'>' +
         '                     <span class=\'' + ADD_DIAG_ICON + '\' ></span>' +
         '            </button>' +
         '       </div>' +
         '       <div class=\'form_content row\'>' +
         '           <input type=\'text\' name=\'headline\' class=\'headline form-control editable' +
-        '                   font-weight-bold\' value=\'' + data.headline + '\'/>' +
-        '           <textarea class=\'articlebody form-control\' name=\'articleBody\' rows=\'3\'>' + data.articleBody +
-        '           </textarea>' +
+        '                   font-weight-bold\' value=\'' + data.headline +
+        '\'/>' +
+        '           <textarea class=\'articlebody form-control\' name=\'articleBody\' rows=\'3\'>' +
+        data.articleBody + '           </textarea>' +
         '       </div>' +
         '</form>' +
 
         // '<div id=\'NewDiagnosis\' class=\'collapse\'>' +
-        '<div id=\'NewDiagnosis\'>' +
-        '   <form id=\'NewDiagnosisForm\' action=\'' + data['@controls']['medical_forum:add-diagnosis-with-user'].href + '\'>' +
+        '<div class=\'diagnosis-form collapse\' id=\'NewDiagnosis\'>' +
+        '   <form id=\'NewDiagnosisForm\' action=\'' +
+        data['@controls']['medical_forum:add-diagnosis-with-user'].href + '\'>' +
         '       <div class=\'text-center row\'>' +
         '           <h4>Add new diagnosis</h4>' +
         '       </div>' +
         '       <div class=\'form-group row\'>' +
-        '           <label for=\'NewDiagnosisUserID\' class=\'col-sm-2 col-form-label\'>UserID </label>' +
+        //   '           <label for=\'NewDiagnosisUserID\' class=\'col-sm-2
+        //   col-form-label\'>UserID </label>' +
         '           <div class=\'col-sm-10\'>' +
         // data['@controls']['medical_forum:add-diagnosis-with-user'].user_id
-        '               <input type=\'text\' name=\'user_id\' id=\'NewDiagnosisUserID\' value=\'' + $('#userID').val() + '\'class=\'form-control\' readonly>' +
+        '               <input name=\'user_id\' type=\'hidden\' id=\'NewDiagnosisUserID\' value=\'' +
+        $('#userID').val() + '\' class=\'form-control\' readonly>' +
         '           </div>' +
         '       </div>' +
         '       <div class=\'form-group row\'>' +
@@ -1094,10 +1106,11 @@ function appendMessageToList(data) {
         '               title=\'Send diagnosis\'> Send</button>' +
         '       </div>' +
         '   </form>' +
-        '</div>'
-    );
+        '</div>');
 
-    $('#messages_list').append($message);
+    $message.attr('id', data.message_id);
+
+    $(append_dom_name).append($message);
 }
 
 function appendDiagnosisToList(data) {
@@ -1110,7 +1123,7 @@ function appendDiagnosisToList(data) {
             '   <div class=\'row\'>' +
             '       <div class=\'form_content col-md-8\'>' +
             '           <label type=\'text\' class=\'headline form-control-plaintext font-weight-bold\'>' +
-            'User ID: ' + data.user_id + '</label>' +
+            'Diagnosis</label>' +
             '       <div class=\'col-md-8\'>' +
             '           <label type=\'text\' class=\'headline form-control-plaintext font-weight-bold\'>' +
             'Disease: ' + data.disease + '</label>' +
@@ -1122,7 +1135,7 @@ function appendDiagnosisToList(data) {
             '   </div>' +
             '</form>');
 
-    $('#diagnoses_list').append($diagnosis);
+    $('#' + data.message_id).append($diagnosis);
 }
 
 /**
@@ -1232,7 +1245,7 @@ function handleEditUserRestricted(event) {
     }
     var $form = $('#user_restricted_form');
     var body = serializeFormTemplate($form);
-    console.log(body);
+    // console.log(body);
     var user_restricted_url = $('#user_restricted_form').attr('action');
     edit_user(user_restricted_url, body);
     return false;
@@ -1286,7 +1299,7 @@ function handleDeleteMessage(event) {
     }
     event.preventDefault();
     var messageUrl = $(this).closest('form').attr('action');
-    console.log("message to delete url: " + messageUrl);
+    console.log('message to delete url: ' + messageUrl);
     delete_message(messageUrl);
 }
 
@@ -1296,10 +1309,10 @@ function handleEditMessage(event) {
     }
     event.preventDefault();
     var messageUrl = $(this).closest('form').attr('action');
-    console.log("message to edit url: " + messageUrl);
+    console.log('message to edit url: ' + messageUrl);
 
     var body = serializeMessageForm($(this).closest('form'));
-    console.log(body);
+    // console.log(body);
     edit_message(messageUrl, body);
 }
 
@@ -1308,12 +1321,12 @@ function handleAddMessage(event) {
         console.log('Triggered handleAddMessage');
     }
     event.preventDefault();
-    var messageUrl = $("#NewMessageForm").attr('action');
+    var messageUrl = $('#NewMessageForm').attr('action');
 
-    var body = serializeMessageForm($("#NewMessageForm"));
-    body['author'] = $("#newMessageAuthor").val();
+    var body = serializeMessageForm($('#NewMessageForm'));
+    body['author'] = $('#newMessageAuthor').val();
     addMessage(messageUrl, body);
-    console.log(body);
+    // console.log(body);
 }
 
 function handleAddDiagnosis(event) {
@@ -1322,12 +1335,11 @@ function handleAddDiagnosis(event) {
     }
 
     event.preventDefault();
-    var diagnosisUrl = $("#NewDiagnosisForm").attr('action');
-    var body = serializeMessageForm($("#NewDiagnosisForm"));
-    body['user_id'] = $("#userID").val();
-    var messageurl = $("#NewDiagnosisForm").parent().parent().find('form').attr('action');
+    var diagnosisUrl = $('#NewDiagnosisForm').attr('action');
+    var body = serializeMessageForm($(this).closest('#NewDiagnosisForm'));
+    body['user_id'] = $('#userID').val();
+    var messageurl = $(this).closest('.message').attr('id');
     body['message_id'] = messageurl.match(/\d{1,3}/)['0'];
-    console.log("url dgs: ", diagnosisUrl);
     console.log(body);
     addDiagnosis(diagnosisUrl, body);
 }
@@ -1360,7 +1372,6 @@ function addDiagnosis(apiurl, body) {
 }
 
 function addMessage(apiurl, body) {
-
     var messageData = JSON.stringify(body);
     return $
         .ajax({
@@ -1389,7 +1400,13 @@ function addMessage(apiurl, body) {
 }
 
 function handleshowNewDaignosisForm(event) {
-
+    console.log('toggle');
+    $new_diagnosis_div = $(this)
+        .parent()
+        .parent()
+        .parent()
+        .find('.diagnosis-form')
+        .collapse('toggle');
 }
 
 /**** END BUTTON HANDLERS ****/
@@ -1404,11 +1421,13 @@ $(function () {
 
     $('#messages_list').on('click', '.deleteMessage', handleDeleteMessage);
     $('#messages_list').on('click', '.editMessage', handleEditMessage);
+    $('#messages_list')
+        .on('click', '.showNewDaignosisForm', handleshowNewDaignosisForm);
     $('#messages').on('click', '#addMessage', handleAddMessage);
     $('#messages_list').on('click', '.addDiagnosis', handleAddDiagnosis);
     $('#patients_list').on('click', 'li a', handleGetUser);
     $('#doctors_list').on('click', 'li a', handleGetUser);
-    $('#messages_list').on('click', '.showNewDaignosisForm', handleshowNewDaignosisForm);
+
 
     getUsers(ENTRYPOINT_USERS);
 });

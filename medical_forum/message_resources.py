@@ -11,6 +11,7 @@ from .error_handlers import create_error_response
 
 from . import forum_object as forum_obj
 from . import user_resources as user_res
+from . import diagnosis_resources as diagnosis_res
 
 
 class Messages(Resource):
@@ -182,7 +183,9 @@ class Message(Resource):
         envelope = forum_obj.ForumObject(
             headline=message_db["title"],
             articleBody=message_db["body"],
-            author=sender
+            author=sender,
+            reply_to=message_db["reply_to"],
+            message_id=message_db["message_id"]
         )
 
         envelope.add_namespace("medical_forum", hyper_const.LINK_RELATIONS_URL)
@@ -193,6 +196,10 @@ class Message(Resource):
         envelope.add_control_reply_to(message_id)
         envelope.add_control_add_diagnosis_with_user(
             user_id=message_db['user_id'])
+        envelope.add_control("medical_forum:diagnoses-history-message",
+                             href=API.url_for(diagnosis_res.DiagnosesHistoryMessage,
+                                              message_id=message_id))
+
         envelope.add_control_delete_message(message_id=message_id)
         envelope.add_control("profile", href=hyper_const.FORUM_MESSAGE_PROFILE)
         envelope.add_control("collection", href=API.url_for(Messages))

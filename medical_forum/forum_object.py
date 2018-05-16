@@ -76,6 +76,17 @@ class ForumObject(MasonObject):
             "title": "Diagnoses history for user"
         }
 
+    def add_control_diagnoses_history_message(self, message_id):
+        """
+        Adds the diagnosis-all link to an object. Intended for the document object.
+        """
+
+        self["@controls"]["medical_forum:diagnoses-history-message"] = {
+            "href": API.url_for(diagnosis_res.Diagnoses, message_id=message_id).rstrip("/") + "{?message_id}",
+            # "isHrefTemplate": True,
+            "title": "Diagnoses history for message"
+        }
+
     def add_control_add_message(self):
         """
         This adds the add-message control to an object. Intended for the
@@ -140,6 +151,23 @@ class ForumObject(MasonObject):
             "encoding": "json",
             "method": "POST",
             "user_id": user_id,
+            "schema": self._dgs_schema()
+        }
+
+    def add_control_get_diagnosis_with_message(self, message_id):
+        """
+        This adds the add-diagnosis control to an object. Intended for the
+        document object. Here you can see that adding the control is a bunch of
+        lines where all we're basically doing is nested dictionaries to
+        achieve the correctly formed JSON document representation.
+        """
+
+        self["@controls"]["medical_forum:get-diagnosis-with-message"] = {
+            "href": API.url_for(diagnosis_res.Diagnoses),
+            "title": "Create diagnosis",
+            "encoding": "json",
+            "method": "GET",
+            "message_id": message_id,
             "schema": self._dgs_schema()
         }
 
@@ -320,6 +348,7 @@ class ForumObject(MasonObject):
         """
 
         user_id = "user_id"
+        message_id = "message_id"
 
         schema = {
             "type": "object",
