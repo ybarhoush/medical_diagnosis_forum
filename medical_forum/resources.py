@@ -14,7 +14,7 @@ from .api import API, APP
 from .user_resources import User, Users
 from .profile_resources import UserPublic, UserRestricted
 from .message_resources import Message, Messages, History
-from .diagnosis_resources import Diagnoses, Diagnosis, DiagnosesHistory
+from .diagnosis_resources import Diagnoses, Diagnosis, DiagnosesHistory, DiagnosesHistoryMessage
 
 
 def add_resources_routes():
@@ -37,6 +37,8 @@ def add_resources_routes():
                      endpoint="diagnoses")
     API.add_resource(Diagnosis, "/medical_forum/api/diagnoses/<regex('dgs-\d+'):diagnosis_id>/",
                      endpoint="diagnosis")
+    API.add_resource(DiagnosesHistoryMessage, "/medical_forum/api/diagnoses/<regex('msg-\d+'):message_id>/",
+                     endpoint="diagnoses_message")
     API.add_resource(DiagnosesHistory, "/medical_forum/api/diagnoses/<user_id>/",
                      endpoint="diagnoses_user")
     API.add_resource(History, "/medical_forum/api/messages/<username>/history/",

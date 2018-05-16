@@ -37,6 +37,7 @@ class Diagnoses(Resource):
         """
 
         diagnoses_db = g.con.get_diagnoses()
+        print('dgs default')
 
         envelope = forum_obj.ForumObject()
         envelope.add_namespace("medical_forum", hyper_const.LINK_RELATIONS_URL)
@@ -154,7 +155,56 @@ class DiagnosesHistory(Resource):
          * The attribute user_id is obtained from the column diagnoses.user_id
         """
 
-        diagnoses_db = g.con.get_diagnoses(user_id)
+        diagnoses_db = g.con.get_diagnoses(user_id=user_id)
+        print('dgs user')
+        envelope = forum_obj.ForumObject()
+        envelope.add_namespace("medical_forum", hyper_const.LINK_RELATIONS_URL)
+
+        envelope.add_control("self", href=API.url_for(Diagnoses))
+        envelope.add_control_users_all()
+        envelope.add_control_add_diagnosis()
+        items = envelope["items"] = []
+
+        for dgs in diagnoses_db:
+            item = forum_obj.ForumObject(
+                id=dgs["diagnosis_id"], disease=dgs["disease"])
+            item.add_control("self", href=API.url_for(
+                Diagnosis, diagnosis_id=dgs["diagnosis_id"]))
+            item.add_control(
+                "profile", href=hyper_const.FORUM_DIAGNOSIS_PROFILE)
+            items.append(item)
+
+        return Response(json.dumps(envelope), 200, mimetype=hyper_const.MASON + ";" +
+                        hyper_const.FORUM_DIAGNOSIS_PROFILE)
+
+
+class DiagnosesHistoryMessage(Resource):
+    """
+    Resource Diagnoses implementation
+    """
+
+    def get(self, message_id=None):
+        """
+        Get all diagnoses.
+
+        INPUT parameters:
+          None
+
+        RESPONSE ENTITY BODY:
+        * Media type: Mason
+          https://github.com/JornWildt/Mason
+         * Profile: Forum_Diagnosis
+          /profiles/diagnosis_profile
+
+        NOTE:
+         * The attribute disease is obtained from the column diagnoses.disease
+         * The attribute diagnosis is obtained from the column diagnoses.diagnosis_description
+         * The attribute message_id is obtained from the column diagnoses.message_id
+         * The attribute user_id is obtained from the column diagnoses.user_id
+        """
+
+        diagnoses_db = g.con.get_diagnoses(message_id=message_id)
+        print('dgs message')
         envelope = forum_obj.ForumObject()
         envelope.add_namespace("medical_forum", hyper_const.LINK_RELATIONS_URL)
 
