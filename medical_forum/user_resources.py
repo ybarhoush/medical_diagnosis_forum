@@ -255,6 +255,8 @@ class User(Resource):
          * If the username does not exist return 404
         """
 
+        print('test delete')
+
         # PEROFRM OPERATIONS
         # Try to  delete the user. If it could not be deleted, the database
         # returns None.
