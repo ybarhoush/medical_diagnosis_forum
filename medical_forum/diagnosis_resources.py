@@ -37,7 +37,6 @@ class Diagnoses(Resource):
         """
 
         diagnoses_db = g.con.get_diagnoses()
-        print('dgs default')
 
         envelope = forum_obj.ForumObject()
         envelope.add_namespace("medical_forum", hyper_const.LINK_RELATIONS_URL)
@@ -156,7 +155,6 @@ class DiagnosesHistory(Resource):
         """
 
         diagnoses_db = g.con.get_diagnoses(user_id=user_id)
-        print('dgs user')
         envelope = forum_obj.ForumObject()
         envelope.add_namespace("medical_forum", hyper_const.LINK_RELATIONS_URL)
 
@@ -204,7 +202,6 @@ class DiagnosesHistoryMessage(Resource):
         """
 
         diagnoses_db = g.con.get_diagnoses(message_id=message_id)
-        print('dgs message')
         envelope = forum_obj.ForumObject()
         envelope.add_namespace("medical_forum", hyper_const.LINK_RELATIONS_URL)
 
