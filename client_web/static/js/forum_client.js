@@ -1074,15 +1074,15 @@ function appendMessageToList(append_dom_name, data) {
 
 function appendDiagnosisToList(data) {
   var $diagnosis =
-      $('<div>')
+      $('<div class=\'row\'>')
           .addClass('diagnosis')
           .html(
               '' +
               '<form action=\'' + data['@controls'].self.href + '>' +
               '   <div class=\'row\'>' +
               '       <div class=\'form_content col-md-8\'>' +
-              '           <label type=\'text\' class=\'headline form-control-plaintext font-weight-bold\'>' +
-              'Diagnosis</label>' +
+              '           <h4 type=\'text\' class=\'headline form-control-plaintext font-weight-bold\'>' +
+              'Diagnosis</h4>' +
               '       <div class=\'col-md-8\'>' +
               '           <label type=\'text\' class=\'headline form-control-plaintext font-weight-bold\'>' +
               'Disease: ' + data.disease + '</label>' +
@@ -1094,7 +1094,7 @@ function appendDiagnosisToList(data) {
               '   </div>' +
               '</form>');
 
-  $('#' + data.message_id).append($diagnosis);
+  $('#' + data.message_id).find('form').append($diagnosis);
   $('#' + data.message_id).find('.showNewDaignosisForm').remove();
 }
 
