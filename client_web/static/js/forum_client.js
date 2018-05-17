@@ -428,10 +428,6 @@ function diagnoses_history(apiurl) {
   apiurl = apiurl || ENTRYPOINT_DIAGNOSES;
   return $.ajax({url: apiurl, dataType: DEFAULT_DATATYPE})
       .done(function(data, textStatus, jqXHR) {
-        if (DEBUG_ENABLE) {
-          console.log(
-              'RECEIVED RESPONSE: data:', data, '; textStatus:', textStatus);
-        }
         var diagnoses = data.items;
 
         diagnosis_counter += diagnoses.length;
