@@ -18,50 +18,69 @@ PATIENT_ID = 1
 PATIENT = {'public_profile': {'reg_date': 1785505926,
                               'username': PATIENT_USERNAME,
                               'speciality': '',
-                              'user_type': 0},
-           'restricted_profile': {'firstname': 'PoorGuy',
+                              'user_id': PATIENT_ID,
+                              'user_type': 0,
+                              'picture': '192.219/dab/image.png'},
+           'restricted_profile': {'user_id': PATIENT_ID,
+                                  'firstname': 'PoorGuy',
                                   'lastname': 'Jackie',
                                   'work_address': '85 South White Oak Way',
+                                  'phone': 1785505926,
                                   'gender': 'female',
-                                  'picture': '192.219/dab/image.png',
                                   'age': 36,
-                                  'email': 'vpid7@-zbe--.net'}}
+                                  'email': 'vpid7@-zbe--.net',
+                                  'diagnosis_id': 1,
+                                  'height': 75,
+                                  'weight': 75}}
 
 MODIFIED_PATIENT = {'public_profile': {'reg_date': 1785505926,
                                        'username': PATIENT_USERNAME,
+                                       'picture': None,
+                                       'user_id': PATIENT_ID,
                                        'speciality': '',
                                        'user_type': 0},
-                    'restricted_profile': {'firstname': 'PoorGuy',
+                    'restricted_profile': {'user_id': PATIENT_ID,
+                                           'firstname': 'PoorGuy',
                                            'lastname': 'Tell',
                                            'work_address': '54 Middle White Park',
                                            'gender': 'female',
-                                           'picture': '192.219/dab/image45.png',
+                                           'phone': 1785505926,
                                            'age': 36,
-                                           'email': 'modified@email.net'}}
+                                           'email': 'modified@email.net',
+                                           'diagnosis_id': 1,
+                                           'height': 75,
+                                           'weight': 75}}
 
 DOCTOR_USERNAME = 'Clarissa'
 DOCTOR_ID = 4
 DOCTOR = {'public_profile': {'reg_date': 715581063,
                              'username': DOCTOR_USERNAME,
                              'speciality': 'head',
-                             'user_type': 1},
-          'restricted_profile': {'firstname': 'Clarissa',
+                             'user_id': DOCTOR_ID,
+                             'user_type': 1,
+                             'picture': '192.219/dab/image.png'},
+          'restricted_profile': {'user_id': DOCTOR_ID,
+                                 'firstname': 'Clarissa',
                                  'lastname': 'Guadalupe',
                                  'work_address': '47 West Rocky Hague Road',
                                  'gender': 'female',
-                                 'picture': '192.219/dab/image.png',
+                                 'phone': 715581063,
                                  'age': 27,
-                                 'email': 'pbxim@f-hq--.com'}}
+                                 'email': 'pbxim@f-hq--.com',
+                                 'diagnosis_id': 14,
+                                 'height': '',
+                                 'weight': ''}}
 
 NEW_PATIENT_USERNAME = 'sully'
 NEW_PATIENT = {'public_profile': {'username': NEW_PATIENT_USERNAME,
                                   'speciality': '',
-                                  'user_type': 0},
+                                  'user_type': 0,
+                                  'picture': None},
                'restricted_profile': {'firstname': 'sully',
                                       'lastname': 'stolen',
                                       'work_address': '89 North White Oak Way',
                                       'gender': 'male',
-                                      'picture': '',
+                                      'phone': '',
                                       'age': 40,
                                       'email': 'test@email.com'},
                'pass_hash': 'testPass'}
@@ -128,7 +147,7 @@ class DatabaseUsersTestCase(unittest.TestCase):
                              INITIAL_USERS_PROFILE_COUNT)
 
     def test_create_user_object(self):
-        """
+        """ 
         Check that the method create_user_object works return proper values.
         """
         print('(' + self.test_create_user_object.__name__+')',
@@ -217,12 +236,13 @@ class DatabaseUsersTestCase(unittest.TestCase):
         get_resp = self.connection.get_user(PATIENT_USERNAME)
         resp_r_profile = get_resp['restricted_profile']
         r_profile = MODIFIED_PATIENT['restricted_profile']
+        self.assertEqual(
+            r_profile['user_id'], resp_r_profile['user_id'])
         self.assertEqual(r_profile['firstname'], resp_r_profile['firstname'])
         self.assertEqual(r_profile['lastname'], resp_r_profile['lastname'])
         self.assertEqual(r_profile['work_address'],
                          resp_r_profile['work_address'])
         self.assertEqual(r_profile['gender'], resp_r_profile['gender'])
-        self.assertEqual(r_profile['picture'], resp_r_profile['picture'])
         self.assertEqual(r_profile['age'], resp_r_profile['age'])
         self.assertEqual(r_profile['email'], resp_r_profile['email'])
         self.assertDictContainsSubset(get_resp, MODIFIED_PATIENT)
