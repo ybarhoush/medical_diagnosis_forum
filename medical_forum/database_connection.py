@@ -231,6 +231,7 @@ class Connection(object):
         return {'public_profile': {'reg_date': reg_date,
                                    'username': row['username'],
                                    'picture': row['picture'],
+                                   'user_id': row['user_id'],
                                    'user_type': row['user_type'],
                                    'speciality': row['speciality']},
                 'restricted_profile': {'user_id': row['user_id'], 'firstname': row['firstname'],
@@ -360,8 +361,8 @@ class Connection(object):
             select_all_dgs_query += " WHERE user_id = '%s'" % user_id
         if message_id is not None:
             message_id_int = re.match(r'msg-(\d{1,3})', message_id)
-            if message_id_int is None: 
-                raise ValueError("The message id is malformed") 
+            if message_id_int is None:
+                raise ValueError("The message id is malformed")
             message_id_n = int(message_id_int.group(1))
             select_all_dgs_query += " WHERE message_id = '%s'" % message_id_n
 
