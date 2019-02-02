@@ -10,6 +10,8 @@
 
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+    <!--<script type="text/javascript" src="https://code.jquery.com/jquery-2.1.1.min.js"></script>-->
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/handlebars.js/2.0.0/handlebars.min.js"></script>
     <script type="text/javascript" src="js/forum_client.js"></script>
 </head>
 
@@ -20,6 +22,72 @@
             <span class="glyphicon glyphicon-plus-sign"></span> button to register new patient or doctor.</p>
     </div>
 
+    <div class="container">
+      <div class="row">
+        <div class="col-md-5">
+            <h4>This website allows you to enter a symptom
+                (ie: “sore throat”, "rash", etc.)
+                You will receive a list of doctors in NY who can help you.
+            </h4>
+            <br>
+            <div class="forms">
+                <form id="searching-symptom-form">
+                    <h2>Enter Symptom: </h2>
+                    <p>(Only One Symptom)</p>
+                    <div class="form-group">
+                        <input type="text" class="form-control" id="symptom">
+                    </div>
+                </form>
+                <h4 class="sidebar-heading d-flex text-center text-muted">
+                    <span>Doctor for Search</span>
+                    <a id="doctorSearchButton" class="d-flex text-muted" href="#" title="Search for Doctor">
+                        <span class="glyphicon glyphicon-search"></span>
+                    </a>
+                </h4>
+                <form id="email-doctor-list">
+                    <h2>Enter email: </h2>
+                    <p>(This email will receive the results of your search)</p>
+                    <div class="form-group-1">
+                        <input type="text" class="form-control" id="email">
+                    </div>
+                </form>
+                <h4 class="sidebar-heading d-flex text-center text-muted">
+                    <span>Send Email</span>
+                    <a id="sendEmailButton" class="d-flex text-muted" href="#" title="Send Email">
+                        <span class="glyphicon glyphicon-envelope"></span>
+                    </a>
+                </h4>
+            </div>
+            <br>
+            <h4>If you wish to see a doctor in person, you can always schedule a consultation appointment!</h4>
+            <!--calendar-->
+            <a href="https://app.acuityscheduling.com/schedule.php?owner=16554327" target="_blank" class="acuity-embed-button" style="float: left;">Make Appointment</a>
+            <link rel="stylesheet" href="https://embed.acuityscheduling.com/embed/button/16554327.css" id="acuity-button-styles" />
+            <script src="https://embed.acuityscheduling.com/embed/button/16554327.js" async></script>
+            <br>
+        </div>
+          <br>
+
+
+          <div class="col-md-7">
+              <div class="results">
+                  <div class="symptom-results">
+                      <div class="symptom-results-success">
+                          <h3>List of doctors in the NY area who can deal with  <em><span id="searching-symptom"></span>:</em></h3>
+                          <ul>
+                              <span id="response-symptom"/>
+                          </ul>
+                      </div>
+                      <div class="symptom-results-error">
+                          <h3><span id="symptom-errors"></span></h3>
+                      </div>
+                  </div>
+              </div>
+          </div>
+      </div>
+    </div>
+    <br>
+
     <div class="container-fluid" id="content">
         <!-- Side bar area -->
         <div id="sidebar" class="sidebar-sticky">
@@ -29,6 +97,14 @@
                     <span class="glyphicon glyphicon-plus-sign"></span>
                 </a>
             </h4>
+
+            <h4 class="sidebar-heading d-flex text-center text-muted">
+                <span>List Insurances</span>
+                <a id="insurancesButton" class="d-flex text-muted" href="#" title="Insurances">
+                    <span class="glyphicon glyphicon-search"></span>
+                </a>
+            </h4>
+
             <ul class="nav d-flex flex-column" id="user_list">
                 <a data-toggle="collapse" href="#patients_list" style="text-align: center;">
                     <h4>Patients list
@@ -215,6 +291,37 @@
                 </form>
             </div>
         </div>
+    </div>
+
+    <!--Better Doctor-->
+    <!--insurances-->
+    <div class="container">
+        <div id="content-placeholder-insurances"></div>
+        <script id="insurances-template" type="text/x-handlebars-template">
+            <table align="center">
+                <thead>
+                <th>Name</th>
+                <th>uid</th>
+                <th>Categories</th>
+                </thead>
+                <tbody>
+                {{#data}}
+                <tr class="provider">
+                    <td>{{name}}</td>
+                    <td>{{uid}}</td>
+                    <td></td>
+                </tr>
+                    {{#plans}}
+                    <tr>
+                        <td>{{name}}</td>
+                        <td>{{uid}}</td>
+                        <td>{{category}}
+                    </tr>
+                    {{/plans}}
+                {{/data}}
+                </tbody>
+            </table>
+        </script>
     </div>
 </body>
 

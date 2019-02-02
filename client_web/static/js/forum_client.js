@@ -6,6 +6,7 @@
  * @author <a href="mailto:ivan.sanchez@oulu.fi">Ivan Sanchez Milara</a>
  * @author <a href="mailto:mika.oja@oulu.fi">Mika Oja</a>
  * @author <a href="mailto:assam.boudjelthia@oulu.fi">Assam Boudjelthia</a>"
+ * @author <a href="mailto:yazan.barhoush@oulu.fi">Yazan Barhoush</a>"
  * @version 1.1
  *
 **/
@@ -28,6 +29,8 @@ const DELETE_ICON = 'glyphicon glyphicon-trash';
 const EDIT_ICON = 'glyphicon glyphicon-pencil';
 const ADD_DIAG_ICON = 'glyphicon glyphicon-tags';
 var diagnosis_counter = 0;
+
+var api_key = '6793c4a326f991e7506b64e49fc700eb';
 
 /**** START RESTFUL CLIENT****/
 
@@ -96,6 +99,11 @@ function getDiagnoses(apiurl) {
         }
         alert('Could not fetch the list of users.  Please, try again');
       });
+
+  $('#docs-template').hide();
+  $('#content-placeholder-docs').hide();
+  $('#insurances-template').hide();
+  $('#content-placeholder-insurances').show();
 }
 
 /**
@@ -167,38 +175,10 @@ function getUsers(apiurl) {
       });
 }
 
-/*** RELATIONS USED IN MESSAGES AND USERS PROFILES ***/
-
-/**
- * This client does not support this functionality.
- *
- * Associated rel attribute: messages-all
- *
- * @param {string} apiurl - The url of the Messages list.
- * // TODO: THE CLIENT DOES NOT KNOW HOW TO HANDLE LIST OF MESSAGES
- **/
-function messages_all(apiurl) {
-  return;
-}
-
 /*** FUNCTIONS FOR MESSAGE PROFILE ***/
 
 /*** Note, the client is mainly utilized to manage users, not to manage
 messages ***/
-
-
-/**
- * This client does not support this functionality.
- *
- * Associated rel attribute: reply
- *
- * @param {string} apiurl - The url of the parent message.
- * @param {object} body - An associative array with the new message
- *
- **/
-function reply(apiurl, body) {
-  return;  // THE CLIENT DOES NOT KNOW HOW TO ADD A NEW MESSAGE
-}
 
 /**
  * Sends an AJAX request to remove a message from the system. Utilizes the
@@ -215,7 +195,6 @@ function reply(apiurl, body) {
  * @param {string} apiurl - The url of the Message
  *
  **/
-
 function delete_message(apiurl) {
   if (DEBUG_ENABLE) {
     console.log('Triggered delete_message');
@@ -262,39 +241,6 @@ function edit_message(apiurl, body) {
             'ERROR EDITING MESSAGE: ' + error['@messages'][0],
             error['@message']);
       });
-}
-
-/**
- * This client does not support this functionality.
- *
- * Associated rel attribute: author
- *
- * @param {string} apiurl - The url of the User instance.
- **/
-function author(apiurl) {
-  return;  // THE CLIEND DOES NOT KNOW TO HANDLE THIS RELATION.
-}
-
-/**
- * This client does not support this functionality.
- *
- * Associated rel attribute: collection (message_profile)
- *
- * @param {string} apiurl - The url of the Messages list.
- **/
-function collection_messages(apiurl) {
-  return;  // THE CLIENT DOES NOT KNOW HOW TO HANDLE A LIST OF MESSAGES
-}
-
-/**
- * This client does not support this functionality.
- *
- * Associated rel attribute: in-reply-to
- *
- * @param {string} apiurl - The url of the Message
- **/
-function in_reply_to(apiurl) {
-  return;  // THE CLIENT DOES NOT KNOW HOW TO REPRESENT A HIERARHCY OF MESSAGEs
 }
 
 /**
@@ -491,17 +437,7 @@ function delete_user(apiurl) {
 }
 
 /**
- * This client does not support handling public user information
- *
- * Associated rel attribute: public-data
- *
- * @param {string} apiurl - The url of the Public profile instance.
- **/
-function public_data(apiurl) {
-  return;  // THE CLIENT DOES NOT SHOW USER PUBLIC DATA SUCH AVATAR OR IMAGE
-}
-
-/**
+ * This client does not support handling public user information.
  * Sends an AJAX request to retrieve the restricted profile information:
  * {@link
  *http://medical_forumapp.docs.apiary.io/#reference/users/users-private-profile/get-user's-restricted-profile
@@ -637,17 +573,6 @@ function add_user(apiurl, user) {
         }
         alert('Could not create new user:' + jqXHR.responseJSON.message);
       });
-}
-
-/**
- * Get user information.
- *
- * Associated rel attribute: up
- *
- * @param {string} apiurl - The url of the User instamce
- **/
-function up(apiurl) {
-  return;  // We do not process this information.
 }
 
 /**
@@ -1072,6 +997,12 @@ function appendMessageToList(append_dom_name, data) {
   $(append_dom_name).append($message);
 }
 
+/**
+ * Add a new .$diagnosis HTML element in the to the #messages_list <div> element.
+ *
+ * @param {string} append_dom_name - the dom id to append message under
+ * @param {object} data - the data object from messages ajax request
+ **/
 function appendDiagnosisToList(data) {
   var $diagnosis =
       $('<div class=\'row\'>')
@@ -1112,6 +1043,10 @@ function prepareUserDataVisualization() {
   $('#newUser').hide();
   $('#userData').show();
   $('#mainContent').show();
+  $('#docs-template').hide();
+  $('#content-placeholder-docs').hide();
+  $('#insurances-template').hide();
+  $('#content-placeholder-insurances').hide();
 }
 
 /**
@@ -1127,6 +1062,128 @@ function showNewUserForm() {
   $('input[type=\'button\']', form).show();
   $('#newUser').show();
   $('#mainContent').show();
+  $('#docs-template').hide();
+  $('#content-placeholder-docs').hide();
+  $('#insurances-template').hide();
+  $('#content-placeholder-insurances').hide();
+}
+
+/**
+ * Method to retrieve and show doctor search from better doctor api (#content-placeholder-docs)
+ * It hides other unnecessary information.
+ **/
+function doctorSearch() {
+
+    var symptom = document.getElementById("symptom").value;
+
+    $.ajax({
+      //location is fixed to NY by providing its latitude and longitude in url
+      url: `https://api.betterdoctor.com/2016-03-01/doctors?query=${symptom}&location=40.712%2C-74.005%2C100&skip=0&limit=5&user_key=${api_key}`,
+      type: 'GET',
+      data: {
+        format: 'json'
+      },
+      success: function(response) {
+        $(".symptom-results-success").show();
+        $("#searching-symptom").text(symptom);
+        if (response.meta.total < 1) {
+          $("#response-symptom").text("We are so sorry but no doctors meet the criteria. Try again!")
+        } else {
+          response.data.forEach(function(doctorPractice) {
+
+            $("#response-symptom").prepend("<li><em>"+ doctorPractice.practices[0].name + "</em>" +
+                                          "<ul>" +
+                                            "<li>First name: " + doctorPractice.profile.first_name + "</li>" +
+                                            "<li>Last name: " + doctorPractice.profile.last_name + "</li>" +
+                                            "<li>Address: " + doctorPractice.practices[0].visit_address.city + ", " + doctorPractice.practices[0].visit_address.zip + ", "  + doctorPractice.practices[0].visit_address.street + "</li>" +
+                                            "<li>Phone number: " + doctorPractice.practices[0].phones[0].number + "</li>" +
+                                            "<li>Website: " + doctorPractice.practices[0].website + "</li>" +
+                                          "</ul>" +
+                                        "</li>");
+          });
+        }
+      },
+      error: function() {
+        $(".symptom-results-error").show();
+        $("#symptom-errors").text("There was an error processing your request about symptom. Please try again.");
+      }
+    });
+}
+
+/**
+ * Method to retrieve and show doctor search from better doctor api (#content-placeholder-docs)
+ * It hides other unnecessary information.
+ **/
+function sendEmail() {
+
+    /* In order for Mandrill to work, we need to setup an own domain, but it is not a live website
+    and it looks like you're using a Gmail email address. ' +
+    Therefore, it is recommended to use SendGrid in this case
+    You don't have any sending domains set up yet. To start sending through Mandrill,
+    you need to verify ownership of your sending domain and update your DNS records.*/
+
+/*    $.ajax({
+      url: `https://mandrillapp.com/api/1.0/messages/send.json`,
+      type: 'POST',
+      data: {
+          'key': 'jFxVmJmWNCa64wb6ydgNlA',
+          'message': {
+              'from_email': 'ybarhoush@gmail.com',
+              'to': [{
+            'email': 'ybarhoush@gmail.com',
+            'type': 'to'
+          },],
+              'autotext': 'true',
+              'subject': 'YOUR SUBJECT HERE!',
+              'html': 'YOUR EMAIL CONTENT HERE! YOU CAN USE HTML!'
+          }
+      },
+      success: function(response) {
+          console.log(response);
+      },
+      error: function(err) {
+          console.log(err);
+      }
+    })*/
+
+    var apiKey = 'Bearer [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]';
+
+    var postdata = '{"personalizations": [{"to":[{"ybarhoush@gmail.com"}],"from": {"email":"from email"},"subject":"Hello, World!" , "content" : [{ "type":"text/plain" , "value":"TestMessage!" }]}]}';
+
+    $.ajax({
+        method: 'POST',
+        url: 'https://api.sendgrid.com/v3/templates/ HTTP/1.1',
+        data: JSON.stringify(postdata),
+        dataType: 'application/json',
+        headers: { 'Authorization': apiKey },
+        crossDomain: true
+    })
+        .done(function(res) {
+            console.log(1, res)
+        })
+        .fail(function (err) {
+            console.log(2, err.status, err.responseText)
+        })
+}
+/**
+ * Method to retrieve and show insurances search from better doctor api (#content-placeholder-insurances)
+ * It hides other unnecessary information.
+ **/
+function showInsurances() {
+    var resource_url_insurances = 'https://api.betterdoctor.com/2016-03-01/insurances?skip=0&limit=10&user_key=' + api_key;
+
+    $.get(resource_url_insurances, function (data) {
+    // data: { meta: {<metadata>}, data: {<array[InsuranceProvider]>} }
+    var template = Handlebars.compile(document.getElementById('insurances-template').innerHTML);
+    document.getElementById('content-placeholder-insurances').innerHTML = template(data);
+});
+  deselectUser();
+  $('#userData').hide();
+  $('#mainContent').hide();
+  $('#docs-template').hide();
+  $('#content-placeholder-docs').hide();
+  $('#insurances-template').hide();
+  $('#content-placeholder-insurances').show();
 }
 
 /**
@@ -1180,6 +1237,38 @@ function handleShowUserForm(event) {
     console.log('Triggered handleShowUserForm');
   }
   showNewUserForm();
+  return false;
+}
+
+/**
+ * Internally it calls to {@link #doctorSearch}
+ **/
+function handleDoctorSearch(event) {
+  if (DEBUG_ENABLE) {
+    console.log('Triggered handleDoctorSearch');
+  }
+  doctorSearch();
+  return false;
+}
+
+/**
+ * Internally it calls to {@link #sendEmail}
+ **/
+function handleSendEmail(event) {
+  if (DEBUG_ENABLE) {
+    console.log('Triggered handleSendEmail');
+  }
+  sendEmail();
+  return false;
+}
+/**
+ * Internally it calls to {@link #showInsurances}
+ **/
+function handleShowInsurances(event) {
+  if (DEBUG_ENABLE) {
+    console.log('Triggered handleShowInsurances');
+  }
+  showInsurances();
   return false;
 }
 
@@ -1373,6 +1462,9 @@ function handleshowNewDaignosisForm(event) {
 // This method is executed when the webpage is loaded.
 $(function() {
   $('#addUserButton').click(handleShowUserForm);
+  $('#doctorSearchButton').click(handleDoctorSearch);
+  $('#sendEmailButton').click(handleSendEmail);
+  $('#insurancesButton').click(handleShowInsurances);
   $('#deleteUser').click(handleDeleteUser);
   $('#editUserRestricted').click(handleEditUserRestricted);
   $('#deleteUserRestricted').click(handleDeleteUser);
